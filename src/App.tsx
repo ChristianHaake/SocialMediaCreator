@@ -1,6 +1,5 @@
 import {
   Camera,
-  Check,
   Download,
   FileDown,
   FileUp,
@@ -14,8 +13,13 @@ import {
   useRef,
   useState,
 } from "react";
+import { AppFooter } from "./components/AppFooter";
+import { AppHeader } from "./components/AppHeader";
+import { ContentPage } from "./components/ContentPage";
 import { PhotoPostEditor } from "./components/PhotoPostEditor";
 import { PhotoPostPreview } from "./components/PhotoPostPreview";
+import { TeacherInfoDialog } from "./components/TeacherInfoDialog";
+import { contentPages, isContentPath } from "./content";
 import type { ImageState } from "./types";
 import { defaultPhotoPost } from "./types";
 import {
@@ -47,8 +51,13 @@ export function App() {
     message: string;
   } | null>(null);
   const [exporting, setExporting] = useState<ImageExportFormat | null>(null);
+  const [teacherInfoOpen, setTeacherInfoOpen] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
   const configInputRef = useRef<HTMLInputElement>(null);
+  const pathname =
+    window.location.pathname.length > 1
+      ? window.location.pathname.replace(/\/+$/, "")
+      : "/";
 
   useEffect(
     () => () => {
@@ -170,25 +179,17 @@ export function App() {
 
   return (
     <div className="app">
-      <header className="app-header">
-        <a className="brand" href="/">
-          <span className="brand__mark">
-            <ImageIcon aria-hidden="true" size={21} />
-          </span>
-          <span>
-            <strong>Mockup Studio</strong>
-            <small>Werkstatt für digitale Formate</small>
-          </span>
-        </a>
-        <div className="header-meta">
-          <span className="privacy-badge">
-            <Check aria-hidden="true" size={15} />
-            Alles bleibt lokal
-          </span>
-        </div>
-      </header>
+      <AppHeader onOpenTeacherInfo={() => setTeacherInfoOpen(true)} />
 
-      <main>
+      {isContentPath(pathname) ? (
+        <ContentPage {...contentPages[pathname]} />
+      ) : pathname !== "/" ? (
+        <ContentPage
+          content="Die angeforderte Seite existiert nicht. Kehre zur App zurück oder verwende einen Link aus der Fußnavigation."
+          title="Seite nicht gefunden"
+        />
+      ) : (
+        <main>
         <section className="intro">
           <div>
             <span className="eyebrow">Fiktiv. Lokal. Exportierbar.</span>
@@ -365,12 +366,14 @@ export function App() {
             )}
           </div>
         </section>
-      </main>
+        </main>
+      )}
 
-      <footer className="app-footer">
-        <span>Mockup Studio · Daten bleiben auf deinem Gerät</span>
-        <span>Version 0.1 · Foto-Post</span>
-      </footer>
+      <AppFooter />
+      <TeacherInfoDialog
+        onClose={() => setTeacherInfoOpen(false)}
+        open={teacherInfoOpen}
+      />
     </div>
   );
 }
