@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { defaultMessenger, defaultPhotoPost } from "../types";
+import {
+  defaultMessenger,
+  defaultMicroblog,
+  defaultPhotoPost,
+} from "../types";
 import {
   createMessengerConfig,
+  createMicroblogConfig,
   createPhotoPostConfig,
   parseConfig,
   parsePhotoPostConfig,
@@ -70,5 +75,36 @@ describe("messenger configuration files", () => {
     };
 
     expect(() => parseConfig(JSON.stringify(invalid))).toThrow("unvollständig");
+  });
+});
+
+describe("microblog configuration files", () => {
+  it("roundtrips all serializable values", () => {
+    const config = createMicroblogConfig(defaultMicroblog);
+    const parsed = parseConfig(JSON.stringify(config));
+
+    expect(parsed.module).toBe("microblog");
+    if (parsed.module === "microblog") {
+      expect(parsed.data).toEqual(defaultMicroblog);
+    }
+  });
+
+  it("rejects image references in microblog data", () => {
+    const config = createMicroblogConfig(defaultMicroblog);
+    const invalid = {
+      ...config,
+      data: { ...config.data, profileImageUrl: "blob:private" },
+    };
+
+    expect(() => parseConfig(JSON.stringify(invalid))).toThrow("unvollständig");
+  });
+
+  it("rejects negative reaction values", () => {
+    const config = createMicroblogConfig({
+      ...defaultMicroblog,
+      likes: -1,
+    });
+
+    expect(() => parseConfig(JSON.stringify(config))).toThrow("unvollständig");
   });
 });

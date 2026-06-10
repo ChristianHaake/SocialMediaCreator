@@ -3,8 +3,8 @@ import {
   Download,
   FileDown,
   FileUp,
-  Image as ImageIcon,
   MessageSquareText,
+  PenLine,
   RotateCcw,
 } from "lucide-react";
 import {
@@ -18,6 +18,8 @@ import { AppHeader } from "./components/AppHeader";
 import { ContentPage } from "./components/ContentPage";
 import { MessengerEditor } from "./components/MessengerEditor";
 import { MessengerPreview } from "./components/MessengerPreview";
+import { MicroblogEditor } from "./components/MicroblogEditor";
+import { MicroblogPreview } from "./components/MicroblogPreview";
 import { PhotoPostEditor } from "./components/PhotoPostEditor";
 import { PhotoPostPreview } from "./components/PhotoPostPreview";
 import { TeacherInfoDialog } from "./components/TeacherInfoDialog";
@@ -26,7 +28,11 @@ import type {
   ImageState,
   ModuleType,
 } from "./types";
-import { defaultMessenger, defaultPhotoPost } from "./types";
+import {
+  defaultMessenger,
+  defaultMicroblog,
+  defaultPhotoPost,
+} from "./types";
 import {
   downloadModuleConfig,
   readConfigFile,
@@ -43,19 +49,16 @@ const modules = [
     id: "photoPost" as const,
     label: "Foto-Post",
     icon: Camera,
-    available: true,
   },
   {
     id: "messenger" as const,
     label: "Messenger-Chat",
     icon: MessageSquareText,
-    available: true,
   },
   {
     id: "microblog" as const,
     label: "Mikroblog",
-    icon: ImageIcon,
-    available: false,
+    icon: PenLine,
   },
 ];
 
@@ -77,6 +80,13 @@ const moduleCopy: Record<
       "Erstelle einen fiktiven Dialog, ordne Nachrichten und exportiere den vollständigen Verlauf direkt im Browser.",
     editorTitle: "Messenger-Chat bearbeiten",
   },
+  microblog: {
+    eyebrow: "Kurz. Klar. Kontextbezogen.",
+    title: "Formuliere deinen Mikroblog-Beitrag.",
+    description:
+      "Gestalte einen kurzen fiktiven Beitrag mit Profil, Zeitangaben und Reaktionen. Der Zeichenzähler informiert, ohne dich zu begrenzen.",
+    editorTitle: "Mikroblog bearbeiten",
+  },
 };
 
 function useImageCleanup(image: ImageState | null) {
@@ -92,10 +102,13 @@ export function App() {
   const [activeModule, setActiveModule] = useState<ModuleType>("photoPost");
   const [photoPost, setPhotoPost] = useState(defaultPhotoPost);
   const [messenger, setMessenger] = useState(defaultMessenger);
+  const [microblog, setMicroblog] = useState(defaultMicroblog);
   const [photoProfileImage, setPhotoProfileImage] =
     useState<ImageState | null>(null);
   const [postImage, setPostImage] = useState<ImageState | null>(null);
   const [messengerProfileImage, setMessengerProfileImage] =
+    useState<ImageState | null>(null);
+  const [microblogProfileImage, setMicroblogProfileImage] =
     useState<ImageState | null>(null);
   const [mobileView, setMobileView] = useState<MobileView>("editor");
   const [imageError, setImageError] = useState<string | null>(null);
@@ -116,12 +129,15 @@ export function App() {
   useImageCleanup(photoProfileImage);
   useImageCleanup(postImage);
   useImageCleanup(messengerProfileImage);
+  useImageCleanup(microblogProfileImage);
 
   const activeCopy = moduleCopy[activeModule];
   const activeHasImages =
     activeModule === "photoPost"
       ? photoProfileImage !== null || postImage !== null
-      : messengerProfileImage !== null;
+      : activeModule === "messenger"
+        ? messengerProfileImage !== null
+        : microblogProfileImage !== null;
 
   function selectModule(module: ModuleType) {
     setActiveModule(module);
@@ -140,9 +156,16 @@ export function App() {
       );
     }
 
+    if (module === "messenger") {
+      return (
+        JSON.stringify(messenger) !== JSON.stringify(defaultMessenger) ||
+        messengerProfileImage !== null
+      );
+    }
+
     return (
-      JSON.stringify(messenger) !== JSON.stringify(defaultMessenger) ||
-      messengerProfileImage !== null
+      JSON.stringify(microblog) !== JSON.stringify(defaultMicroblog) ||
+      microblogProfileImage !== null
     );
   }
 
@@ -150,8 +173,10 @@ export function App() {
     if (module === "photoPost") {
       setPhotoProfileImage(null);
       setPostImage(null);
-    } else {
+    } else if (module === "messenger") {
       setMessengerProfileImage(null);
+    } else {
+      setMicroblogProfileImage(null);
     }
   }
 
@@ -165,8 +190,10 @@ export function App() {
 
     if (activeModule === "photoPost") {
       setPhotoPost(defaultPhotoPost);
-    } else {
+    } else if (activeModule === "messenger") {
       setMessenger(defaultMessenger);
+    } else {
+      setMicroblog(defaultMicroblog);
     }
     clearModuleImages(activeModule);
     setImageError(null);
@@ -184,11 +211,13 @@ export function App() {
       return;
     }
 
-    if (activeModule === "photoPost") {
-      downloadModuleConfig(activeModule, photoPost);
-    } else {
-      downloadModuleConfig(activeModule, messenger);
-    }
+    const data =
+      activeModule === "photoPost"
+        ? photoPost
+        : activeModule === "messenger"
+          ? messenger
+          : microblog;
+    downloadModuleConfig(activeModule, data);
 
     setConfigStatus({
       type: "success",
@@ -216,8 +245,10 @@ export function App() {
 
       if (config.module === "photoPost") {
         setPhotoPost(config.data);
-      } else {
+      } else if (config.module === "messenger") {
         setMessenger(config.data);
+      } else {
+        setMicroblog(config.data);
       }
 
       clearModuleImages(config.module);
@@ -251,7 +282,9 @@ export function App() {
         format,
         activeModule === "photoPost"
           ? "mockup-studio-foto-post"
-          : "mockup-studio-messenger-chat",
+          : activeModule === "messenger"
+            ? "mockup-studio-messenger-chat"
+            : "mockup-studio-mikroblog",
       );
     } catch {
       setExportError(
@@ -277,13 +310,25 @@ export function App() {
       );
     }
 
+    if (activeModule === "messenger") {
+      return (
+        <MessengerEditor
+          onChange={setMessenger}
+          onImageError={setImageError}
+          onProfileImageChange={setMessengerProfileImage}
+          profileImage={messengerProfileImage}
+          value={messenger}
+        />
+      );
+    }
+
     return (
-      <MessengerEditor
-        onChange={setMessenger}
+      <MicroblogEditor
+        onChange={setMicroblog}
         onImageError={setImageError}
-        onProfileImageChange={setMessengerProfileImage}
-        profileImage={messengerProfileImage}
-        value={messenger}
+        onProfileImageChange={setMicroblogProfileImage}
+        profileImage={microblogProfileImage}
+        value={microblog}
       />
     );
   }
@@ -300,11 +345,21 @@ export function App() {
       );
     }
 
+    if (activeModule === "messenger") {
+      return (
+        <MessengerPreview
+          profileImage={messengerProfileImage}
+          ref={previewRef}
+          value={messenger}
+        />
+      );
+    }
+
     return (
-      <MessengerPreview
-        profileImage={messengerProfileImage}
+      <MicroblogPreview
+        profileImage={microblogProfileImage}
         ref={previewRef}
-        value={messenger}
+        value={microblog}
       />
     );
   }
@@ -331,7 +386,7 @@ export function App() {
           </section>
 
           <nav aria-label="Format auswählen" className="module-tabs">
-            {modules.map(({ id, label, icon: Icon, available }) => (
+            {modules.map(({ id, label, icon: Icon }) => (
               <button
                 aria-current={id === activeModule ? "page" : undefined}
                 className={
@@ -339,16 +394,12 @@ export function App() {
                     ? "module-tab module-tab--active"
                     : "module-tab"
                 }
-                disabled={!available}
                 key={id}
-                onClick={() => {
-                  if (available) selectModule(id as ModuleType);
-                }}
+                onClick={() => selectModule(id)}
                 type="button"
               >
                 <Icon aria-hidden="true" size={19} />
                 <span>{label}</span>
-                {!available && <small>Folgt</small>}
               </button>
             ))}
           </nav>

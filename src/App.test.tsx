@@ -171,4 +171,65 @@ describe("App", () => {
 
     expect(screen.getByLabelText("Kontaktname")).toHaveValue("Medienkurs");
   });
+
+  it("updates the microblog preview and keeps its state", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Mikroblog" }));
+
+    expect(
+      screen.getByRole("heading", {
+        level: 1,
+        name: "Formuliere deinen Mikroblog-Beitrag.",
+      }),
+    ).toBeInTheDocument();
+
+    const displayName = screen.getByLabelText("Anzeigename");
+    const text = screen.getByLabelText("Beitragstext");
+    await user.clear(displayName);
+    await user.type(displayName, "Quellenlabor");
+    await user.clear(text);
+    await user.type(text, "Kontext vor Reichweite.");
+
+    const preview = document.querySelector(".microblog-preview");
+    expect(preview).not.toBeNull();
+    expect(
+      within(preview as HTMLElement).getByText("Quellenlabor"),
+    ).toBeInTheDocument();
+    expect(
+      within(preview as HTMLElement).getByText("Kontext vor Reichweite."),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Foto-Post" }));
+    await user.click(screen.getByRole("button", { name: "Mikroblog" }));
+    expect(screen.getByLabelText("Anzeigename")).toHaveValue("Quellenlabor");
+  });
+
+  it("shows a non-blocking warning for long microblog posts", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Mikroblog" }));
+    const text = screen.getByLabelText("Beitragstext");
+    await user.clear(text);
+    await user.type(text, "a".repeat(281));
+
+    expect(screen.getByText("281 Zeichen · länger als 280 Zeichen")).toBeInTheDocument();
+    expect(text).toHaveValue("a".repeat(281));
+  });
+
+  it("can hide microblog date and time independently", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Mikroblog" }));
+    const preview = document.querySelector(".microblog-preview");
+    expect(preview).not.toBeNull();
+    expect(within(preview as HTMLElement).getByText("10:15 · 11.06.2026")).toBeInTheDocument();
+
+    await user.click(screen.getByLabelText("Uhrzeit anzeigen"));
+    expect(within(preview as HTMLElement).getByText("11.06.2026")).toBeInTheDocument();
+    expect(within(preview as HTMLElement).queryByText("10:15 · 11.06.2026")).not.toBeInTheDocument();
+  });
 });

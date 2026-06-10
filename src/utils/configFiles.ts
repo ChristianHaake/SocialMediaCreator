@@ -1,6 +1,7 @@
 import type {
   MessengerMessage,
   MessengerState,
+  MicroblogState,
   ModuleType,
   PhotoPostState,
 } from "../types";
@@ -20,7 +21,15 @@ export type MessengerConfigFile = BaseConfigFile & {
   data: MessengerState;
 };
 
-export type ConfigFile = PhotoPostConfigFile | MessengerConfigFile;
+export type MicroblogConfigFile = BaseConfigFile & {
+  module: "microblog";
+  data: MicroblogState;
+};
+
+export type ConfigFile =
+  | PhotoPostConfigFile
+  | MessengerConfigFile
+  | MicroblogConfigFile;
 
 const maxConfigSize = 1024 * 1024;
 const maxMessages = 200;
@@ -91,6 +100,35 @@ function isMessengerState(value: unknown): value is MessengerState {
   );
 }
 
+function isMicroblogState(value: unknown): value is MicroblogState {
+  if (!isRecord(value)) return false;
+
+  return (
+    hasOnlyKeys(value, [
+      "displayName",
+      "handle",
+      "text",
+      "date",
+      "time",
+      "showDate",
+      "showTime",
+      "replies",
+      "reposts",
+      "likes",
+    ]) &&
+    typeof value.displayName === "string" &&
+    typeof value.handle === "string" &&
+    typeof value.text === "string" &&
+    typeof value.date === "string" &&
+    typeof value.time === "string" &&
+    typeof value.showDate === "boolean" &&
+    typeof value.showTime === "boolean" &&
+    isNonNegativeNumber(value.replies) &&
+    isNonNegativeNumber(value.reposts) &&
+    isNonNegativeNumber(value.likes)
+  );
+}
+
 export function createPhotoPostConfig(
   data: PhotoPostState,
 ): PhotoPostConfigFile {
@@ -109,6 +147,17 @@ export function createMessengerConfig(
     format: "mockup-studio-config",
     version: 1,
     module: "messenger",
+    data,
+  };
+}
+
+export function createMicroblogConfig(
+  data: MicroblogState,
+): MicroblogConfigFile {
+  return {
+    format: "mockup-studio-config",
+    version: 1,
+    module: "microblog",
     data,
   };
 }
@@ -136,6 +185,10 @@ export function parseConfig(contents: string): ConfigFile {
 
   if (value.module === "messenger" && isMessengerState(value.data)) {
     return value as MessengerConfigFile;
+  }
+
+  if (value.module === "microblog" && isMicroblogState(value.data)) {
+    return value as MicroblogConfigFile;
   }
 
   throw new Error("Die Modulkonfiguration ist unvollständig.");
@@ -172,7 +225,7 @@ function downloadConfig(config: ConfigFile, fileName: string) {
 
 export function downloadModuleConfig(
   module: ModuleType,
-  data: PhotoPostState | MessengerState,
+  data: PhotoPostState | MessengerState | MicroblogState,
 ) {
   if (module === "photoPost") {
     downloadConfig(
@@ -182,9 +235,17 @@ export function downloadModuleConfig(
     return;
   }
 
+  if (module === "messenger") {
+    downloadConfig(
+      createMessengerConfig(data as MessengerState),
+      "mockup-studio-messenger-chat.json",
+    );
+    return;
+  }
+
   downloadConfig(
-    createMessengerConfig(data as MessengerState),
-    "mockup-studio-messenger-chat.json",
+    createMicroblogConfig(data as MicroblogState),
+    "mockup-studio-mikroblog.json",
   );
 }
 

@@ -1,4 +1,4 @@
-export type ModuleType = "photoPost" | "messenger";
+export type ModuleType = "photoPost" | "messenger" | "microblog";
 
 export type PhotoPostState = {
   username: string;
@@ -22,6 +22,19 @@ export type MessengerState = {
   contactName: string;
   status: string;
   messages: MessengerMessage[];
+};
+
+export type MicroblogState = {
+  displayName: string;
+  handle: string;
+  text: string;
+  date: string;
+  time: string;
+  showDate: boolean;
+  showTime: boolean;
+  replies: number;
+  reposts: number;
+  likes: number;
 };
 
 export type ImageState = {
@@ -63,4 +76,17 @@ export const defaultMessenger: MessengerState = {
       time: "09:44",
     },
   ],
+};
+
+export const defaultMicroblog: MicroblogState = {
+  displayName: "Medienprojekt",
+  handle: "medienprojekt",
+  text: "Eine Behauptung wird nicht glaubwürdiger, nur weil sie oft geteilt wird. Prüfe Quelle, Kontext und Datum.",
+  date: "2026-06-11",
+  time: "10:15",
+  showDate: true,
+  showTime: true,
+  replies: 8,
+  reposts: 24,
+  likes: 96,
 };

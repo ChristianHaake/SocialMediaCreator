@@ -13,7 +13,18 @@ Veröffentlichung in eine versionierte Sektion verschoben.
 
 ### Hinzugefügt
 
+- Vollständiges Mikroblog-Modul mit Anzeigename, Handle und Profilbild.
+- Beitragstext mit informierendem Zeichenzähler ohne erzwungene Begrenzung.
+- Optional einblendbare Datums- und Zeitangaben.
+- Fiktive Kennzahlen für Antworten, Reposts und Likes.
+- Mikroblog-Konfigurationen als versionierte JSON-Dateien importieren und
+  exportieren.
+- PNG- und JPG-Export mit modulspezifischem Dateinamen.
+- Automatisierte UI- und Konfigurationstests für das Mikroblog-Modul.
+
 ### Geändert
+
+- Alle drei im Produktplan vorgesehenen Mockup-Module sind auswählbar.
 
 ### Behoben
 
