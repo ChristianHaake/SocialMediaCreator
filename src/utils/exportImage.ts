@@ -3,7 +3,6 @@ import { toJpeg, toPng } from "html-to-image";
 export type ImageExportFormat = "png" | "jpg";
 
 const exportWidth = 1080;
-const exportFileName = "mockup-studio-foto-post";
 
 function downloadDataUrl(dataUrl: string, fileName: string) {
   const link = document.createElement("a");
@@ -15,6 +14,7 @@ function downloadDataUrl(dataUrl: string, fileName: string) {
 export async function exportElementAsImage(
   element: HTMLElement,
   format: ImageExportFormat,
+  fileName = "mockup-studio-foto-post",
 ) {
   const scale = exportWidth / element.offsetWidth;
   const commonOptions = {
@@ -28,5 +28,5 @@ export async function exportElementAsImage(
       ? await toPng(element, commonOptions)
       : await toJpeg(element, { ...commonOptions, quality: 0.92 });
 
-  downloadDataUrl(dataUrl, `${exportFileName}.${format}`);
+  downloadDataUrl(dataUrl, `${fileName}.${format}`);
 }

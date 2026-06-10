@@ -22,9 +22,11 @@ npm run smoke:production
 
 ## Stand
 
-Der erste vollständige Foto-Post-Ablauf enthält:
+Der aktuelle Stand enthält:
 
-- responsive Editor- und Vorschauansicht
+- Foto-Post, Messenger-Chat und Mikroblog mit responsiver Live-Vorschau
+- bearbeitbare und sortierbare Messenger-Nachrichten
+- Mikroblog-Beiträge mit optionalen Zeitangaben und weichem Zeichenzähler
 - lokale Profil- und Beitragsbilder
 - validierte JSON-Konfigurationen ohne Bilder
 - PNG- und JPG-Export
@@ -32,7 +34,8 @@ Der erste vollständige Foto-Post-Ablauf enthält:
 - Hilfe, Projektinformationen, Datenschutz und Impressum
 - gehärtete Cloudflare-Workers-Auslieferung mit SPA-Fallback
 
-Messenger-Chat und Mikroblog folgen in späteren Umsetzungsphasen.
-
 Die Cloudflare-Einstellungen sind unter
 [`docs/CLOUDFLARE.md`](docs/CLOUDFLARE.md) dokumentiert.
+
+Alle wesentlichen Änderungen werden fortlaufend im
+[`CHANGELOG.md`](CHANGELOG.md) dokumentiert.
