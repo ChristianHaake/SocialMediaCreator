@@ -6,6 +6,7 @@ import { App } from "./App";
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  window.history.replaceState({}, "", "/");
 });
 
 describe("App", () => {
@@ -45,5 +46,35 @@ describe("App", () => {
 
     expect(confirm).toHaveBeenCalledOnce();
     expect(usernameInput).toHaveValue("anderer_name");
+  });
+
+  it("opens the teacher information dialog", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Für Lehrkräfte" }));
+
+    expect(
+      screen.getByRole("dialog", { name: "Hinweise für Lehrkräfte" }),
+    ).toBeInTheDocument();
+  });
+
+  it("renders direct content routes", () => {
+    window.history.replaceState({}, "", "/datenschutz");
+    render(<App />);
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Datenschutz" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Hosting und technische Verbindungsdaten")).toBeInTheDocument();
+  });
+
+  it("renders an application-level not-found page", () => {
+    window.history.replaceState({}, "", "/existiert-nicht");
+    render(<App />);
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Seite nicht gefunden" }),
+    ).toBeInTheDocument();
   });
 });
