@@ -16,14 +16,19 @@ import {
 import { AppFooter } from "./components/AppFooter";
 import { AppHeader } from "./components/AppHeader";
 import { ContentPage } from "./components/ContentPage";
+import { MessengerEditor } from "./components/MessengerEditor";
+import { MessengerPreview } from "./components/MessengerPreview";
 import { PhotoPostEditor } from "./components/PhotoPostEditor";
 import { PhotoPostPreview } from "./components/PhotoPostPreview";
 import { TeacherInfoDialog } from "./components/TeacherInfoDialog";
 import { contentPages, isContentPath } from "./content";
-import type { ImageState } from "./types";
-import { defaultPhotoPost } from "./types";
+import type {
+  ImageState,
+  ModuleType,
+} from "./types";
+import { defaultMessenger, defaultPhotoPost } from "./types";
 import {
-  downloadPhotoPostConfig,
+  downloadModuleConfig,
   readConfigFile,
 } from "./utils/configFiles";
 import {
@@ -34,15 +39,64 @@ import {
 type MobileView = "editor" | "preview";
 
 const modules = [
-  { label: "Foto-Post", icon: Camera, available: true },
-  { label: "Messenger-Chat", icon: MessageSquareText, available: false },
-  { label: "Mikroblog", icon: ImageIcon, available: false },
+  {
+    id: "photoPost" as const,
+    label: "Foto-Post",
+    icon: Camera,
+    available: true,
+  },
+  {
+    id: "messenger" as const,
+    label: "Messenger-Chat",
+    icon: MessageSquareText,
+    available: true,
+  },
+  {
+    id: "microblog" as const,
+    label: "Mikroblog",
+    icon: ImageIcon,
+    available: false,
+  },
 ];
 
+const moduleCopy: Record<
+  ModuleType,
+  { eyebrow: string; title: string; description: string; editorTitle: string }
+> = {
+  photoPost: {
+    eyebrow: "Fiktiv. Lokal. Exportierbar.",
+    title: "Erstelle deinen Foto-Post.",
+    description:
+      "Gestalte einen fiktiven Beitrag und beobachte jede Änderung direkt in der Vorschau. Ohne Anmeldung und ohne Upload.",
+    editorTitle: "Foto-Post bearbeiten",
+  },
+  messenger: {
+    eyebrow: "Dialoge nachvollziehbar gestalten.",
+    title: "Baue deinen Messenger-Chat.",
+    description:
+      "Erstelle einen fiktiven Dialog, ordne Nachrichten und exportiere den vollständigen Verlauf direkt im Browser.",
+    editorTitle: "Messenger-Chat bearbeiten",
+  },
+};
+
+function useImageCleanup(image: ImageState | null) {
+  useEffect(
+    () => () => {
+      if (image) URL.revokeObjectURL(image.url);
+    },
+    [image],
+  );
+}
+
 export function App() {
+  const [activeModule, setActiveModule] = useState<ModuleType>("photoPost");
   const [photoPost, setPhotoPost] = useState(defaultPhotoPost);
-  const [profileImage, setProfileImage] = useState<ImageState | null>(null);
+  const [messenger, setMessenger] = useState(defaultMessenger);
+  const [photoProfileImage, setPhotoProfileImage] =
+    useState<ImageState | null>(null);
   const [postImage, setPostImage] = useState<ImageState | null>(null);
+  const [messengerProfileImage, setMessengerProfileImage] =
+    useState<ImageState | null>(null);
   const [mobileView, setMobileView] = useState<MobileView>("editor");
   const [imageError, setImageError] = useState<string | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
@@ -59,56 +113,70 @@ export function App() {
       ? window.location.pathname.replace(/\/+$/, "")
       : "/";
 
-  useEffect(
-    () => () => {
-      if (profileImage) URL.revokeObjectURL(profileImage.url);
-    },
-    [profileImage],
-  );
+  useImageCleanup(photoProfileImage);
+  useImageCleanup(postImage);
+  useImageCleanup(messengerProfileImage);
 
-  useEffect(
-    () => () => {
-      if (postImage) URL.revokeObjectURL(postImage.url);
-    },
-    [postImage],
-  );
+  const activeCopy = moduleCopy[activeModule];
+  const activeHasImages =
+    activeModule === "photoPost"
+      ? photoProfileImage !== null || postImage !== null
+      : messengerProfileImage !== null;
 
-  function replaceImage(
-    next: ImageState | null,
-    setter: (image: ImageState | null) => void,
-  ) {
-    setter(next);
-  }
-
-  function resetPhotoPost() {
-    const changed =
-      JSON.stringify(photoPost) !== JSON.stringify(defaultPhotoPost) ||
-      profileImage !== null ||
-      postImage !== null;
-
-    if (changed && !window.confirm("Aktuelle Eingaben wirklich zurücksetzen?")) {
-      return;
-    }
-
-    replaceImage(null, setProfileImage);
-    replaceImage(null, setPostImage);
-    setPhotoPost(defaultPhotoPost);
+  function selectModule(module: ModuleType) {
+    setActiveModule(module);
+    setMobileView("editor");
     setImageError(null);
     setExportError(null);
     setConfigStatus(null);
   }
 
-  function hasChangedContent() {
+  function isModuleChanged(module: ModuleType) {
+    if (module === "photoPost") {
+      return (
+        JSON.stringify(photoPost) !== JSON.stringify(defaultPhotoPost) ||
+        photoProfileImage !== null ||
+        postImage !== null
+      );
+    }
+
     return (
-      JSON.stringify(photoPost) !== JSON.stringify(defaultPhotoPost) ||
-      profileImage !== null ||
-      postImage !== null
+      JSON.stringify(messenger) !== JSON.stringify(defaultMessenger) ||
+      messengerProfileImage !== null
     );
+  }
+
+  function clearModuleImages(module: ModuleType) {
+    if (module === "photoPost") {
+      setPhotoProfileImage(null);
+      setPostImage(null);
+    } else {
+      setMessengerProfileImage(null);
+    }
+  }
+
+  function resetActiveModule() {
+    if (
+      isModuleChanged(activeModule) &&
+      !window.confirm("Aktuelle Eingaben wirklich zurücksetzen?")
+    ) {
+      return;
+    }
+
+    if (activeModule === "photoPost") {
+      setPhotoPost(defaultPhotoPost);
+    } else {
+      setMessenger(defaultMessenger);
+    }
+    clearModuleImages(activeModule);
+    setImageError(null);
+    setExportError(null);
+    setConfigStatus(null);
   }
 
   function handleConfigDownload() {
     if (
-      (profileImage || postImage) &&
+      activeHasImages &&
       !window.confirm(
         "Bilder sind nicht Teil der Konfigurationsdatei und müssen nach dem Laden erneut ausgewählt werden. Trotzdem speichern?",
       )
@@ -116,7 +184,12 @@ export function App() {
       return;
     }
 
-    downloadPhotoPostConfig(photoPost);
+    if (activeModule === "photoPost") {
+      downloadModuleConfig(activeModule, photoPost);
+    } else {
+      downloadModuleConfig(activeModule, messenger);
+    }
+
     setConfigStatus({
       type: "success",
       message: "Konfiguration ohne Bilder gespeichert.",
@@ -133,17 +206,23 @@ export function App() {
     try {
       const config = await readConfigFile(file);
       if (
-        hasChangedContent() &&
+        isModuleChanged(config.module) &&
         !window.confirm(
-          "Beim Laden werden die aktuellen Eingaben ersetzt. Ausgewählte Bilder werden entfernt. Konfiguration laden?",
+          "Beim Laden werden die Eingaben dieses Moduls ersetzt. Ausgewählte Bilder werden entfernt. Konfiguration laden?",
         )
       ) {
         return;
       }
 
-      setPhotoPost(config.data);
-      replaceImage(null, setProfileImage);
-      replaceImage(null, setPostImage);
+      if (config.module === "photoPost") {
+        setPhotoPost(config.data);
+      } else {
+        setMessenger(config.data);
+      }
+
+      clearModuleImages(config.module);
+      setActiveModule(config.module);
+      setMobileView("editor");
       setImageError(null);
       setConfigStatus({
         type: "success",
@@ -167,7 +246,13 @@ export function App() {
     setExportError(null);
     setExporting(format);
     try {
-      await exportElementAsImage(previewRef.current, format);
+      await exportElementAsImage(
+        previewRef.current,
+        format,
+        activeModule === "photoPost"
+          ? "mockup-studio-foto-post"
+          : "mockup-studio-messenger-chat",
+      );
     } catch {
       setExportError(
         "Das Bild konnte nicht erstellt werden. Bitte versuche es erneut.",
@@ -175,6 +260,53 @@ export function App() {
     } finally {
       setExporting(null);
     }
+  }
+
+  function renderEditor() {
+    if (activeModule === "photoPost") {
+      return (
+        <PhotoPostEditor
+          onChange={setPhotoPost}
+          onImageError={setImageError}
+          onPostImageChange={setPostImage}
+          onProfileImageChange={setPhotoProfileImage}
+          postImage={postImage}
+          profileImage={photoProfileImage}
+          value={photoPost}
+        />
+      );
+    }
+
+    return (
+      <MessengerEditor
+        onChange={setMessenger}
+        onImageError={setImageError}
+        onProfileImageChange={setMessengerProfileImage}
+        profileImage={messengerProfileImage}
+        value={messenger}
+      />
+    );
+  }
+
+  function renderPreview() {
+    if (activeModule === "photoPost") {
+      return (
+        <PhotoPostPreview
+          postImage={postImage}
+          profileImage={photoProfileImage}
+          ref={previewRef}
+          value={photoPost}
+        />
+      );
+    }
+
+    return (
+      <MessengerPreview
+        profileImage={messengerProfileImage}
+        ref={previewRef}
+        value={messenger}
+      />
+    );
   }
 
   return (
@@ -190,182 +322,171 @@ export function App() {
         />
       ) : (
         <main>
-        <section className="intro">
-          <div>
-            <span className="eyebrow">Fiktiv. Lokal. Exportierbar.</span>
-            <h1>Erstelle deinen Foto-Post.</h1>
-            <p>
-              Gestalte einen fiktiven Beitrag und beobachte jede Änderung direkt
-              in der Vorschau. Ohne Anmeldung und ohne Upload.
-            </p>
-          </div>
-        </section>
+          <section className="intro">
+            <div>
+              <span className="eyebrow">{activeCopy.eyebrow}</span>
+              <h1>{activeCopy.title}</h1>
+              <p>{activeCopy.description}</p>
+            </div>
+          </section>
 
-        <nav aria-label="Format auswählen" className="module-tabs">
-          {modules.map(({ label, icon: Icon, available }) => (
-            <button
-              aria-current={available ? "page" : undefined}
-              className={available ? "module-tab module-tab--active" : "module-tab"}
-              disabled={!available}
-              key={label}
-              type="button"
-            >
-              <Icon aria-hidden="true" size={19} />
-              <span>{label}</span>
-              {!available && <small>Folgt</small>}
-            </button>
-          ))}
-        </nav>
-
-        <div aria-label="Ansicht auswählen" className="mobile-view-toggle">
-          <button
-            aria-pressed={mobileView === "editor"}
-            onClick={() => setMobileView("editor")}
-            type="button"
-          >
-            Bearbeiten
-          </button>
-          <button
-            aria-pressed={mobileView === "preview"}
-            onClick={() => setMobileView("preview")}
-            type="button"
-          >
-            Vorschau
-          </button>
-        </div>
-
-        <section className="workspace">
-          <div
-            className={`editor-panel ${
-              mobileView === "editor" ? "mobile-panel--active" : ""
-            }`}
-          >
-            <div className="panel-heading">
-              <div>
-                <span className="panel-kicker">Editor</span>
-                <h2>Foto-Post bearbeiten</h2>
-              </div>
+          <nav aria-label="Format auswählen" className="module-tabs">
+            {modules.map(({ id, label, icon: Icon, available }) => (
               <button
-                className="icon-button"
-                onClick={resetPhotoPost}
-                title="Zurücksetzen"
+                aria-current={id === activeModule ? "page" : undefined}
+                className={
+                  id === activeModule
+                    ? "module-tab module-tab--active"
+                    : "module-tab"
+                }
+                disabled={!available}
+                key={id}
+                onClick={() => {
+                  if (available) selectModule(id as ModuleType);
+                }}
                 type="button"
               >
-                <RotateCcw aria-hidden="true" size={18} />
-                <span className="visually-hidden">Zurücksetzen</span>
+                <Icon aria-hidden="true" size={19} />
+                <span>{label}</span>
+                {!available && <small>Folgt</small>}
               </button>
-            </div>
+            ))}
+          </nav>
 
-            {imageError && (
-              <p className="status status--error" role="alert">
-                {imageError}
-              </p>
-            )}
-
-            <PhotoPostEditor
-              onChange={setPhotoPost}
-              onImageError={setImageError}
-              onPostImageChange={(image) =>
-                replaceImage(image, setPostImage)
-              }
-              onProfileImageChange={(image) =>
-                replaceImage(image, setProfileImage)
-              }
-              postImage={postImage}
-              profileImage={profileImage}
-              value={photoPost}
-            />
+          <div aria-label="Ansicht auswählen" className="mobile-view-toggle">
+            <button
+              aria-pressed={mobileView === "editor"}
+              onClick={() => setMobileView("editor")}
+              type="button"
+            >
+              Bearbeiten
+            </button>
+            <button
+              aria-pressed={mobileView === "preview"}
+              onClick={() => setMobileView("preview")}
+              type="button"
+            >
+              Vorschau
+            </button>
           </div>
 
-          <div
-            className={`preview-panel ${
-              mobileView === "preview" ? "mobile-panel--active" : ""
-            }`}
-          >
-            <div className="preview-panel__header">
-              <div>
-                <span className="panel-kicker">Live-Vorschau</span>
-                <p>Wird lokal in deinem Browser gerendert</p>
+          <section className="workspace">
+            <div
+              className={`editor-panel ${
+                mobileView === "editor" ? "mobile-panel--active" : ""
+              }`}
+            >
+              <div className="panel-heading">
+                <div>
+                  <span className="panel-kicker">Editor</span>
+                  <h2>{activeCopy.editorTitle}</h2>
+                </div>
+                <button
+                  className="icon-button"
+                  onClick={resetActiveModule}
+                  title="Zurücksetzen"
+                  type="button"
+                >
+                  <RotateCcw aria-hidden="true" size={18} />
+                  <span className="visually-hidden">Zurücksetzen</span>
+                </button>
               </div>
-              <span className="live-indicator">
-                <span />
-                Live
-              </span>
+
+              {imageError && (
+                <p className="status status--error" role="alert">
+                  {imageError}
+                </p>
+              )}
+
+              {renderEditor()}
             </div>
 
-            <div className="preview-stage">
-              <PhotoPostPreview
-                postImage={postImage}
-                profileImage={profileImage}
-                ref={previewRef}
-                value={photoPost}
-              />
-            </div>
+            <div
+              className={`preview-panel ${
+                mobileView === "preview" ? "mobile-panel--active" : ""
+              }`}
+            >
+              <div className="preview-panel__header">
+                <div>
+                  <span className="panel-kicker">Live-Vorschau</span>
+                  <p>Wird lokal in deinem Browser gerendert</p>
+                </div>
+                <span className="live-indicator">
+                  <span />
+                  Live
+                </span>
+              </div>
 
-            <div className="action-bar">
-              <div className="action-group">
-                <span>Projekt</span>
-                <button
-                  className="button button--secondary"
-                  onClick={() => configInputRef.current?.click()}
-                  type="button"
-                >
-                  <FileUp aria-hidden="true" size={17} />
-                  Laden
-                </button>
-                <input
-                  accept=".json,application/json"
-                  className="visually-hidden"
-                  onChange={handleConfigUpload}
-                  ref={configInputRef}
-                  type="file"
-                />
-                <button
-                  className="button button--secondary"
-                  onClick={handleConfigDownload}
-                  type="button"
-                >
-                  <FileDown aria-hidden="true" size={17} />
-                  Speichern
-                </button>
-              </div>
-              <div className="action-group">
-                <span>Bild</span>
-                <button
-                  className="button button--secondary"
-                  disabled={exporting !== null}
-                  onClick={() => handleImageExport("jpg")}
-                  type="button"
-                >
-                  <Download aria-hidden="true" size={17} />
-                  {exporting === "jpg" ? "Erstelle..." : "JPG"}
-                </button>
-                <button
-                  className="button button--primary"
-                  disabled={exporting !== null}
-                  onClick={() => handleImageExport("png")}
-                  type="button"
-                >
-                  <Download aria-hidden="true" size={17} />
-                  {exporting === "png" ? "Erstelle..." : "PNG"}
-                </button>
-              </div>
-            </div>
-            {exportError && (
-              <p className="status status--error" role="alert">
-                {exportError}
-              </p>
-            )}
-            {configStatus && (
-              <p
-                className={`status status--${configStatus.type}`}
-                role={configStatus.type === "error" ? "alert" : "status"}
+              <div
+                className={`preview-stage preview-stage--${activeModule}`}
               >
-                {configStatus.message}
-              </p>
-            )}
-          </div>
-        </section>
+                {renderPreview()}
+              </div>
+
+              <div className="action-bar">
+                <div className="action-group">
+                  <span>Projekt</span>
+                  <button
+                    className="button button--secondary"
+                    onClick={() => configInputRef.current?.click()}
+                    type="button"
+                  >
+                    <FileUp aria-hidden="true" size={17} />
+                    Laden
+                  </button>
+                  <input
+                    accept=".json,application/json"
+                    className="visually-hidden"
+                    onChange={handleConfigUpload}
+                    ref={configInputRef}
+                    type="file"
+                  />
+                  <button
+                    className="button button--secondary"
+                    onClick={handleConfigDownload}
+                    type="button"
+                  >
+                    <FileDown aria-hidden="true" size={17} />
+                    Speichern
+                  </button>
+                </div>
+                <div className="action-group">
+                  <span>Bild</span>
+                  <button
+                    className="button button--secondary"
+                    disabled={exporting !== null}
+                    onClick={() => handleImageExport("jpg")}
+                    type="button"
+                  >
+                    <Download aria-hidden="true" size={17} />
+                    {exporting === "jpg" ? "Erstelle..." : "JPG"}
+                  </button>
+                  <button
+                    className="button button--primary"
+                    disabled={exporting !== null}
+                    onClick={() => handleImageExport("png")}
+                    type="button"
+                  >
+                    <Download aria-hidden="true" size={17} />
+                    {exporting === "png" ? "Erstelle..." : "PNG"}
+                  </button>
+                </div>
+              </div>
+              {exportError && (
+                <p className="status status--error" role="alert">
+                  {exportError}
+                </p>
+              )}
+              {configStatus && (
+                <p
+                  className={`status status--${configStatus.type}`}
+                  role={configStatus.type === "error" ? "alert" : "status"}
+                >
+                  {configStatus.message}
+                </p>
+              )}
+            </div>
+          </section>
         </main>
       )}
 

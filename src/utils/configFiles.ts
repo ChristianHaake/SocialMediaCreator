@@ -1,16 +1,37 @@
-import type { PhotoPostState } from "../types";
+import type {
+  MessengerMessage,
+  MessengerState,
+  ModuleType,
+  PhotoPostState,
+} from "../types";
 
-export type PhotoPostConfigFile = {
+type BaseConfigFile = {
   format: "mockup-studio-config";
   version: 1;
+};
+
+export type PhotoPostConfigFile = BaseConfigFile & {
   module: "photoPost";
   data: PhotoPostState;
 };
 
+export type MessengerConfigFile = BaseConfigFile & {
+  module: "messenger";
+  data: MessengerState;
+};
+
+export type ConfigFile = PhotoPostConfigFile | MessengerConfigFile;
+
 const maxConfigSize = 1024 * 1024;
+const maxMessages = 200;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function hasOnlyKeys(value: Record<string, unknown>, allowedKeys: string[]) {
+  const allowed = new Set(allowedKeys);
+  return Object.keys(value).every((key) => allowed.has(key));
 }
 
 function isNonNegativeNumber(value: unknown): value is number {
@@ -20,19 +41,17 @@ function isNonNegativeNumber(value: unknown): value is number {
 function isPhotoPostState(value: unknown): value is PhotoPostState {
   if (!isRecord(value)) return false;
 
-  const allowedKeys = new Set([
-    "username",
-    "location",
-    "caption",
-    "imageAlt",
-    "likes",
-    "comments",
-    "showLocation",
-    "showComments",
-  ]);
-
   return (
-    Object.keys(value).every((key) => allowedKeys.has(key)) &&
+    hasOnlyKeys(value, [
+      "username",
+      "location",
+      "caption",
+      "imageAlt",
+      "likes",
+      "comments",
+      "showLocation",
+      "showComments",
+    ]) &&
     typeof value.username === "string" &&
     typeof value.location === "string" &&
     typeof value.caption === "string" &&
@@ -41,6 +60,34 @@ function isPhotoPostState(value: unknown): value is PhotoPostState {
     isNonNegativeNumber(value.comments) &&
     typeof value.showLocation === "boolean" &&
     typeof value.showComments === "boolean"
+  );
+}
+
+function isMessengerMessage(value: unknown): value is MessengerMessage {
+  if (!isRecord(value)) return false;
+
+  return (
+    hasOnlyKeys(value, ["id", "type", "text", "time"]) &&
+    typeof value.id === "string" &&
+    value.id.length > 0 &&
+    (value.type === "sent" || value.type === "received") &&
+    typeof value.text === "string" &&
+    typeof value.time === "string"
+  );
+}
+
+function isMessengerState(value: unknown): value is MessengerState {
+  if (!isRecord(value)) return false;
+
+  return (
+    hasOnlyKeys(value, ["contactName", "status", "messages"]) &&
+    typeof value.contactName === "string" &&
+    typeof value.status === "string" &&
+    Array.isArray(value.messages) &&
+    value.messages.length <= maxMessages &&
+    value.messages.every(isMessengerMessage) &&
+    new Set(value.messages.map((message) => message.id)).size ===
+      value.messages.length
   );
 }
 
@@ -55,7 +102,18 @@ export function createPhotoPostConfig(
   };
 }
 
-export function parsePhotoPostConfig(contents: string): PhotoPostConfigFile {
+export function createMessengerConfig(
+  data: MessengerState,
+): MessengerConfigFile {
+  return {
+    format: "mockup-studio-config",
+    version: 1,
+    module: "messenger",
+    data,
+  };
+}
+
+export function parseConfig(contents: string): ConfigFile {
   let value: unknown;
 
   try {
@@ -72,11 +130,23 @@ export function parsePhotoPostConfig(contents: string): PhotoPostConfigFile {
     throw new Error("Diese Konfigurationsversion wird nicht unterstützt.");
   }
 
-  if (value.module !== "photoPost" || !isPhotoPostState(value.data)) {
-    throw new Error("Die Foto-Post-Konfiguration ist unvollständig.");
+  if (value.module === "photoPost" && isPhotoPostState(value.data)) {
+    return value as PhotoPostConfigFile;
   }
 
-  return value as PhotoPostConfigFile;
+  if (value.module === "messenger" && isMessengerState(value.data)) {
+    return value as MessengerConfigFile;
+  }
+
+  throw new Error("Die Modulkonfiguration ist unvollständig.");
+}
+
+export function parsePhotoPostConfig(contents: string): PhotoPostConfigFile {
+  const config = parseConfig(contents);
+  if (config.module !== "photoPost") {
+    throw new Error("Die Datei enthält keine Foto-Post-Konfiguration.");
+  }
+  return config;
 }
 
 export async function readConfigFile(file: File) {
@@ -84,18 +154,40 @@ export async function readConfigFile(file: File) {
     throw new Error("Die Konfigurationsdatei darf höchstens 1 MB groß sein.");
   }
 
-  return parsePhotoPostConfig(await file.text());
+  return parseConfig(await file.text());
 }
 
-export function downloadPhotoPostConfig(data: PhotoPostState) {
-  const contents = JSON.stringify(createPhotoPostConfig(data), null, 2);
+function downloadConfig(config: ConfigFile, fileName: string) {
+  const contents = JSON.stringify(config, null, 2);
   const url = URL.createObjectURL(
     new Blob([contents], { type: "application/json" }),
   );
   const link = document.createElement("a");
 
-  link.download = "mockup-studio-foto-post.json";
+  link.download = fileName;
   link.href = url;
   link.click();
   window.setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+export function downloadModuleConfig(
+  module: ModuleType,
+  data: PhotoPostState | MessengerState,
+) {
+  if (module === "photoPost") {
+    downloadConfig(
+      createPhotoPostConfig(data as PhotoPostState),
+      "mockup-studio-foto-post.json",
+    );
+    return;
+  }
+
+  downloadConfig(
+    createMessengerConfig(data as MessengerState),
+    "mockup-studio-messenger-chat.json",
+  );
+}
+
+export function downloadPhotoPostConfig(data: PhotoPostState) {
+  downloadModuleConfig("photoPost", data);
 }

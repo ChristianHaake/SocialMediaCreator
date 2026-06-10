@@ -15,8 +15,8 @@ hochzuladen.
 
 ## Entwicklungsstand
 
-Version 0.1 enthält den Foto-Post. Messenger-Chat und Mikroblog folgen in
-weiteren Entwicklungsschritten.
+Version 0.2 enthält Foto-Post und Messenger-Chat. Das Mikroblog-Modul folgt in
+einem weiteren Entwicklungsschritt.
 
 ## Quellcode
 

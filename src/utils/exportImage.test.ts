@@ -46,4 +46,23 @@ describe("exportElementAsImage", () => {
       expect.objectContaining({ quality: 0.92 }),
     );
   });
+
+  it("uses the module-specific export file name", async () => {
+    const click = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(() => undefined);
+    const element = document.createElement("div");
+    Object.defineProperty(element, "offsetWidth", { value: 540 });
+
+    await exportElementAsImage(
+      element,
+      "png",
+      "mockup-studio-messenger-chat",
+    );
+
+    expect(click).toHaveBeenCalledOnce();
+    expect((click.mock.instances[0] as HTMLAnchorElement).download).toBe(
+      "mockup-studio-messenger-chat.png",
+    );
+  });
 });
