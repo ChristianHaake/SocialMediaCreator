@@ -21,12 +21,22 @@ Veröffentlichung in eine versionierte Sektion verschoben.
   exportieren.
 - PNG- und JPG-Export mit modulspezifischem Dateinamen.
 - Automatisierte UI- und Konfigurationstests für das Mikroblog-Modul.
+- Browser-E2E-Suite für Chromium, Firefox und WebKit.
+- Browserprüfungen für Bild- und Konfigurationsdownloads aller Module.
+- Automatisierte Prüfung der Netzwerkfreiheit nach dem initialen Laden.
+- Responsive Browserprüfung bei 320 CSS-Pixeln.
 
 ### Geändert
 
 - Alle drei im Produktplan vorgesehenen Mockup-Module sind auswählbar.
+- Die Modulnavigation verwendet semantische Tabs und unterstützt
+  Pfeiltasten sowie Home und Ende.
+- Der Lehrkräfte-Dialog hält den Tastaturfokus und gibt ihn nach dem Schließen
+  an den auslösenden Button zurück.
 
 ### Behoben
+
+- Fokus-Rückgabe des Lehrkräfte-Dialogs für Safari/WebKit vereinheitlicht.
 
 ### Sicherheit
 

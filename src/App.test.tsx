@@ -1,4 +1,10 @@
-import { cleanup, render, screen, within } from "@testing-library/react";
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { App } from "./App";
@@ -59,6 +65,23 @@ describe("App", () => {
     ).toBeInTheDocument();
   });
 
+  it("returns focus after closing the teacher information dialog", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const trigger = screen.getByRole("button", { name: "Für Lehrkräfte" });
+    await user.click(trigger);
+    expect(
+      screen.getByRole("button", { name: "Dialog schließen" }),
+    ).toHaveFocus();
+
+    await user.keyboard("{Escape}");
+    expect(
+      screen.queryByRole("dialog", { name: "Hinweise für Lehrkräfte" }),
+    ).not.toBeInTheDocument();
+    await waitFor(() => expect(trigger).toHaveFocus());
+  });
+
   it("renders direct content routes", () => {
     window.history.replaceState({}, "", "/datenschutz");
     render(<App />);
@@ -83,7 +106,7 @@ describe("App", () => {
     render(<App />);
 
     await user.click(
-      screen.getByRole("button", { name: "Messenger-Chat" }),
+      screen.getByRole("tab", { name: "Messenger-Chat" }),
     );
     expect(
       screen.getByRole("heading", {
@@ -120,7 +143,7 @@ describe("App", () => {
     render(<App />);
 
     await user.click(
-      screen.getByRole("button", { name: "Messenger-Chat" }),
+      screen.getByRole("tab", { name: "Messenger-Chat" }),
     );
     await user.click(
       screen.getByRole("button", {
@@ -141,7 +164,7 @@ describe("App", () => {
     render(<App />);
 
     await user.click(
-      screen.getByRole("button", { name: "Messenger-Chat" }),
+      screen.getByRole("tab", { name: "Messenger-Chat" }),
     );
     await user.click(
       screen.getByRole("button", { name: "Nachricht 1 löschen" }),
@@ -158,25 +181,47 @@ describe("App", () => {
     render(<App />);
 
     await user.click(
-      screen.getByRole("button", { name: "Messenger-Chat" }),
+      screen.getByRole("tab", { name: "Messenger-Chat" }),
     );
     const contactName = screen.getByLabelText("Kontaktname");
     await user.clear(contactName);
     await user.type(contactName, "Medienkurs");
 
-    await user.click(screen.getByRole("button", { name: "Foto-Post" }));
+    await user.click(screen.getByRole("tab", { name: "Foto-Post" }));
     await user.click(
-      screen.getByRole("button", { name: "Messenger-Chat" }),
+      screen.getByRole("tab", { name: "Messenger-Chat" }),
     );
 
     expect(screen.getByLabelText("Kontaktname")).toHaveValue("Medienkurs");
+  });
+
+  it("switches module tabs with arrow, home and end keys", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const photoTab = screen.getByRole("tab", { name: "Foto-Post" });
+    const messengerTab = screen.getByRole("tab", { name: "Messenger-Chat" });
+    const microblogTab = screen.getByRole("tab", { name: "Mikroblog" });
+
+    photoTab.focus();
+    await user.keyboard("{ArrowRight}");
+    expect(messengerTab).toHaveFocus();
+    expect(messengerTab).toHaveAttribute("aria-selected", "true");
+
+    await user.keyboard("{End}");
+    expect(microblogTab).toHaveFocus();
+    expect(microblogTab).toHaveAttribute("aria-selected", "true");
+
+    await user.keyboard("{Home}");
+    expect(photoTab).toHaveFocus();
+    expect(photoTab).toHaveAttribute("aria-selected", "true");
   });
 
   it("updates the microblog preview and keeps its state", async () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(screen.getByRole("button", { name: "Mikroblog" }));
+    await user.click(screen.getByRole("tab", { name: "Mikroblog" }));
 
     expect(
       screen.getByRole("heading", {
@@ -201,8 +246,8 @@ describe("App", () => {
       within(preview as HTMLElement).getByText("Kontext vor Reichweite."),
     ).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Foto-Post" }));
-    await user.click(screen.getByRole("button", { name: "Mikroblog" }));
+    await user.click(screen.getByRole("tab", { name: "Foto-Post" }));
+    await user.click(screen.getByRole("tab", { name: "Mikroblog" }));
     expect(screen.getByLabelText("Anzeigename")).toHaveValue("Quellenlabor");
   });
 
@@ -210,7 +255,7 @@ describe("App", () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(screen.getByRole("button", { name: "Mikroblog" }));
+    await user.click(screen.getByRole("tab", { name: "Mikroblog" }));
     const text = screen.getByLabelText("Beitragstext");
     await user.clear(text);
     await user.type(text, "a".repeat(281));
@@ -223,7 +268,7 @@ describe("App", () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(screen.getByRole("button", { name: "Mikroblog" }));
+    await user.click(screen.getByRole("tab", { name: "Mikroblog" }));
     const preview = document.querySelector(".microblog-preview");
     expect(preview).not.toBeNull();
     expect(within(preview as HTMLElement).getByText("10:15 · 11.06.2026")).toBeInTheDocument();
