@@ -69,6 +69,61 @@ describe("App", () => {
     ).toBeInTheDocument();
   });
 
+  it("inserts photo posts after the selected post and reorders them", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Beitrag" }));
+    await user.click(
+      screen.getByRole("button", { name: "Beitrag 1 auswählen" }),
+    );
+    await user.click(screen.getByRole("button", { name: "Beitrag" }));
+
+    const caption = screen.getByLabelText("Beschreibung");
+    await user.clear(caption);
+    await user.type(caption, "Eingefügter Beitrag");
+
+    let previews = document.querySelectorAll(".photo-post");
+    expect(previews).toHaveLength(3);
+    expect(previews[1]).toHaveTextContent("Eingefügter Beitrag");
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Beitrag 2 nach oben verschieben",
+      }),
+    );
+    previews = document.querySelectorAll(".photo-post");
+    expect(previews[0]).toHaveTextContent("Eingefügter Beitrag");
+    expect(screen.getByLabelText("Beschreibung")).toHaveValue(
+      "Eingefügter Beitrag",
+    );
+  });
+
+  it("deletes first, middle and last feed posts without removing the project", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Beitrag" }));
+    await user.click(screen.getByRole("button", { name: "Beitrag" }));
+    await user.click(screen.getByRole("button", { name: "Beitrag" }));
+    expect(document.querySelectorAll(".photo-post")).toHaveLength(4);
+
+    await user.click(
+      screen.getByRole("button", { name: "Beitrag 4 löschen" }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Beitrag 2 löschen" }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Beitrag 1 löschen" }),
+    );
+
+    expect(document.querySelectorAll(".photo-post")).toHaveLength(1);
+    expect(
+      screen.getByRole("button", { name: "Beitrag 1 löschen" }),
+    ).toBeDisabled();
+  });
+
   it("asks before resetting changed content", async () => {
     const user = userEvent.setup();
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
@@ -326,6 +381,40 @@ describe("App", () => {
         "Antwort am zweiten Beitrag",
       ),
     ).toBeInTheDocument();
+  });
+
+  it("switches microblog feed and thread layouts and reorders posts", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("tab", { name: "Mikroblog" }));
+    expect(document.querySelector(".microblog-feed")).toHaveClass(
+      "microblog-feed--feed",
+    );
+
+    await user.selectOptions(
+      screen.getByLabelText("Timeline-Darstellung"),
+      "thread",
+    );
+    expect(document.querySelector(".microblog-feed")).toHaveClass(
+      "microblog-feed--thread",
+    );
+
+    await user.click(screen.getByRole("button", { name: "Beitrag" }));
+    const text = screen.getByLabelText("Beitragstext");
+    await user.clear(text);
+    await user.type(text, "Thread-Fortsetzung");
+    await user.click(
+      screen.getByRole("button", {
+        name: "Beitrag 2 nach oben verschieben",
+      }),
+    );
+
+    const posts = document.querySelectorAll(".microblog-preview");
+    expect(posts[0]).toHaveTextContent("Thread-Fortsetzung");
+    expect(screen.getByLabelText("Beitragstext")).toHaveValue(
+      "Thread-Fortsetzung",
+    );
   });
 
   it("shows a non-blocking warning for long microblog posts", async () => {

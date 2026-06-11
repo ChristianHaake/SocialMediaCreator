@@ -1,6 +1,7 @@
 export type ModuleType = "photoPost" | "messenger" | "microblog";
 export type Theme = "light" | "dim" | "dark";
 export type PostViewMode = "post" | "comments";
+export type MicroblogLayoutMode = "feed" | "thread";
 
 export type CommentReply = {
   id: string;
@@ -83,6 +84,7 @@ export type MicroblogPost = {
 
 export type MicroblogState = {
   theme: Theme;
+  layoutMode: MicroblogLayoutMode;
   activePostId: string;
   posts: MicroblogPost[];
 };
@@ -227,6 +229,7 @@ export const defaultMicroblogItem: MicroblogPost = {
 
 export const defaultMicroblog: MicroblogState = {
   theme: "light",
+  layoutMode: "feed",
   activePostId: defaultMicroblogItem.id,
   posts: [defaultMicroblogItem],
 };

@@ -280,3 +280,15 @@ Nicht enthalten:
 - PDF-Export im A4-Hochformat
 - Lokale Verifikationsseite unter `/verifizieren`
 - Config V3 mit Importmigration aus V1 und V2
+
+## 12. Sprint 8
+
+- Config V4 ergänzt `layoutMode: "feed" | "thread"` für Mikroblog-Projekte und
+  migriert V1 bis V3 auf den Feed-Modus.
+- Foto- und Mikroblog-Beiträge werden ID-basiert per Drag-and-Drop, Touch,
+  Tastatur oder Pfeilschaltflächen sortiert.
+- Neue Beiträge werden hinter dem aktiven Beitrag eingefügt.
+- Mikroblog-Vorschauen unterstützen getrennte Feed-Einträge und verbundene
+  Thread-Beiträge.
+- Bildexporte übernehmen die vollständige Reihenfolge; PDF beginnt jeden
+  Hauptbeitrag auf einer neuen Seite.

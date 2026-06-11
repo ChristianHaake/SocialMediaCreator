@@ -29,18 +29,27 @@ export const MicroblogPreview = forwardRef<
 >(function MicroblogPreview({ value, images }, ref) {
   return (
     <div
-      className={`microblog-feed simulation-theme theme-${value.theme}`}
+      className={`microblog-feed microblog-feed--${value.layoutMode} simulation-theme theme-${value.theme}`}
       ref={ref}
     >
-      {value.posts.map((post) => {
+      {value.posts.map((post, index) => {
         const displayName = post.displayName.trim() || "Anzeigename";
         const postImages = images[post.id];
         return (
           <article
             className={
-              post.viewMode === "comments"
-                ? "microblog-preview microblog-preview--comments"
-                : "microblog-preview"
+              [
+                "microblog-preview",
+                post.viewMode === "comments"
+                  ? "microblog-preview--comments"
+                  : "",
+                index === 0 ? "microblog-preview--first" : "",
+                index === value.posts.length - 1
+                  ? "microblog-preview--last"
+                  : "",
+              ]
+                .filter(Boolean)
+                .join(" ")
             }
             key={post.id}
           >

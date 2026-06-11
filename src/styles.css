@@ -575,6 +575,10 @@ main {
   list-style: none;
 }
 
+.post-selector-list--sorting {
+  cursor: grabbing;
+}
+
 .post-selector {
   display: flex;
   gap: 8px;
@@ -583,6 +587,24 @@ main {
   border: 1px solid var(--border-soft);
   border-radius: 12px;
   background: #f8fafc;
+}
+
+.post-selector--dragging {
+  z-index: 3;
+  opacity: 0.72;
+  box-shadow: 0 12px 28px rgb(15 23 42 / 18%);
+}
+
+.post-selector__drag {
+  flex: 0 0 auto;
+  cursor: grab;
+  touch-action: none;
+}
+
+.post-selector__actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 4px;
 }
 
 .post-selector--active {
@@ -750,8 +772,13 @@ main {
 .photo-feed {
   display: grid;
   width: min(100%, 430px);
-  gap: 24px;
+  gap: 18px;
+  padding: 18px 0;
   background: var(--simulation-bg);
+}
+
+.photo-feed .photo-post + .photo-post {
+  border-top-width: 5px;
 }
 
 .photo-post {
@@ -1228,8 +1255,74 @@ main {
 .microblog-feed {
   display: grid;
   width: min(100%, 520px);
-  gap: 20px;
   background: var(--simulation-bg);
+}
+
+.microblog-feed--feed {
+  gap: 0;
+  border: 1px solid var(--simulation-border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.microblog-feed--feed .microblog-preview {
+  border: 0;
+  border-bottom: 1px solid var(--simulation-border);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.microblog-feed--feed .microblog-preview--last {
+  border-bottom: 0;
+}
+
+.microblog-feed--thread {
+  gap: 0;
+  border: 1px solid var(--simulation-border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.microblog-feed--thread .microblog-preview {
+  position: relative;
+  border: 0;
+  border-bottom: 1px solid var(--simulation-border);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.microblog-feed--thread .microblog-preview--last {
+  border-bottom: 0;
+}
+
+.microblog-feed--thread .microblog-preview:not(.microblog-preview--last)::after {
+  position: absolute;
+  z-index: 0;
+  top: 58px;
+  bottom: -18px;
+  left: 46px;
+  width: 2px;
+  background: var(--simulation-border);
+  content: "";
+}
+
+.microblog-feed--thread .microblog-preview__avatar {
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 0 0 4px var(--simulation-surface);
+}
+
+.microblog-feed--thread .microblog-preview > * {
+  position: relative;
+  z-index: 1;
+}
+
+.microblog-feed--thread .comment-thread {
+  background: var(--simulation-surface);
+}
+
+.microblog-feed--thread .microblog-preview__text {
+  margin-top: 12px;
 }
 
 .microblog-preview {
