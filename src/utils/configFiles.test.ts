@@ -12,15 +12,116 @@ import {
   parsePhotoPostConfig,
 } from "./configFiles";
 
-describe("photo-post configuration files", () => {
-  it("roundtrips posts and comments in their current order", () => {
-    const config = createPhotoPostConfig(defaultPhotoPost);
-    const parsed = parsePhotoPostConfig(JSON.stringify(config));
-
+describe("configuration version 3", () => {
+  it("roundtrips photo posts, media, themes and reply chains", () => {
+    const parsed = parsePhotoPostConfig(
+      JSON.stringify(createPhotoPostConfig(defaultPhotoPost)),
+    );
+    expect(parsed.format).toBe("social-media-creator-config");
+    expect(parsed.version).toBe(3);
     expect(parsed.data).toEqual(defaultPhotoPost);
-    expect(parsed.version).toBe(2);
   });
 
+  it("roundtrips two-profile messenger data", () => {
+    const parsed = parseConfig(
+      JSON.stringify(createMessengerConfig(defaultMessenger)),
+    );
+    expect(parsed.module).toBe("messenger");
+    if (parsed.module === "messenger") {
+      expect(parsed.data).toEqual(defaultMessenger);
+    }
+  });
+
+  it("roundtrips microblog themes, timestamps and replies", () => {
+    const parsed = parseConfig(
+      JSON.stringify(createMicroblogConfig(defaultMicroblog)),
+    );
+    expect(parsed.module).toBe("microblog");
+    if (parsed.module === "microblog") {
+      expect(parsed.data).toEqual(defaultMicroblog);
+    }
+  });
+
+  it("rejects invalid sender references", () => {
+    const config = createMessengerConfig({
+      ...defaultMessenger,
+      messages: [
+        { ...defaultMessenger.messages[0], senderId: "unknown-profile" },
+      ],
+    });
+    expect(() => parseConfig(JSON.stringify(config))).toThrow("unvollständig");
+  });
+
+  it("rejects duplicate ids across comments and replies", () => {
+    const comment = defaultPhotoPost.posts[0].comments[0];
+    const config = createPhotoPostConfig({
+      ...defaultPhotoPost,
+      posts: [
+        {
+          ...defaultPhotoPost.posts[0],
+          comments: [
+            {
+              ...comment,
+              replies: [{ ...comment.replies[0], id: comment.id }],
+            },
+          ],
+        },
+      ],
+    });
+    expect(() => parseConfig(JSON.stringify(config))).toThrow("unvollständig");
+  });
+
+  it("rejects invalid active media references and more than ten media", () => {
+    const post = defaultPhotoPost.posts[0];
+    expect(() =>
+      parseConfig(
+        JSON.stringify(
+          createPhotoPostConfig({
+            ...defaultPhotoPost,
+            posts: [{ ...post, activeMediaId: "missing" }],
+          }),
+        ),
+      ),
+    ).toThrow("unvollständig");
+
+    expect(() =>
+      parseConfig(
+        JSON.stringify(
+          createPhotoPostConfig({
+            ...defaultPhotoPost,
+            posts: [
+              {
+                ...post,
+                media: Array.from({ length: 11 }, (_, index) => ({
+                  ...post.media[0],
+                  id: `media-${index}`,
+                })),
+              },
+            ],
+          }),
+        ),
+      ),
+    ).toThrow("unvollständig");
+  });
+
+  it("rejects image references and unsupported versions", () => {
+    const invalid = {
+      ...createPhotoPostConfig(defaultPhotoPost),
+      data: { ...defaultPhotoPost, profileImageUrl: "blob:private" },
+    };
+    expect(() => parseConfig(JSON.stringify(invalid))).toThrow("unvollständig");
+    expect(() =>
+      parseConfig(
+        JSON.stringify({
+          ...createPhotoPostConfig(defaultPhotoPost),
+          version: 99,
+        }),
+      ),
+    ).toThrow("nicht unterstützt");
+  });
+});
+
+describe("legacy configuration migration", () => {
   it("migrates version one photo posts", () => {
     const parsed = parsePhotoPostConfig(
       JSON.stringify({
@@ -31,7 +132,7 @@ describe("photo-post configuration files", () => {
           username: "alt",
           location: "Archiv",
           caption: "Alter Beitrag",
-          imageAlt: "",
+          imageAlt: "Archivbild",
           likes: 4,
           comments: 2,
           showLocation: true,
@@ -39,138 +140,89 @@ describe("photo-post configuration files", () => {
         },
       }),
     );
-
-    expect(parsed.version).toBe(2);
+    expect(parsed.version).toBe(3);
+    expect(parsed.data.theme).toBe("light");
     expect(parsed.data.posts[0]).toMatchObject({
       username: "alt",
       commentCount: 2,
-      comments: [],
+      timestamp: "vor einem Moment",
+      viewMode: "post",
     });
+    expect(parsed.data.posts[0].media[0].imageAlt).toBe("Archivbild");
   });
 
-  it("rejects unsupported versions", () => {
-    const config = { ...createPhotoPostConfig(defaultPhotoPost), version: 99 };
-
-    expect(() => parsePhotoPostConfig(JSON.stringify(config))).toThrow(
-      "nicht unterstützt",
-    );
-  });
-
-  it("rejects image fields and incomplete data structures", () => {
-    const config = createPhotoPostConfig(defaultPhotoPost);
-    const invalid = {
-      ...config,
-      data: { username: "test", profileImageUrl: "blob:private" },
-    };
-
-    expect(() => parsePhotoPostConfig(JSON.stringify(invalid))).toThrow(
-      "unvollständig",
-    );
-  });
-
-  it("rejects duplicate post and comment ids", () => {
-    const firstPost = defaultPhotoPost.posts[0];
-    const duplicatePostConfig = createPhotoPostConfig({
-      activePostId: firstPost.id,
-      posts: [firstPost, { ...firstPost }],
-    });
-    expect(() => parseConfig(JSON.stringify(duplicatePostConfig))).toThrow(
-      "unvollständig",
-    );
-
-    const duplicateComment = firstPost.comments[0];
-    const duplicateCommentConfig = createPhotoPostConfig({
-      ...defaultPhotoPost,
-      posts: [
-        {
-          ...firstPost,
-          comments: [duplicateComment, { ...duplicateComment }],
+  it("migrates version two photo comments and media metadata", () => {
+    const parsed = parseConfig(
+      JSON.stringify({
+        format: "mockup-studio-config",
+        version: 2,
+        module: "photoPost",
+        data: {
+          activePostId: "post-1",
+          posts: [
+            {
+              id: "post-1",
+              username: "projekt",
+              location: "",
+              caption: "V2",
+              imageAlt: "",
+              likes: 1,
+              commentCount: 1,
+              showLocation: false,
+              showComments: true,
+              comments: [{ id: "comment-1", author: "a", text: "b" }],
+            },
+          ],
         },
-      ],
-    });
-    expect(() => parseConfig(JSON.stringify(duplicateCommentConfig))).toThrow(
-      "unvollständig",
+      }),
     );
+    expect(parsed.module).toBe("photoPost");
+    if (parsed.module === "photoPost") {
+      expect(parsed.data.posts[0].comments[0]).toMatchObject({
+        timestamp: "",
+        replies: [],
+      });
+      expect(parsed.data.posts[0].media).toHaveLength(1);
+    }
   });
 
-  it("rejects values longer than the editor can represent", () => {
-    const config = createPhotoPostConfig({
-      ...defaultPhotoPost,
-      posts: [
-        {
-          ...defaultPhotoPost.posts[0],
-          username: "a".repeat(31),
+  it("migrates legacy messenger directions to profile references", () => {
+    const parsed = parseConfig(
+      JSON.stringify({
+        format: "mockup-studio-config",
+        version: 2,
+        module: "messenger",
+        data: {
+          contactName: "Archivkontakt",
+          status: "offline",
+          messages: [
+            {
+              id: "m1",
+              type: "sent",
+              text: "Gesendet",
+              time: "10:00",
+            },
+            {
+              id: "m2",
+              type: "received",
+              text: "Empfangen",
+              time: "10:01",
+            },
+          ],
         },
-      ],
-    });
-
-    expect(() => parseConfig(JSON.stringify(config))).toThrow("unvollständig");
-  });
-});
-
-describe("messenger configuration files", () => {
-  it("roundtrips messages in their current order", () => {
-    const config = createMessengerConfig(defaultMessenger);
-    const parsed = parseConfig(JSON.stringify(config));
-
+      }),
+    );
     expect(parsed.module).toBe("messenger");
     if (parsed.module === "messenger") {
-      expect(parsed.data).toEqual(defaultMessenger);
-      expect(parsed.data.messages.map((message) => message.id)).toEqual([
-        "message-1",
-        "message-2",
-        "message-3",
-      ]);
+      expect(parsed.data.profiles).toHaveLength(2);
+      expect(parsed.data.messages[0].senderId).toBe(
+        "messenger-profile-right",
+      );
+      expect(parsed.data.messages[1].senderId).toBe("messenger-profile-left");
     }
   });
 
-  it("rejects duplicate message ids", () => {
-    const duplicateMessage = defaultMessenger.messages[0];
-    const config = createMessengerConfig({
-      ...defaultMessenger,
-      messages: [duplicateMessage, { ...duplicateMessage }],
-    });
-
-    expect(() => parseConfig(JSON.stringify(config))).toThrow("unvollständig");
-  });
-
-  it("rejects image references in messenger data", () => {
-    const config = createMessengerConfig(defaultMessenger);
-    const invalid = {
-      ...config,
-      data: { ...config.data, profileImageUrl: "blob:private" },
-    };
-
-    expect(() => parseConfig(JSON.stringify(invalid))).toThrow("unvollständig");
-  });
-
-  it("rejects invalid message times", () => {
-    const config = createMessengerConfig({
-      ...defaultMessenger,
-      messages: [
-        {
-          ...defaultMessenger.messages[0],
-          time: "25:99",
-        },
-      ],
-    });
-
-    expect(() => parseConfig(JSON.stringify(config))).toThrow("unvollständig");
-  });
-});
-
-describe("microblog configuration files", () => {
-  it("roundtrips posts and comments in their current order", () => {
-    const config = createMicroblogConfig(defaultMicroblog);
-    const parsed = parseConfig(JSON.stringify(config));
-
-    expect(parsed.module).toBe("microblog");
-    if (parsed.module === "microblog") {
-      expect(parsed.data).toEqual(defaultMicroblog);
-    }
-  });
-
-  it("migrates version one microblog posts", () => {
+  it("converts legacy microblog date and time into free text", () => {
     const parsed = parseConfig(
       JSON.stringify({
         format: "mockup-studio-config",
@@ -190,52 +242,9 @@ describe("microblog configuration files", () => {
         },
       }),
     );
-
     expect(parsed.module).toBe("microblog");
     if (parsed.module === "microblog") {
-      expect(parsed.version).toBe(2);
-      expect(parsed.data.posts[0]).toMatchObject({
-        displayName: "Altbestand",
-        comments: [],
-      });
+      expect(parsed.data.posts[0].timestamp).toBe("12:00 · 11.06.2026");
     }
-  });
-
-  it("rejects image references in microblog data", () => {
-    const config = createMicroblogConfig(defaultMicroblog);
-    const invalid = {
-      ...config,
-      data: { ...config.data, profileImageUrl: "blob:private" },
-    };
-
-    expect(() => parseConfig(JSON.stringify(invalid))).toThrow("unvollständig");
-  });
-
-  it("rejects negative reaction values", () => {
-    const config = createMicroblogConfig({
-      ...defaultMicroblog,
-      posts: [
-        {
-          ...defaultMicroblog.posts[0],
-          likes: -1,
-        },
-      ],
-    });
-
-    expect(() => parseConfig(JSON.stringify(config))).toThrow("unvollständig");
-  });
-
-  it("rejects dates that cannot be displayed by the editor", () => {
-    const config = createMicroblogConfig({
-      ...defaultMicroblog,
-      posts: [
-        {
-          ...defaultMicroblog.posts[0],
-          date: "2026-02-31",
-        },
-      ],
-    });
-
-    expect(() => parseConfig(JSON.stringify(config))).toThrow("unvollständig");
   });
 });

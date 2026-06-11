@@ -13,6 +13,16 @@ Veröffentlichung in eine versionierte Sektion verschoben.
 
 ### Hinzugefügt
 
+- Light-, Dim- und Dark-Mode pro Simulationsmodul.
+- Zwei explizite Messenger-Profile mit Profilbildern, Status,
+  Nachrichtenzuweisung, freien Zeitstempeln und Gesehen-Status.
+- Zweistufige Kommentare mit individuellen Profilbildern und Zeitstempeln.
+- Dedizierte Kommentaransichten für Foto-Post und Mikroblog.
+- Foto-Karussells mit bis zu zehn sortierbaren Medien.
+- Video-Simulation mit Thumbnail, Play-Overlay, Dauer und Aufrufzahl.
+- PDF-Export im A4-Hochformat.
+- Lokaler Herkunftsmarker für PNG und JPG sowie Verifikationsseite.
+- Konfigurationsformat Version 3 mit Migration aus Version 1 und 2.
 - Foto-Post und Mikroblog unterstützen mehrere Beiträge in einem Projekt.
 - Kommentare lassen sich direkt an einzelne Foto- und Mikroblog-Beiträge
   anhängen, bearbeiten und löschen.
@@ -37,6 +47,9 @@ Veröffentlichung in eine versionierte Sektion verschoben.
 
 ### Geändert
 
+- Mikroblog-Datum und -Uhrzeit wurden durch einen freien Zeitstempel ersetzt.
+- PNG- und JPG-Exporte werden Blob-basiert erzeugt und mit einem prüfbaren
+  lokalen Marker versehen.
 - Produktname und Exportdateinamen wurden auf `SocialMediaCreator` umgestellt.
 - PNG- und JPG-Exporte enthalten den vollständigen Feed aller Beiträge.
 - Alle drei im Produktplan vorgesehenen Mockup-Module sind auswählbar.

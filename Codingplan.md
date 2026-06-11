@@ -8,7 +8,7 @@ Lehrkräfte.
 
 Alle Inhalte werden ausschließlich im Browser verarbeitet. Es gibt kein
 Backend, keine Datenbank, keine Anmeldung, kein Tracking und keinen Upload.
-Die Anwendung wird als statische Website über Cloudflare Pages ausgeliefert.
+Die Anwendung wird als statische Website über Cloudflare Workers ausgeliefert.
 
 Die App-Oberfläche und die Mockups verwenden neutrale Bezeichnungen, eigene
 Farbvarianten und generische Icons. Sie orientieren sich an bekannten
@@ -23,7 +23,7 @@ Kommunikationsmustern, bilden bestehende Plattformen aber nicht pixelgenau nach.
 - Normales CSS mit Custom Properties
 - Lucide Icons
 - `html-to-image` für PNG- und JPG-Export
-- Statisches Deployment über Cloudflare Pages
+- Statisches Deployment über Cloudflare Workers
 - Keine dauerhafte Speicherung im Browser in Version 0.1
 
 ## 3. Module
@@ -144,7 +144,7 @@ den Beispieldaten verändert wurde.
 - Statische Inhaltsseiten für Hilfe, Projektinformationen, Impressum und
   Datenschutz sind über einen Footer erreichbar.
 - Die Inhaltsseiten werden aus Markdown-Dateien unter `src/content/` gebaut.
-- Cloudflare Pages liefert für SPA-Routen den Einstiegspunkt aus; ein
+- Cloudflare Workers liefert für SPA-Routen den Einstiegspunkt aus; ein
   `HashRouter` ist nicht erforderlich.
 
 ## 6. Barrierefreiheit
@@ -167,8 +167,8 @@ den Beispieldaten verändert wurde.
 type ModuleType = "photoPost" | "messenger" | "microblog";
 
 type ConfigFile = {
-  format: "mockup-studio-config";
-  version: 1;
+  format: "social-media-creator-config";
+  version: 3;
   module: ModuleType;
   data: PhotoPostConfig | MessengerConfig | MicroblogConfig;
 };
@@ -241,7 +241,7 @@ die serialisierbaren Konfigurationstypen.
 - Responsive Layout und Barrierefreiheit prüfen
 - Tests in Chromium, Firefox und WebKit durchführen
 - Netzwerkfreiheit der Kernabläufe prüfen
-- Cloudflare-Pages-Konfiguration und SPA-Fallback ergänzen
+- Cloudflare-Workers-Konfiguration und SPA-Fallback ergänzen
 
 ## 10. Umfang Version 0.1
 
@@ -265,3 +265,18 @@ Nicht enthalten:
 - Vorlagenbibliothek
 - Plattformlogos oder pixelgenaue Plattformkopien
 - Analyse oder Tracking
+
+## 11. Sprint 7
+
+- Light-, Dim- und Dark-Theme pro Modul
+- Zwei explizite Messenger-Profile mit frei zuweisbaren Nachrichten,
+  Zeitstempeln und Gesehen-Status
+- Freie Beitragszeitstempel für Foto-Post und Mikroblog
+- Zweistufige Kommentarstrukturen mit Profilbildern und Zeitstempeln
+- Kommentaransicht für lange Diskussionen
+- Foto-Karussells mit bis zu zehn Medien und sortierbarer Reihenfolge
+- Video-Simulation über Thumbnail, Play-Overlay, Dauer und Aufrufzahl
+- PNG- und JPG-Exporte mit lokal prüfbarem Herkunftsmarker
+- PDF-Export im A4-Hochformat
+- Lokale Verifikationsseite unter `/verifizieren`
+- Config V3 mit Importmigration aus V1 und V2

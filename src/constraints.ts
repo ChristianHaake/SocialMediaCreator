@@ -5,13 +5,18 @@ export const fieldLimits = {
     commentId: 100,
     commentAuthor: 40,
     commentText: 500,
+    timestamp: 80,
     comments: 100,
+    replies: 100,
   },
   photoPost: {
     username: 30,
     location: 50,
     caption: 500,
     imageAlt: 160,
+    media: 10,
+    videoDuration: 20,
+    videoViews: 30,
   },
   messenger: {
     contactName: 40,
@@ -19,6 +24,7 @@ export const fieldLimits = {
     messageId: 100,
     messageText: 1000,
     messages: 200,
+    profileId: 100,
   },
   microblog: {
     displayName: 50,

@@ -5,6 +5,7 @@ export function AppFooter() {
       <nav aria-label="Fußnavigation">
         <a href="/hilfe">Hilfe</a>
         <a href="/ueber">Über das Projekt</a>
+        <a href="/verifizieren">Bild verifizieren</a>
         <a href="/datenschutz">Datenschutz</a>
         <a href="/impressum">Impressum</a>
         <a

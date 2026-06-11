@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { forwardRef } from "react";
 import type { MicroblogImages, MicroblogState } from "../types";
+import { CommentThread } from "./CommentThread";
 
 type MicroblogPreviewProps = {
   value: MicroblogState;
@@ -22,32 +23,33 @@ function formatHandle(handle: string) {
   return `@${normalized || "handle"}`;
 }
 
-function formatDate(date: string) {
-  const [year, month, day] = date.split("-");
-  return year && month && day ? `${day}.${month}.${year}` : date;
-}
-
 export const MicroblogPreview = forwardRef<
   HTMLDivElement,
   MicroblogPreviewProps
 >(function MicroblogPreview({ value, images }, ref) {
   return (
-    <div className="microblog-feed" ref={ref}>
+    <div
+      className={`microblog-feed simulation-theme theme-${value.theme}`}
+      ref={ref}
+    >
       {value.posts.map((post) => {
         const displayName = post.displayName.trim() || "Anzeigename";
-        const meta = [
-          post.showTime && post.time ? post.time : null,
-          post.showDate && post.date ? formatDate(post.date) : null,
-        ].filter(Boolean);
-
+        const postImages = images[post.id];
         return (
-          <article className="microblog-preview" key={post.id}>
+          <article
+            className={
+              post.viewMode === "comments"
+                ? "microblog-preview microblog-preview--comments"
+                : "microblog-preview"
+            }
+            key={post.id}
+          >
             <div className="microblog-preview__header">
-              {images[post.id] ? (
+              {postImages?.profileImage ? (
                 <img
                   alt=""
                   className="microblog-preview__avatar"
-                  src={images[post.id]?.url}
+                  src={postImages.profileImage.url}
                 />
               ) : (
                 <div className="microblog-preview__avatar microblog-preview__avatar--initial">
@@ -61,41 +63,46 @@ export const MicroblogPreview = forwardRef<
               <MoreHorizontal aria-hidden="true" size={21} />
             </div>
 
-            <p className="microblog-preview__text">
-              {post.text || "Dein Beitrag erscheint hier."}
-            </p>
-
-            {meta.length > 0 && (
-              <p className="microblog-preview__meta">{meta.join(" · ")}</p>
+            {post.viewMode === "post" && (
+              <>
+                <p className="microblog-preview__text">
+                  {post.text || "Dein Beitrag erscheint hier."}
+                </p>
+                {post.timestamp && (
+                  <p className="microblog-preview__meta">{post.timestamp}</p>
+                )}
+                <div
+                  className="microblog-preview__actions"
+                  aria-label="Reaktionen"
+                >
+                  <span>
+                    <MessageCircle aria-hidden="true" size={19} />
+                    {post.replies.toLocaleString("de-DE")}
+                  </span>
+                  <span>
+                    <Repeat2 aria-hidden="true" size={20} />
+                    {post.reposts.toLocaleString("de-DE")}
+                  </span>
+                  <span>
+                    <Heart aria-hidden="true" size={19} />
+                    {post.likes.toLocaleString("de-DE")}
+                  </span>
+                  <span aria-label="Teilen">
+                    <Share aria-hidden="true" size={18} />
+                  </span>
+                </div>
+              </>
             )}
 
-            <div className="microblog-preview__actions" aria-label="Reaktionen">
-              <span>
-                <MessageCircle aria-hidden="true" size={19} />
-                {post.replies.toLocaleString("de-DE")}
-              </span>
-              <span>
-                <Repeat2 aria-hidden="true" size={20} />
-                {post.reposts.toLocaleString("de-DE")}
-              </span>
-              <span>
-                <Heart aria-hidden="true" size={19} />
-                {post.likes.toLocaleString("de-DE")}
-              </span>
-              <span aria-label="Teilen">
-                <Share aria-hidden="true" size={18} />
-              </span>
-            </div>
-
+            {post.viewMode === "comments" && (
+              <p className="comment-view-context">{post.text}</p>
+            )}
             {post.comments.length > 0 && (
-              <div className="microblog-preview__comments">
-                {post.comments.map((comment) => (
-                  <div className="microblog-comment" key={comment.id}>
-                    <strong>{comment.author || "account"}</strong>
-                    <p>{comment.text}</p>
-                  </div>
-                ))}
-              </div>
+              <CommentThread
+                comments={post.comments}
+                images={postImages?.commentImages ?? {}}
+                variant="microblog"
+              />
             )}
           </article>
         );

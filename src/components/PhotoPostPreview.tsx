@@ -1,10 +1,19 @@
-import { Bookmark, Heart, Image, MessageCircle, Send } from "lucide-react";
+import {
+  Bookmark,
+  Heart,
+  Image,
+  MessageCircle,
+  Play,
+  Send,
+} from "lucide-react";
 import { forwardRef } from "react";
 import type { PhotoPostImages, PhotoPostState } from "../types";
+import { CommentThread } from "./CommentThread";
 
 type PhotoPostPreviewProps = {
   value: PhotoPostState;
   images: PhotoPostImages;
+  onActiveMediaChange: (postId: string, mediaId: string) => void;
 };
 
 function initialFor(username: string) {
@@ -14,9 +23,12 @@ function initialFor(username: string) {
 export const PhotoPostPreview = forwardRef<
   HTMLDivElement,
   PhotoPostPreviewProps
->(function PhotoPostPreview({ value, images }, ref) {
+>(function PhotoPostPreview(
+  { value, images, onActiveMediaChange },
+  ref,
+) {
   return (
-    <div className="photo-feed" ref={ref}>
+    <div className={`photo-feed simulation-theme theme-${value.theme}`} ref={ref}>
       {value.posts.map((post) => {
         const username = post.username.trim() || "benutzername";
         const postImages = images[post.id];
@@ -26,7 +38,14 @@ export const PhotoPostPreview = forwardRef<
         );
 
         return (
-          <article className="photo-post" key={post.id}>
+          <article
+            className={
+              post.viewMode === "comments"
+                ? "photo-post photo-post--comments"
+                : "photo-post"
+            }
+            key={post.id}
+          >
             <div className="photo-post__header">
               {postImages?.profileImage ? (
                 <img
@@ -50,50 +69,104 @@ export const PhotoPostPreview = forwardRef<
               </span>
             </div>
 
-            <div className="photo-post__media">
-              {postImages?.postImage ? (
-                <img alt={post.imageAlt} src={postImages.postImage.url} />
-              ) : (
-                <div className="photo-post__placeholder">
-                  <Image aria-hidden="true" size={52} strokeWidth={1.4} />
-                  <span>Dein Bild erscheint hier</span>
-                </div>
-              )}
-            </div>
-
-            <div className="photo-post__content">
-              <div aria-hidden="true" className="photo-post__icons">
-                <Heart />
-                <MessageCircle />
-                <Send />
-                <Bookmark className="photo-post__bookmark" />
-              </div>
-              <strong className="photo-post__likes">
-                {post.likes.toLocaleString("de-DE")} Likes
-              </strong>
-              <p className="photo-post__caption">
-                <strong>{username}</strong> {post.caption}
-              </p>
-              {post.showComments && (
-                <>
-                  {post.comments.length > 0 && (
-                    <div className="photo-post__comment-list">
-                      {post.comments.map((comment) => (
-                        <p key={comment.id}>
-                          <strong>{comment.author || "account"}</strong>{" "}
-                          {comment.text}
-                        </p>
-                      ))}
+            <div className="photo-post__media-list">
+              {post.media.map((media, index) => (
+                <div
+                  className={
+                    media.id === post.activeMediaId
+                      ? "photo-post__media photo-post__media--active"
+                      : "photo-post__media"
+                  }
+                  data-carousel-index={index + 1}
+                  key={media.id}
+                >
+                  {postImages?.media[media.id] ? (
+                    <img
+                      alt={media.imageAlt}
+                      src={postImages.media[media.id].url}
+                    />
+                  ) : (
+                    <div className="photo-post__placeholder">
+                      <Image aria-hidden="true" size={52} strokeWidth={1.4} />
+                      <span>Dein Bild erscheint hier</span>
                     </div>
                   )}
-                  {visibleCommentCount > 0 && (
-                    <p className="photo-post__comments">
-                      {visibleCommentCount} Kommentare ansehen
-                    </p>
+                  {media.mode === "video" && (
+                    <>
+                      <span className="video-overlay">
+                        <Play aria-hidden="true" fill="currentColor" size={34} />
+                      </span>
+                      {(media.videoViews || media.videoDuration) && (
+                        <span className="video-meta">
+                          {media.videoViews &&
+                            `${media.videoViews} Aufrufe`}
+                          {media.videoViews && media.videoDuration && " · "}
+                          {media.videoDuration}
+                        </span>
+                      )}
+                    </>
                   )}
+                  {post.media.length > 1 && (
+                    <span className="carousel-counter">
+                      {index + 1}/{post.media.length}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {post.media.length > 1 && (
+              <div
+                aria-label="Karussellbild auswählen"
+                className="carousel-dots"
+              >
+                {post.media.map((media, index) => (
+                  <button
+                    aria-label={`Bild ${index + 1} anzeigen`}
+                    aria-pressed={media.id === post.activeMediaId}
+                    key={media.id}
+                    onClick={() => onActiveMediaChange(post.id, media.id)}
+                    type="button"
+                  />
+                ))}
+              </div>
+            )}
+
+            <div className="photo-post__content">
+              {post.viewMode === "post" && (
+                <>
+                  <div aria-hidden="true" className="photo-post__icons">
+                    <Heart />
+                    <MessageCircle />
+                    <Send />
+                    <Bookmark className="photo-post__bookmark" />
+                  </div>
+                  <strong className="photo-post__likes">
+                    {post.likes.toLocaleString("de-DE")} Likes
+                  </strong>
+                  <p className="photo-post__caption">
+                    <strong>{username}</strong> {post.caption}
+                  </p>
                 </>
               )}
-              <span className="photo-post__date">VOR EINEM MOMENT</span>
+
+              {post.showComments && post.comments.length > 0 && (
+                <CommentThread
+                  comments={post.comments}
+                  images={postImages?.commentImages ?? {}}
+                  variant="photo"
+                />
+              )}
+              {post.viewMode === "post" &&
+                post.showComments &&
+                visibleCommentCount > 0 && (
+                  <p className="photo-post__comments">
+                    {visibleCommentCount} Kommentare ansehen
+                  </p>
+                )}
+              {post.timestamp && (
+                <span className="photo-post__date">{post.timestamp}</span>
+              )}
             </div>
           </article>
         );

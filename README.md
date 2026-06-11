@@ -35,11 +35,13 @@ npm run verify
 Der aktuelle Stand enthält:
 
 - Foto-Post, Messenger-Chat und Mikroblog mit responsiver Live-Vorschau
-- bearbeitbare und sortierbare Messenger-Nachrichten
-- Mikroblog-Beiträge mit optionalen Zeitangaben und weichem Zeichenzähler
+- zwei Messenger-Profile mit frei zuweisbaren Nachrichten und Gesehen-Status
+- freie Zeitstempel, Themes und zweistufige Kommentare
+- Foto-Karussells und Video-Simulationen
 - lokale Profil- und Beitragsbilder
-- validierte JSON-Konfigurationen ohne Bilder
-- PNG- und JPG-Export
+- validierte Config-V3-Dateien ohne Bilder mit V1/V2-Migration
+- PNG-, JPG- und PDF-Export
+- lokale Herkunftsmarker und Bildverifikation
 - Zurücksetzen mit Schutz vor Datenverlust
 - semantische Modul-Tabs mit vollständiger Pfeiltastensteuerung
 - Fokusführung und Fokus-Rückgabe im Lehrkräfte-Dialog

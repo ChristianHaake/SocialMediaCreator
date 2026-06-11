@@ -1,52 +1,51 @@
-import {
-  ArrowDown,
-  ArrowUp,
-  Plus,
-  Trash2,
-} from "lucide-react";
+import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import { useState, type Dispatch, type SetStateAction } from "react";
 import { fieldLimits } from "../constraints";
 import type {
   ImageState,
+  MessengerImages,
   MessengerMessage,
+  MessengerProfile,
   MessengerState,
 } from "../types";
+import { createId } from "../utils/ids";
 import { ImageUploadField } from "./ImageUploadField";
+import { ThemeSelector } from "./ThemeSelector";
 
 type MessengerEditorProps = {
   value: MessengerState;
   onChange: Dispatch<SetStateAction<MessengerState>>;
-  profileImage: ImageState | null;
-  onProfileImageChange: (image: ImageState | null) => void;
+  images: MessengerImages;
+  onProfileImageChange: (profileId: string, image: ImageState | null) => void;
   onImageError: (message: string | null) => void;
 };
 
 type MessageDraft = Omit<MessengerMessage, "id">;
 
-const defaultDraft: MessageDraft = {
-  type: "received",
-  text: "",
-  time: "10:00",
-};
-
-function createMessageId() {
-  return globalThis.crypto?.randomUUID?.() ?? `message-${Date.now()}`;
-}
-
 export function MessengerEditor({
   value,
   onChange,
-  profileImage,
+  images,
   onProfileImageChange,
   onImageError,
 }: MessengerEditorProps) {
-  const [draft, setDraft] = useState(defaultDraft);
+  const [draft, setDraft] = useState<MessageDraft>({
+    senderId: value.profiles[0].id,
+    text: "",
+    timestamp: "10:00",
+    seen: false,
+  });
 
-  function update<K extends keyof MessengerState>(
-    key: K,
-    nextValue: MessengerState[K],
+  function updateProfile(
+    id: string,
+    changes: Partial<Omit<MessengerProfile, "id" | "side">>,
   ) {
-    onChange((current) => ({ ...current, [key]: nextValue }));
+    onChange((current) => ({
+      ...current,
+      profiles: current.profiles.map((profile) =>
+        profile.id === id ? { ...profile, ...changes } : profile,
+      ) as MessengerState["profiles"],
+    }));
   }
 
   function updateMessage(
@@ -63,32 +62,23 @@ export function MessengerEditor({
 
   function addMessage() {
     if (!draft.text.trim()) return;
-
     onChange((current) => ({
       ...current,
       messages: [
         ...current.messages,
-        { ...draft, id: createMessageId(), text: draft.text.trim() },
+        { ...draft, id: createId("message"), text: draft.text.trim() },
       ],
     }));
     setDraft((current) => ({ ...current, text: "" }));
   }
 
-  function removeMessage(id: string) {
-    onChange((current) => ({
-      ...current,
-      messages: current.messages.filter((message) => message.id !== id),
-    }));
-  }
-
   function moveMessage(index: number, direction: -1 | 1) {
-    const targetIndex = index + direction;
-    if (targetIndex < 0 || targetIndex >= value.messages.length) return;
-
+    const target = index + direction;
+    if (target < 0 || target >= value.messages.length) return;
     onChange((current) => {
       const messages = [...current.messages];
-      [messages[index], messages[targetIndex]] = [
-        messages[targetIndex],
+      [messages[index], messages[target]] = [
+        messages[target],
         messages[index],
       ];
       return { ...current, messages };
@@ -101,82 +91,91 @@ export function MessengerEditor({
         <div className="section-heading">
           <span>01</span>
           <div>
-            <h2>Kontakt</h2>
-            <p>Name, Bild und aktueller Status</p>
+            <h2>Darstellung</h2>
+            <p>Farbschema des Messenger-Chats</p>
           </div>
         </div>
-
-        <p className="editor-notice">
-          Verwende fiktive Namen und keine echten privaten Chats.
-        </p>
-
-        <ImageUploadField
-          id="messenger-profile-image"
-          image={profileImage}
-          label="Profilbild"
-          onChange={onProfileImageChange}
-          onError={onImageError}
+        <ThemeSelector
+          onChange={(theme) => onChange((current) => ({ ...current, theme }))}
+          value={value.theme}
         />
-
-        <label className="field">
-          <span className="field-label">Kontaktname</span>
-          <input
-            maxLength={fieldLimits.messenger.contactName}
-            onChange={(event) => update("contactName", event.target.value)}
-            value={value.contactName}
-          />
-        </label>
-
-        <label className="field">
-          <span className="field-label">Status</span>
-          <input
-            maxLength={fieldLimits.messenger.status}
-            onChange={(event) => update("status", event.target.value)}
-            value={value.status}
-          />
-        </label>
       </section>
 
       <section className="editor-section">
         <div className="section-heading">
           <span>02</span>
           <div>
-            <h2>Neue Nachricht</h2>
-            <p>Füge eine Nachricht am Ende des Verlaufs hinzu</p>
+            <h2>Chat-Profile</h2>
+            <p>Zwei feste Seiten mit frei editierbaren Profilen</p>
           </div>
         </div>
+        <p className="editor-notice">
+          Verwende fiktive Namen und keine echten privaten Chats.
+        </p>
+        <div className="profile-editor-list">
+          {value.profiles.map((profile) => (
+            <div className="message-editor-card" key={profile.id}>
+              <strong>
+                {profile.side === "left" ? "Profil links" : "Profil rechts"}
+              </strong>
+              <ImageUploadField
+                id={`messenger-profile-image-${profile.side}`}
+                image={images[profile.id] ?? null}
+                label="Profilbild"
+                onChange={(image) => onProfileImageChange(profile.id, image)}
+                onError={onImageError}
+              />
+              <label className="field">
+                <span className="field-label">Name</span>
+                <input
+                  maxLength={fieldLimits.messenger.contactName}
+                  onChange={(event) =>
+                    updateProfile(profile.id, { name: event.target.value })
+                  }
+                  value={profile.name}
+                />
+              </label>
+              <label className="field">
+                <span className="field-label">Online-Status</span>
+                <input
+                  maxLength={fieldLimits.messenger.status}
+                  onChange={(event) =>
+                    updateProfile(profile.id, { status: event.target.value })
+                  }
+                  value={profile.status}
+                />
+              </label>
+            </div>
+          ))}
+        </div>
+      </section>
 
-        <fieldset className="segmented-field">
-          <legend className="field-label">Nachrichtentyp</legend>
-          <div className="segmented-control">
-            <label>
-              <input
-                checked={draft.type === "received"}
-                name="new-message-type"
-                onChange={() =>
-                  setDraft((current) => ({
-                    ...current,
-                    type: "received",
-                  }))
-                }
-                type="radio"
-              />
-              <span>Empfangen</span>
-            </label>
-            <label>
-              <input
-                checked={draft.type === "sent"}
-                name="new-message-type"
-                onChange={() =>
-                  setDraft((current) => ({ ...current, type: "sent" }))
-                }
-                type="radio"
-              />
-              <span>Gesendet</span>
-            </label>
+      <section className="editor-section">
+        <div className="section-heading">
+          <span>03</span>
+          <div>
+            <h2>Neue Nachricht</h2>
+            <p>Nachricht einem der beiden Profile zuweisen</p>
           </div>
-        </fieldset>
-
+        </div>
+        <label className="field">
+          <span className="field-label">Absender</span>
+          <select
+            onChange={(event) =>
+              setDraft((current) => ({
+                ...current,
+                senderId: event.target.value,
+              }))
+            }
+            value={draft.senderId}
+          >
+            {value.profiles.map((profile) => (
+              <option key={profile.id} value={profile.id}>
+                {profile.name || profile.side}
+              </option>
+            ))}
+          </select>
+        </label>
         <label className="field">
           <span className="field-label">Nachrichtentext</span>
           <textarea
@@ -192,46 +191,53 @@ export function MessengerEditor({
             value={draft.text}
           />
         </label>
-
-        <div className="message-add-row">
-          <label className="field field--compact">
-            <span className="field-label">Uhrzeit</span>
-            <input
-              onChange={(event) =>
-                setDraft((current) => ({
-                  ...current,
-                  time: event.target.value,
-                }))
-              }
-              type="time"
-              value={draft.time}
-            />
-          </label>
-          <button
-            className="button button--primary"
-            disabled={!draft.text.trim()}
-            onClick={addMessage}
-            type="button"
-          >
-            <Plus aria-hidden="true" size={18} />
-            Hinzufügen
-          </button>
-        </div>
+        <label className="field">
+          <span className="field-label">Zeitstempel</span>
+          <input
+            maxLength={fieldLimits.common.timestamp}
+            onChange={(event) =>
+              setDraft((current) => ({
+                ...current,
+                timestamp: event.target.value,
+              }))
+            }
+            value={draft.timestamp}
+          />
+        </label>
+        <label className="toggle-field">
+          <input
+            checked={draft.seen}
+            onChange={(event) =>
+              setDraft((current) => ({
+                ...current,
+                seen: event.target.checked,
+              }))
+            }
+            type="checkbox"
+          />
+          <span>Als gelesen oder gesehen markieren</span>
+        </label>
+        <button
+          className="button button--primary full-width-button"
+          disabled={!draft.text.trim()}
+          onClick={addMessage}
+          type="button"
+        >
+          <Plus aria-hidden="true" size={18} />
+          Hinzufügen
+        </button>
       </section>
 
       <section className="editor-section">
         <div className="section-heading">
-          <span>03</span>
+          <span>04</span>
           <div>
             <h2>Nachrichten</h2>
             <p>{value.messages.length} Nachrichten bearbeiten und sortieren</p>
           </div>
         </div>
-
         {value.messages.length === 0 ? (
-          <p className="empty-state">
-            Noch keine Nachrichten. Füge oben die erste Nachricht hinzu.
-          </p>
+          <p className="empty-state">Noch keine Nachrichten.</p>
         ) : (
           <ol className="message-editor-list">
             {value.messages.map((message, index) => (
@@ -260,30 +266,38 @@ export function MessengerEditor({
                     <button
                       aria-label={`Nachricht ${index + 1} löschen`}
                       className="compact-icon-button compact-icon-button--danger"
-                      onClick={() => removeMessage(message.id)}
+                      onClick={() =>
+                        onChange((current) => ({
+                          ...current,
+                          messages: current.messages.filter(
+                            (item) => item.id !== message.id,
+                          ),
+                        }))
+                      }
                       type="button"
                     >
                       <Trash2 aria-hidden="true" size={16} />
                     </button>
                   </div>
                 </div>
-
                 <label className="field">
-                  <span className="field-label">Typ</span>
+                  <span className="field-label">Absender</span>
                   <select
-                    aria-label={`Typ von Nachricht ${index + 1}`}
+                    aria-label={`Absender von Nachricht ${index + 1}`}
                     onChange={(event) =>
                       updateMessage(message.id, {
-                        type: event.target.value as MessengerMessage["type"],
+                        senderId: event.target.value,
                       })
                     }
-                    value={message.type}
+                    value={message.senderId}
                   >
-                    <option value="received">Empfangen</option>
-                    <option value="sent">Gesendet</option>
+                    {value.profiles.map((profile) => (
+                      <option key={profile.id} value={profile.id}>
+                        {profile.name || profile.side}
+                      </option>
+                    ))}
                   </select>
                 </label>
-
                 <label className="field">
                   <span className="field-label">Text</span>
                   <textarea
@@ -296,17 +310,28 @@ export function MessengerEditor({
                     value={message.text}
                   />
                 </label>
-
                 <label className="field">
-                  <span className="field-label">Uhrzeit</span>
+                  <span className="field-label">Zeitstempel</span>
                   <input
-                    aria-label={`Uhrzeit von Nachricht ${index + 1}`}
+                    aria-label={`Zeitstempel von Nachricht ${index + 1}`}
+                    maxLength={fieldLimits.common.timestamp}
                     onChange={(event) =>
-                      updateMessage(message.id, { time: event.target.value })
+                      updateMessage(message.id, {
+                        timestamp: event.target.value,
+                      })
                     }
-                    type="time"
-                    value={message.time}
+                    value={message.timestamp}
                   />
+                </label>
+                <label className="toggle-field">
+                  <input
+                    checked={message.seen}
+                    onChange={(event) =>
+                      updateMessage(message.id, { seen: event.target.checked })
+                    }
+                    type="checkbox"
+                  />
+                  <span>Gelesen oder gesehen</span>
                 </label>
               </li>
             ))}
