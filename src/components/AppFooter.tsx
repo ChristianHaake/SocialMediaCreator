@@ -1,7 +1,7 @@
 export function AppFooter() {
   return (
     <footer className="app-footer">
-      <span>Mockup Studio · Inhalte bleiben auf deinem Gerät</span>
+      <span>SocialMediaCreator · Inhalte bleiben auf deinem Gerät</span>
       <nav aria-label="Fußnavigation">
         <a href="/hilfe">Hilfe</a>
         <a href="/ueber">Über das Projekt</a>

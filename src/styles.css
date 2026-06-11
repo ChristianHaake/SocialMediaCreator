@@ -303,6 +303,19 @@ main {
   margin-bottom: 22px;
 }
 
+.section-heading--actions {
+  align-items: center;
+}
+
+.section-heading--actions > div {
+  flex: 1;
+}
+
+.section-heading__button {
+  flex: 0 0 auto;
+  padding: 0 11px;
+}
+
 .section-heading > span {
   display: grid;
   flex: 0 0 auto;
@@ -508,6 +521,51 @@ main {
   gap: 5px;
 }
 
+.post-selector-list {
+  display: grid;
+  gap: 9px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.post-selector {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 7px;
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.post-selector--active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.post-selector__select {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  padding: 6px 7px;
+  text-align: left;
+}
+
+.post-selector__select strong {
+  font-size: 0.8rem;
+}
+
+.post-selector__select span {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .compact-icon-button {
   display: grid;
   width: 34px;
@@ -643,6 +701,12 @@ main {
     #efedf3;
 }
 
+.photo-feed {
+  display: grid;
+  width: min(100%, 430px);
+  gap: 24px;
+}
+
 .photo-post {
   width: min(100%, 430px);
   overflow: hidden;
@@ -763,6 +827,18 @@ main {
 
 .photo-post__comments {
   color: #777f8b;
+}
+
+.photo-post__comment-list {
+  display: grid;
+  gap: 5px;
+  margin-bottom: 7px;
+}
+
+.photo-post__comment-list p {
+  margin: 0;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 .photo-post__date {
@@ -913,6 +989,12 @@ main {
   color: #2783b8;
 }
 
+.microblog-feed {
+  display: grid;
+  width: min(100%, 520px);
+  gap: 20px;
+}
+
 .microblog-preview {
   width: min(100%, 520px);
   padding: 22px 24px 18px;
@@ -1003,6 +1085,31 @@ main {
 
 .microblog-preview__actions span:last-child {
   justify-content: flex-end;
+}
+
+.microblog-preview__comments {
+  display: grid;
+  gap: 10px;
+  padding-top: 15px;
+  margin-top: 14px;
+  border-top: 1px solid #e3dfe7;
+}
+
+.microblog-comment {
+  padding-left: 12px;
+  border-left: 3px solid #d8cce4;
+}
+
+.microblog-comment strong {
+  font-size: 0.75rem;
+}
+
+.microblog-comment p {
+  margin: 3px 0 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 
 .action-bar {
@@ -1274,11 +1381,23 @@ main {
   }
 
   .module-tabs {
-    overflow-x: auto;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    padding: 4px;
   }
 
   .module-tab {
-    min-width: max-content;
+    min-width: 0;
+    min-height: 52px;
+    gap: 5px;
+    padding: 7px 4px;
+    font-size: 0.7rem;
+    line-height: 1.15;
+  }
+
+  .module-tab span {
+    overflow-wrap: anywhere;
   }
 
   .mobile-view-toggle {

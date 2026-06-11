@@ -5,7 +5,7 @@
 Die Anwendung ist eine Mockup-Werkstatt für fiktive digitale
 Kommunikationsformate, kein Kopierwerkzeug für bestehende soziale Netzwerke.
 
-Arbeitstitel: **Mockup Studio**
+Produktname: **SocialMediaCreator**
 
 Untertitel:
 

@@ -14,7 +14,7 @@ function downloadDataUrl(dataUrl: string, fileName: string) {
 export async function exportElementAsImage(
   element: HTMLElement,
   format: ImageExportFormat,
-  fileName = "mockup-studio-foto-post",
+  fileName = "social-media-creator-foto-post",
 ) {
   const scale = exportWidth / element.offsetWidth;
   const commonOptions = {

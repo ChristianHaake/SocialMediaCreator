@@ -22,7 +22,7 @@ test("module tabs support keyboard navigation and preserve state", async ({
   await expect(
     page.getByRole("heading", {
       level: 1,
-      name: "Formuliere deinen Mikroblog-Beitrag.",
+      name: "Formuliere deine Mikroblog-Beiträge.",
     }),
   ).toBeVisible();
 
@@ -58,15 +58,130 @@ test("all modules export images and configuration files", async ({ page }) => {
     const configDownload = page.waitForEvent("download");
     await page.getByRole("button", { name: "Speichern" }).click();
     expect((await configDownload).suggestedFilename()).toMatch(
-      /mockup-studio-.+\.json/,
+      /social-media-creator-.+\.json/,
     );
 
     const imageDownload = page.waitForEvent("download");
     await page.getByRole("button", { name: "PNG" }).click();
     expect((await imageDownload).suggestedFilename()).toMatch(
-      /mockup-studio-.+\.png/,
+      /social-media-creator-.+\.png/,
     );
   }
+});
+
+test("configuration import validates before replacing editor state", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const username = page.getByLabel("Benutzername");
+  await username.fill("bleibt_erhalten");
+
+  const input = page.locator('input[type="file"][accept*="json"]');
+  await input.setInputFiles({
+    name: "invalid.json",
+    mimeType: "application/json",
+    buffer: Buffer.from('{"format":"mockup-studio-config","version":1}'),
+  });
+
+  await expect(page.getByRole("alert")).toContainText("unvollständig");
+  await expect(username).toHaveValue("bleibt_erhalten");
+
+  await input.setInputFiles({
+    name: "microblog.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(
+      JSON.stringify({
+        format: "mockup-studio-config",
+        version: 1,
+        module: "microblog",
+        data: {
+          displayName: "Importiertes Projekt",
+          handle: "import_test",
+          text: "Importierter Beitrag",
+          date: "2026-06-11",
+          time: "12:30",
+          showDate: true,
+          showTime: true,
+          replies: 1,
+          reposts: 2,
+          likes: 3,
+        },
+      }),
+    ),
+  });
+
+  await expect(page.getByRole("tab", { name: "Mikroblog" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await expect(page.getByLabel("Anzeigename")).toHaveValue(
+    "Importiertes Projekt",
+  );
+  await expect(
+    page.locator(".microblog-preview").getByText("Importierter Beitrag", {
+      exact: true,
+    }),
+  ).toBeVisible();
+});
+
+test("photo and microblog feeds support multiple posts with comments", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  await page.getByRole("button", { name: "Beitrag", exact: true }).click();
+  await page.getByLabel("Beschreibung").fill("Zweiter Foto-Beitrag");
+  await page.getByRole("button", { name: "Kommentar", exact: true }).click();
+  await page.getByLabel("Kommentartext").last().fill("Foto-Kommentar");
+
+  await expect(page.locator(".photo-post")).toHaveCount(2);
+  await expect(page.locator(".photo-post").nth(1)).toContainText(
+    "Zweiter Foto-Beitrag",
+  );
+  await expect(page.locator(".photo-post").nth(1)).toContainText(
+    "Foto-Kommentar",
+  );
+
+  await page.getByRole("tab", { name: "Mikroblog" }).click();
+  await page.getByRole("button", { name: "Beitrag", exact: true }).click();
+  await page.getByLabel("Beitragstext").fill("Zweiter Mikroblog-Beitrag");
+  await page.getByRole("button", { name: "Kommentar", exact: true }).click();
+  await page.getByLabel("Kommentartext").last().fill("Mikroblog-Kommentar");
+
+  await expect(page.locator(".microblog-preview")).toHaveCount(2);
+  await expect(page.locator(".microblog-preview").nth(1)).toContainText(
+    "Zweiter Mikroblog-Beitrag",
+  );
+  await expect(page.locator(".microblog-preview").nth(1)).toContainText(
+    "Mikroblog-Kommentar",
+  );
+});
+
+test("image uploads reject invalid files and accept decodable images", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  const input = page.locator("#profile-image");
+  await input.setInputFiles({
+    name: "fake.png",
+    mimeType: "image/png",
+    buffer: Buffer.from("not an image"),
+  });
+  await expect(page.getByRole("alert")).toContainText("kein gültiges");
+
+  const onePixelPng = Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+    "base64",
+  );
+  await input.setInputFiles({
+    name: "pixel.png",
+    mimeType: "image/png",
+    buffer: onePixelPng,
+  });
+
+  await expect(page.getByText("pixel.png")).toBeVisible();
+  await expect(page.getByRole("alert")).toBeHidden();
 });
 
 test("core workflows do not request network resources after loading", async ({

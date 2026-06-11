@@ -27,7 +27,9 @@ import { TeacherInfoDialog } from "./components/TeacherInfoDialog";
 import { contentPages, isContentPath } from "./content";
 import type {
   ImageState,
+  MicroblogImages,
   ModuleType,
+  PhotoPostImages,
 } from "./types";
 import {
   defaultMessenger,
@@ -69,10 +71,10 @@ const moduleCopy: Record<
 > = {
   photoPost: {
     eyebrow: "Fiktiv. Lokal. Exportierbar.",
-    title: "Erstelle deinen Foto-Post.",
+    title: "Erstelle deine Foto-Posts.",
     description:
-      "Gestalte einen fiktiven Beitrag und beobachte jede Änderung direkt in der Vorschau. Ohne Anmeldung und ohne Upload.",
-    editorTitle: "Foto-Post bearbeiten",
+      "Gestalte fiktive Beiträge und beobachte jede Änderung direkt in der Vorschau. Ohne Anmeldung und ohne Upload.",
+    editorTitle: "Foto-Posts bearbeiten",
   },
   messenger: {
     eyebrow: "Dialoge nachvollziehbar gestalten.",
@@ -83,10 +85,10 @@ const moduleCopy: Record<
   },
   microblog: {
     eyebrow: "Kurz. Klar. Kontextbezogen.",
-    title: "Formuliere deinen Mikroblog-Beitrag.",
+    title: "Formuliere deine Mikroblog-Beiträge.",
     description:
-      "Gestalte einen kurzen fiktiven Beitrag mit Profil, Zeitangaben und Reaktionen. Der Zeichenzähler informiert, ohne dich zu begrenzen.",
-    editorTitle: "Mikroblog bearbeiten",
+      "Gestalte kurze fiktive Beiträge mit Profil, Zeitangaben und Reaktionen. Der Zeichenzähler informiert, ohne dich zu begrenzen.",
+    editorTitle: "Mikroblog-Beiträge bearbeiten",
   },
 };
 
@@ -99,18 +101,31 @@ function useImageCleanup(image: ImageState | null) {
   );
 }
 
+function revokeImage(image: ImageState | null | undefined) {
+  if (image) URL.revokeObjectURL(image.url);
+}
+
+function revokePhotoImages(images: PhotoPostImages) {
+  Object.values(images).forEach(({ profileImage, postImage }) => {
+    revokeImage(profileImage);
+    revokeImage(postImage);
+  });
+}
+
+function revokeMicroblogImages(images: MicroblogImages) {
+  Object.values(images).forEach(revokeImage);
+}
+
 export function App() {
   const [activeModule, setActiveModule] = useState<ModuleType>("photoPost");
   const [photoPost, setPhotoPost] = useState(defaultPhotoPost);
   const [messenger, setMessenger] = useState(defaultMessenger);
   const [microblog, setMicroblog] = useState(defaultMicroblog);
-  const [photoProfileImage, setPhotoProfileImage] =
-    useState<ImageState | null>(null);
-  const [postImage, setPostImage] = useState<ImageState | null>(null);
+  const [photoImages, setPhotoImages] = useState<PhotoPostImages>({});
   const [messengerProfileImage, setMessengerProfileImage] =
     useState<ImageState | null>(null);
-  const [microblogProfileImage, setMicroblogProfileImage] =
-    useState<ImageState | null>(null);
+  const [microblogImages, setMicroblogImages] =
+    useState<MicroblogImages>({});
   const [mobileView, setMobileView] = useState<MobileView>("editor");
   const [imageError, setImageError] = useState<string | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
@@ -123,23 +138,34 @@ export function App() {
   const previewRef = useRef<HTMLDivElement>(null);
   const configInputRef = useRef<HTMLInputElement>(null);
   const moduleTabRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const photoImagesRef = useRef(photoImages);
+  const microblogImagesRef = useRef(microblogImages);
   const pathname =
     window.location.pathname.length > 1
       ? window.location.pathname.replace(/\/+$/, "")
       : "/";
 
-  useImageCleanup(photoProfileImage);
-  useImageCleanup(postImage);
   useImageCleanup(messengerProfileImage);
-  useImageCleanup(microblogProfileImage);
+  photoImagesRef.current = photoImages;
+  microblogImagesRef.current = microblogImages;
+
+  useEffect(
+    () => () => {
+      revokePhotoImages(photoImagesRef.current);
+      revokeMicroblogImages(microblogImagesRef.current);
+    },
+    [],
+  );
 
   const activeCopy = moduleCopy[activeModule];
   const activeHasImages =
     activeModule === "photoPost"
-      ? photoProfileImage !== null || postImage !== null
+      ? Object.values(photoImages).some(
+          ({ profileImage, postImage }) => profileImage || postImage,
+        )
       : activeModule === "messenger"
         ? messengerProfileImage !== null
-        : microblogProfileImage !== null;
+        : Object.values(microblogImages).some(Boolean);
 
   function selectModule(module: ModuleType) {
     setActiveModule(module);
@@ -176,8 +202,7 @@ export function App() {
     if (module === "photoPost") {
       return (
         JSON.stringify(photoPost) !== JSON.stringify(defaultPhotoPost) ||
-        photoProfileImage !== null ||
-        postImage !== null
+        Object.keys(photoImages).length > 0
       );
     }
 
@@ -190,19 +215,75 @@ export function App() {
 
     return (
       JSON.stringify(microblog) !== JSON.stringify(defaultMicroblog) ||
-      microblogProfileImage !== null
+      Object.keys(microblogImages).length > 0
     );
   }
 
   function clearModuleImages(module: ModuleType) {
     if (module === "photoPost") {
-      setPhotoProfileImage(null);
-      setPostImage(null);
+      revokePhotoImages(photoImagesRef.current);
+      setPhotoImages({});
     } else if (module === "messenger") {
       setMessengerProfileImage(null);
     } else {
-      setMicroblogProfileImage(null);
+      revokeMicroblogImages(microblogImagesRef.current);
+      setMicroblogImages({});
     }
+  }
+
+  function setPhotoImage(
+    postId: string,
+    key: "profileImage" | "postImage",
+    image: ImageState | null,
+  ) {
+    setPhotoImages((current) => {
+      const previous = current[postId]?.[key];
+      if (previous?.url !== image?.url) revokeImage(previous);
+
+      const currentPostImages = current[postId] ?? {
+        profileImage: null,
+        postImage: null,
+      };
+      const nextPostImages = { ...currentPostImages, [key]: image };
+      const next = { ...current, [postId]: nextPostImages };
+
+      if (!nextPostImages.profileImage && !nextPostImages.postImage) {
+        delete next[postId];
+      }
+      return next;
+    });
+  }
+
+  function removePhotoPostImages(postId: string) {
+    setPhotoImages((current) => {
+      const postImages = current[postId];
+      if (!postImages) return current;
+      revokeImage(postImages.profileImage);
+      revokeImage(postImages.postImage);
+      const next = { ...current };
+      delete next[postId];
+      return next;
+    });
+  }
+
+  function setMicroblogImage(postId: string, image: ImageState | null) {
+    setMicroblogImages((current) => {
+      const previous = current[postId];
+      if (previous?.url !== image?.url) revokeImage(previous);
+      const next = { ...current };
+      if (image) next[postId] = image;
+      else delete next[postId];
+      return next;
+    });
+  }
+
+  function removeMicroblogPostImage(postId: string) {
+    setMicroblogImages((current) => {
+      revokeImage(current[postId]);
+      const next = { ...current };
+      delete next[postId];
+      return next;
+    });
   }
 
   function resetActiveModule() {
@@ -306,10 +387,10 @@ export function App() {
         previewRef.current,
         format,
         activeModule === "photoPost"
-          ? "mockup-studio-foto-post"
+          ? "social-media-creator-foto-post"
           : activeModule === "messenger"
-            ? "mockup-studio-messenger-chat"
-            : "mockup-studio-mikroblog",
+            ? "social-media-creator-messenger-chat"
+            : "social-media-creator-mikroblog",
       );
     } catch {
       setExportError(
@@ -324,12 +405,16 @@ export function App() {
     if (activeModule === "photoPost") {
       return (
         <PhotoPostEditor
+          images={photoImages}
           onChange={setPhotoPost}
           onImageError={setImageError}
-          onPostImageChange={setPostImage}
-          onProfileImageChange={setPhotoProfileImage}
-          postImage={postImage}
-          profileImage={photoProfileImage}
+          onPostImageChange={(postId, image) =>
+            setPhotoImage(postId, "postImage", image)
+          }
+          onPostRemoved={removePhotoPostImages}
+          onProfileImageChange={(postId, image) =>
+            setPhotoImage(postId, "profileImage", image)
+          }
           value={photoPost}
         />
       );
@@ -349,10 +434,11 @@ export function App() {
 
     return (
       <MicroblogEditor
+        images={microblogImages}
         onChange={setMicroblog}
         onImageError={setImageError}
-        onProfileImageChange={setMicroblogProfileImage}
-        profileImage={microblogProfileImage}
+        onPostRemoved={removeMicroblogPostImage}
+        onProfileImageChange={setMicroblogImage}
         value={microblog}
       />
     );
@@ -362,8 +448,7 @@ export function App() {
     if (activeModule === "photoPost") {
       return (
         <PhotoPostPreview
-          postImage={postImage}
-          profileImage={photoProfileImage}
+          images={photoImages}
           ref={previewRef}
           value={photoPost}
         />
@@ -382,7 +467,7 @@ export function App() {
 
     return (
       <MicroblogPreview
-        profileImage={microblogProfileImage}
+        images={microblogImages}
         ref={previewRef}
         value={microblog}
       />

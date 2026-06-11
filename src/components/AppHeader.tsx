@@ -12,7 +12,7 @@ export function AppHeader({ onOpenTeacherInfo }: AppHeaderProps) {
           <ImageIcon aria-hidden="true" size={21} />
         </span>
         <span>
-          <strong>Mockup Studio</strong>
+          <strong>SocialMediaCreator</strong>
           <small>Werkstatt für digitale Formate</small>
         </span>
       </a>

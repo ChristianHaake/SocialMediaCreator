@@ -40,6 +40,35 @@ describe("App", () => {
     expect(screen.queryByText("Lernwerkstatt")).not.toBeInTheDocument();
   });
 
+  it("creates multiple photo posts and attaches comments", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Beitrag" }));
+    const caption = screen.getByLabelText("Beschreibung");
+    await user.clear(caption);
+    await user.type(caption, "Zweiter Foto-Beitrag");
+
+    await user.click(screen.getByRole("button", { name: "Kommentar" }));
+    const commentInputs = screen.getAllByLabelText("Kommentartext");
+    await user.clear(commentInputs.at(-1) as HTMLElement);
+    await user.type(
+      commentInputs.at(-1) as HTMLElement,
+      "Kommentar am zweiten Beitrag",
+    );
+
+    expect(document.querySelectorAll(".photo-post")).toHaveLength(2);
+    const previews = document.querySelectorAll(".photo-post");
+    expect(
+      within(previews[1] as HTMLElement).getByText("Zweiter Foto-Beitrag"),
+    ).toBeInTheDocument();
+    expect(
+      within(previews[1] as HTMLElement).getByText(
+        "Kommentar am zweiten Beitrag",
+      ),
+    ).toBeInTheDocument();
+  });
+
   it("asks before resetting changed content", async () => {
     const user = userEvent.setup();
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
@@ -226,7 +255,7 @@ describe("App", () => {
     expect(
       screen.getByRole("heading", {
         level: 1,
-        name: "Formuliere deinen Mikroblog-Beitrag.",
+        name: "Formuliere deine Mikroblog-Beiträge.",
       }),
     ).toBeInTheDocument();
 
@@ -249,6 +278,39 @@ describe("App", () => {
     await user.click(screen.getByRole("tab", { name: "Foto-Post" }));
     await user.click(screen.getByRole("tab", { name: "Mikroblog" }));
     expect(screen.getByLabelText("Anzeigename")).toHaveValue("Quellenlabor");
+  });
+
+  it("creates multiple microblog posts and attaches comments", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("tab", { name: "Mikroblog" }));
+    await user.click(screen.getByRole("button", { name: "Beitrag" }));
+
+    const postText = screen.getByLabelText("Beitragstext");
+    await user.clear(postText);
+    await user.type(postText, "Zweiter Mikroblog-Beitrag");
+
+    await user.click(screen.getByRole("button", { name: "Kommentar" }));
+    const commentInputs = screen.getAllByLabelText("Kommentartext");
+    await user.clear(commentInputs.at(-1) as HTMLElement);
+    await user.type(
+      commentInputs.at(-1) as HTMLElement,
+      "Antwort am zweiten Beitrag",
+    );
+
+    expect(document.querySelectorAll(".microblog-preview")).toHaveLength(2);
+    const previews = document.querySelectorAll(".microblog-preview");
+    expect(
+      within(previews[1] as HTMLElement).getByText(
+        "Zweiter Mikroblog-Beitrag",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(previews[1] as HTMLElement).getByText(
+        "Antwort am zweiten Beitrag",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("shows a non-blocking warning for long microblog posts", async () => {

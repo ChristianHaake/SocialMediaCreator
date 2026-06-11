@@ -5,6 +5,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useState, type Dispatch, type SetStateAction } from "react";
+import { fieldLimits } from "../constraints";
 import type {
   ImageState,
   MessengerMessage,
@@ -120,7 +121,7 @@ export function MessengerEditor({
         <label className="field">
           <span className="field-label">Kontaktname</span>
           <input
-            maxLength={40}
+            maxLength={fieldLimits.messenger.contactName}
             onChange={(event) => update("contactName", event.target.value)}
             value={value.contactName}
           />
@@ -129,7 +130,7 @@ export function MessengerEditor({
         <label className="field">
           <span className="field-label">Status</span>
           <input
-            maxLength={60}
+            maxLength={fieldLimits.messenger.status}
             onChange={(event) => update("status", event.target.value)}
             value={value.status}
           />
@@ -179,7 +180,7 @@ export function MessengerEditor({
         <label className="field">
           <span className="field-label">Nachrichtentext</span>
           <textarea
-            maxLength={1000}
+            maxLength={fieldLimits.messenger.messageText}
             onChange={(event) =>
               setDraft((current) => ({
                 ...current,
@@ -287,7 +288,7 @@ export function MessengerEditor({
                   <span className="field-label">Text</span>
                   <textarea
                     aria-label={`Text von Nachricht ${index + 1}`}
-                    maxLength={1000}
+                    maxLength={fieldLimits.messenger.messageText}
                     onChange={(event) =>
                       updateMessage(message.id, { text: event.target.value })
                     }

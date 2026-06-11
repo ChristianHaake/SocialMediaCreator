@@ -13,6 +13,13 @@ Veröffentlichung in eine versionierte Sektion verschoben.
 
 ### Hinzugefügt
 
+- Foto-Post und Mikroblog unterstützen mehrere Beiträge in einem Projekt.
+- Kommentare lassen sich direkt an einzelne Foto- und Mikroblog-Beiträge
+  anhängen, bearbeiten und löschen.
+- Bildzuordnungen werden je Beitrag getrennt verwaltet.
+- Konfigurationsformat Version 2 speichert Beitragslisten und Kommentare.
+- Bestehende Konfigurationen der Version 1 werden beim Import automatisch
+  migriert.
 - Vollständiges Mikroblog-Modul mit Anzeigename, Handle und Profilbild.
 - Beitragstext mit informierendem Zeichenzähler ohne erzwungene Begrenzung.
 - Optional einblendbare Datums- und Zeitangaben.
@@ -25,20 +32,38 @@ Veröffentlichung in eine versionierte Sektion verschoben.
 - Browserprüfungen für Bild- und Konfigurationsdownloads aller Module.
 - Automatisierte Prüfung der Netzwerkfreiheit nach dem initialen Laden.
 - Responsive Browserprüfung bei 320 CSS-Pixeln.
+- Dokumentiertes Software-Stack- und Stabilitätsaudit.
+- Gebündelter Prüfablauf über `npm run verify`.
 
 ### Geändert
 
+- Produktname und Exportdateinamen wurden auf `SocialMediaCreator` umgestellt.
+- PNG- und JPG-Exporte enthalten den vollständigen Feed aller Beiträge.
 - Alle drei im Produktplan vorgesehenen Mockup-Module sind auswählbar.
 - Die Modulnavigation verwendet semantische Tabs und unterstützt
   Pfeiltasten sowie Home und Ende.
 - Der Lehrkräfte-Dialog hält den Tastaturfokus und gibt ihn nach dem Schließen
   an den auslösenden Button zurück.
+- Editorgrenzen und Validierung importierter Konfigurationen verwenden
+  gemeinsame Feldgrenzen.
+- TypeScript prüft auch die Playwright-Konfiguration und E2E-Tests.
+- Die Projektseite beschreibt alle drei vorhandenen Module.
 
 ### Behoben
 
 - Fokus-Rückgabe des Lehrkräfte-Dialogs für Safari/WebKit vereinheitlicht.
+- Überlange oder nicht darstellbare Werte in Konfigurationsdateien werden vor
+  der Übernahme abgelehnt.
+- Ungültige Datums- und Uhrzeitwerte können nicht mehr zu Abweichungen zwischen
+  Editor und Vorschau führen.
+- Dateien mit gefälschtem Bildtyp oder beschädigten Bilddaten werden vor der
+  Vorschau abgelehnt.
 
 ### Sicherheit
+
+- Abhängigkeitsprüfung ohne bekannte Paket-Schwachstellen.
+- Bilddateien werden anhand von Dateisignatur und tatsächlicher
+  Browser-Dekodierbarkeit geprüft.
 
 ## [0.2.0] - 2026-06-11
 

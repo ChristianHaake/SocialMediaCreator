@@ -1,14 +1,27 @@
 export type ModuleType = "photoPost" | "messenger" | "microblog";
 
-export type PhotoPostState = {
+export type PostComment = {
+  id: string;
+  author: string;
+  text: string;
+};
+
+export type PhotoPost = {
+  id: string;
   username: string;
   location: string;
   caption: string;
   imageAlt: string;
   likes: number;
-  comments: number;
+  commentCount: number;
   showLocation: boolean;
   showComments: boolean;
+  comments: PostComment[];
+};
+
+export type PhotoPostState = {
+  activePostId: string;
+  posts: PhotoPost[];
 };
 
 export type MessengerMessage = {
@@ -24,7 +37,8 @@ export type MessengerState = {
   messages: MessengerMessage[];
 };
 
-export type MicroblogState = {
+export type MicroblogPost = {
+  id: string;
   displayName: string;
   handle: string;
   text: string;
@@ -35,6 +49,12 @@ export type MicroblogState = {
   replies: number;
   reposts: number;
   likes: number;
+  comments: PostComment[];
+};
+
+export type MicroblogState = {
+  activePostId: string;
+  posts: MicroblogPost[];
 };
 
 export type ImageState = {
@@ -42,15 +62,38 @@ export type ImageState = {
   url: string;
 };
 
-export const defaultPhotoPost: PhotoPostState = {
+export type PhotoPostImages = Record<
+  string,
+  {
+    profileImage: ImageState | null;
+    postImage: ImageState | null;
+  }
+>;
+
+export type MicroblogImages = Record<string, ImageState | null>;
+
+export const defaultPhotoPostItem: PhotoPost = {
+  id: "photo-post-1",
   username: "projekt_kurs",
   location: "Lernwerkstatt",
   caption: "Heute dokumentieren wir unsere Projektidee.",
   imageAlt: "",
   likes: 128,
-  comments: 14,
+  commentCount: 14,
   showLocation: true,
   showComments: true,
+  comments: [
+    {
+      id: "photo-comment-1",
+      author: "lernteam",
+      text: "Welche Quelle habt ihr für die Aussage verwendet?",
+    },
+  ],
+};
+
+export const defaultPhotoPost: PhotoPostState = {
+  activePostId: defaultPhotoPostItem.id,
+  posts: [defaultPhotoPostItem],
 };
 
 export const defaultMessenger: MessengerState = {
@@ -78,7 +121,8 @@ export const defaultMessenger: MessengerState = {
   ],
 };
 
-export const defaultMicroblog: MicroblogState = {
+export const defaultMicroblogItem: MicroblogPost = {
+  id: "microblog-post-1",
   displayName: "Medienprojekt",
   handle: "medienprojekt",
   text: "Eine Behauptung wird nicht glaubwürdiger, nur weil sie oft geteilt wird. Prüfe Quelle, Kontext und Datum.",
@@ -89,4 +133,16 @@ export const defaultMicroblog: MicroblogState = {
   replies: 8,
   reposts: 24,
   likes: 96,
+  comments: [
+    {
+      id: "microblog-comment-1",
+      author: "quellencheck",
+      text: "Der ursprüngliche Kontext gehört unbedingt dazu.",
+    },
+  ],
+};
+
+export const defaultMicroblog: MicroblogState = {
+  activePostId: defaultMicroblogItem.id,
+  posts: [defaultMicroblogItem],
 };
