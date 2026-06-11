@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { forwardRef } from "react";
 import type { MicroblogImages, MicroblogState } from "../types";
+import { formatTimelineDate, sortTimelinePosts } from "../utils/timeline";
 import { CommentThread } from "./CommentThread";
 
 type MicroblogPreviewProps = {
@@ -27,12 +28,13 @@ export const MicroblogPreview = forwardRef<
   HTMLDivElement,
   MicroblogPreviewProps
 >(function MicroblogPreview({ value, images }, ref) {
+  const sortedPosts = sortTimelinePosts(value.posts, value.sortOrder);
   return (
     <div
       className={`microblog-feed microblog-feed--${value.layoutMode} simulation-theme theme-${value.theme}`}
       ref={ref}
     >
-      {value.posts.map((post, index) => {
+      {sortedPosts.map((post, index) => {
         const displayName = post.displayName.trim() || "Anzeigename";
         const postImages = images[post.id];
         return (
@@ -44,7 +46,7 @@ export const MicroblogPreview = forwardRef<
                   ? "microblog-preview--comments"
                   : "",
                 index === 0 ? "microblog-preview--first" : "",
-                index === value.posts.length - 1
+                index === sortedPosts.length - 1
                   ? "microblog-preview--last"
                   : "",
               ]
@@ -77,9 +79,9 @@ export const MicroblogPreview = forwardRef<
                 <p className="microblog-preview__text">
                   {post.text || "Dein Beitrag erscheint hier."}
                 </p>
-                {post.timestamp && (
-                  <p className="microblog-preview__meta">{post.timestamp}</p>
-                )}
+                <p className="microblog-preview__meta">
+                  {formatTimelineDate(post.date, post.time)}
+                </p>
                 <div
                   className="microblog-preview__actions"
                   aria-label="Reaktionen"

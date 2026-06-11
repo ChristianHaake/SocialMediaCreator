@@ -36,10 +36,11 @@ Der aktuelle Stand enthält:
 
 - Foto-Post, Messenger-Chat und Mikroblog mit responsiver Live-Vorschau
 - zwei Messenger-Profile mit frei zuweisbaren Nachrichten und Gesehen-Status
-- freie Zeitstempel, Themes und zweistufige Kommentare
+- strukturierte Beitragsdaten mit automatischer Timeline-Sortierung
+- Themes und zweistufige Kommentare
 - Foto-Karussells und Video-Simulationen
 - lokale Profil- und Beitragsbilder
-- validierte Config-V4-Dateien ohne Bilder mit V1/V2/V3-Migration
+- validierte Config-V5-Dateien ohne Bilder
 - PNG-, JPG- und PDF-Export
 - lokale Herkunftsmarker und Bildverifikation
 - Zurücksetzen mit Schutz vor Datenverlust

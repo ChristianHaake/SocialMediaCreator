@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { forwardRef } from "react";
 import type { PhotoPostImages, PhotoPostState } from "../types";
+import { formatTimelineDate, sortTimelinePosts } from "../utils/timeline";
 import { CommentThread } from "./CommentThread";
 
 type PhotoPostPreviewProps = {
@@ -29,7 +30,7 @@ export const PhotoPostPreview = forwardRef<
 ) {
   return (
     <div className={`photo-feed simulation-theme theme-${value.theme}`} ref={ref}>
-      {value.posts.map((post) => {
+      {sortTimelinePosts(value.posts, value.sortOrder).map((post) => {
         const username = post.username.trim() || "benutzername";
         const postImages = images[post.id];
         const visibleCommentCount = Math.max(
@@ -164,9 +165,9 @@ export const PhotoPostPreview = forwardRef<
                     {visibleCommentCount} Kommentare ansehen
                   </p>
                 )}
-              {post.timestamp && (
-                <span className="photo-post__date">{post.timestamp}</span>
-              )}
+              <span className="photo-post__date">
+                {formatTimelineDate(post.date, post.time)}
+              </span>
             </div>
           </article>
         );

@@ -2,6 +2,7 @@ export type ModuleType = "photoPost" | "messenger" | "microblog";
 export type Theme = "light" | "dim" | "dark";
 export type PostViewMode = "post" | "comments";
 export type MicroblogLayoutMode = "feed" | "thread";
+export type TimelineSortOrder = "newest" | "oldest";
 
 export type CommentReply = {
   id: string;
@@ -31,7 +32,8 @@ export type PhotoPost = {
   username: string;
   location: string;
   caption: string;
-  timestamp: string;
+  date: string;
+  time: string;
   viewMode: PostViewMode;
   likes: number;
   commentCount: number;
@@ -44,6 +46,7 @@ export type PhotoPost = {
 
 export type PhotoPostState = {
   theme: Theme;
+  sortOrder: TimelineSortOrder;
   activePostId: string;
   posts: PhotoPost[];
 };
@@ -74,7 +77,8 @@ export type MicroblogPost = {
   displayName: string;
   handle: string;
   text: string;
-  timestamp: string;
+  date: string;
+  time: string;
   viewMode: PostViewMode;
   replies: number;
   reposts: number;
@@ -85,6 +89,7 @@ export type MicroblogPost = {
 export type MicroblogState = {
   theme: Theme;
   layoutMode: MicroblogLayoutMode;
+  sortOrder: TimelineSortOrder;
   activePostId: string;
   posts: MicroblogPost[];
 };
@@ -118,7 +123,8 @@ export const defaultPhotoPostItem: PhotoPost = {
   username: "projekt_kurs",
   location: "Lernwerkstatt",
   caption: "Heute dokumentieren wir unsere Projektidee.",
-  timestamp: "vor einem Moment",
+  date: "2026-06-11",
+  time: "",
   viewMode: "post",
   likes: 128,
   commentCount: 14,
@@ -154,6 +160,7 @@ export const defaultPhotoPostItem: PhotoPost = {
 
 export const defaultPhotoPost: PhotoPostState = {
   theme: "light",
+  sortOrder: "newest",
   activePostId: defaultPhotoPostItem.id,
   posts: [defaultPhotoPostItem],
 };
@@ -204,7 +211,8 @@ export const defaultMicroblogItem: MicroblogPost = {
   displayName: "Medienprojekt",
   handle: "medienprojekt",
   text: "Eine Behauptung wird nicht glaubwürdiger, nur weil sie oft geteilt wird. Prüfe Quelle, Kontext und Datum.",
-  timestamp: "10:15 · 11.06.2026",
+  date: "2026-06-11",
+  time: "10:15",
   viewMode: "post",
   replies: 8,
   reposts: 24,
@@ -230,6 +238,7 @@ export const defaultMicroblogItem: MicroblogPost = {
 export const defaultMicroblog: MicroblogState = {
   theme: "light",
   layoutMode: "feed",
+  sortOrder: "newest",
   activePostId: defaultMicroblogItem.id,
   posts: [defaultMicroblogItem],
 };

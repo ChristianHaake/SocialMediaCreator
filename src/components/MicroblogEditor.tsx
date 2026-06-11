@@ -1,5 +1,4 @@
 import { Plus } from "lucide-react";
-import { arrayMove } from "@dnd-kit/sortable";
 import type { Dispatch, SetStateAction } from "react";
 import { fieldLimits } from "../constraints";
 import type {
@@ -9,10 +8,16 @@ import type {
   MicroblogState,
 } from "../types";
 import { createId } from "../utils/ids";
+import {
+  formatTimelineDate,
+  sortTimelinePosts,
+  todayInputValue,
+} from "../utils/timeline";
 import { CommentEditor } from "./CommentEditor";
+import { EditorDisclosure } from "./EditorDisclosure";
 import { ImageUploadField } from "./ImageUploadField";
+import { TimelinePostList } from "./TimelinePostList";
 import { ThemeSelector } from "./ThemeSelector";
-import { SortablePostList } from "./SortablePostList";
 
 type MicroblogEditorProps = {
   value: MicroblogState;
@@ -35,7 +40,8 @@ function createMicroblogPost(): MicroblogPost {
     displayName: "Neues Profil",
     handle: "neues_profil",
     text: "Neuer Beitrag",
-    timestamp: "gerade eben",
+    date: todayInputValue(),
+    time: "",
     viewMode: "post",
     replies: 0,
     reposts: 0,
@@ -60,6 +66,7 @@ export function MicroblogEditor({
     profileImage: null,
     commentImages: {},
   };
+  const sortedPosts = sortTimelinePosts(value.posts, value.sortOrder);
 
   function updatePost(changes: Partial<Omit<MicroblogPost, "id">>) {
     onChange((current) => ({
@@ -75,20 +82,8 @@ export function MicroblogEditor({
     onChange((current) => ({
       ...current,
       activePostId: post.id,
-      posts: current.posts.flatMap((item) =>
-        item.id === current.activePostId ? [item, post] : [item],
-      ),
+      posts: [...current.posts, post],
     }));
-  }
-
-  function movePost(activeId: string, overId: string) {
-    if (!overId || activeId === overId) return;
-    onChange((current) => {
-      const from = current.posts.findIndex((post) => post.id === activeId);
-      const to = current.posts.findIndex((post) => post.id === overId);
-      if (from < 0 || to < 0) return current;
-      return { ...current, posts: arrayMove(current.posts, from, to) };
-    });
   }
 
   function removePost(id: string) {
@@ -110,14 +105,11 @@ export function MicroblogEditor({
 
   return (
     <form className="editor-form" onSubmit={(event) => event.preventDefault()}>
-      <section className="editor-section">
-        <div className="section-heading">
-          <span>01</span>
-          <div>
-            <h2>Darstellung</h2>
-            <p>Farbschema des gesamten Mikroblog-Moduls</p>
-          </div>
-        </div>
+      <EditorDisclosure
+        description="Farbschema, Layout und Reihenfolge"
+        number="01"
+        title="Darstellung"
+      >
         <ThemeSelector
           onChange={(theme) => onChange((current) => ({ ...current, theme }))}
           value={value.theme}
@@ -137,20 +129,34 @@ export function MicroblogEditor({
             <option value="thread">Verbundener Thread</option>
           </select>
         </label>
-      </section>
+        <label className="field">
+          <span className="field-label">Timeline-Reihenfolge</span>
+          <select
+            onChange={(event) =>
+              onChange((current) => ({
+                ...current,
+                sortOrder: event.target.value as MicroblogState["sortOrder"],
+              }))
+            }
+            value={value.sortOrder}
+          >
+            <option value="newest">Neueste zuerst</option>
+            <option value="oldest">Älteste zuerst</option>
+          </select>
+        </label>
+      </EditorDisclosure>
 
-      <section className="editor-section">
-        <div className="section-heading section-heading--actions">
-          <span>02</span>
-          <div>
-            <h2>Beiträge</h2>
-            <p>
-              {value.posts.length}{" "}
-              {value.posts.length === 1 ? "Beitrag" : "Beiträge"} in Reihenfolge
-            </p>
-          </div>
+      <EditorDisclosure
+        defaultOpen
+        description={`${value.posts.length} ${
+          value.posts.length === 1 ? "Beitrag" : "Beiträge"
+        }, automatisch chronologisch sortiert`}
+        number="02"
+        title="Beiträge"
+      >
+        <div className="editor-section-actions">
           <button
-            className="button button--secondary section-heading__button"
+            className="button button--secondary"
             disabled={value.posts.length >= fieldLimits.common.posts}
             onClick={addPost}
             type="button"
@@ -159,28 +165,26 @@ export function MicroblogEditor({
             Beitrag
           </button>
         </div>
-        <SortablePostList
+        <TimelinePostList
           activeId={activePost.id}
-          onMove={movePost}
           onRemove={removePost}
           onSelect={(activePostId) =>
             onChange((current) => ({ ...current, activePostId }))
           }
-          posts={value.posts.map((post) => ({
+          posts={sortedPosts.map((post) => ({
             id: post.id,
             summary: post.text || "Ohne Text",
+            timestamp: formatTimelineDate(post.date, post.time),
           }))}
         />
-      </section>
+      </EditorDisclosure>
 
-      <section className="editor-section">
-        <div className="section-heading">
-          <span>03</span>
-          <div>
-            <h2>Profil</h2>
-            <p>Absender des ausgewählten Beitrags</p>
-          </div>
-        </div>
+      <EditorDisclosure
+        defaultOpen
+        description="Absender des ausgewählten Beitrags"
+        number="03"
+        title="Profil"
+      >
         <ImageUploadField
           id="microblog-profile-image"
           image={activeImages.profileImage}
@@ -188,32 +192,34 @@ export function MicroblogEditor({
           onChange={(image) => onProfileImageChange(activePost.id, image)}
           onError={onImageError}
         />
-        <label className="field">
-          <span className="field-label">Anzeigename</span>
-          <input
-            maxLength={fieldLimits.microblog.displayName}
-            onChange={(event) => updatePost({ displayName: event.target.value })}
-            value={activePost.displayName}
-          />
-        </label>
-        <label className="field">
-          <span className="field-label">Handle</span>
-          <input
-            maxLength={fieldLimits.microblog.handle}
-            onChange={(event) => updatePost({ handle: event.target.value })}
-            value={activePost.handle}
-          />
-        </label>
-      </section>
-
-      <section className="editor-section">
-        <div className="section-heading">
-          <span>04</span>
-          <div>
-            <h2>Inhalt und Ansicht</h2>
-            <p>Text, Zeitstempel und Darstellungsmodus</p>
-          </div>
+        <div className="field-row">
+          <label className="field">
+            <span className="field-label">Anzeigename</span>
+            <input
+              maxLength={fieldLimits.microblog.displayName}
+              onChange={(event) =>
+                updatePost({ displayName: event.target.value })
+              }
+              value={activePost.displayName}
+            />
+          </label>
+          <label className="field">
+            <span className="field-label">Handle</span>
+            <input
+              maxLength={fieldLimits.microblog.handle}
+              onChange={(event) => updatePost({ handle: event.target.value })}
+              value={activePost.handle}
+            />
+          </label>
         </div>
+      </EditorDisclosure>
+
+      <EditorDisclosure
+        defaultOpen
+        description="Text, Veröffentlichungszeitpunkt und Ansicht"
+        number="04"
+        title="Inhalt und Ansicht"
+      >
         <label className="field">
           <span className="field-label">Beitragstext</span>
           <textarea
@@ -235,14 +241,27 @@ export function MicroblogEditor({
               : ""}
           </span>
         </label>
-        <label className="field">
-          <span className="field-label">Zeitstempel</span>
-          <input
-            maxLength={fieldLimits.common.timestamp}
-            onChange={(event) => updatePost({ timestamp: event.target.value })}
-            value={activePost.timestamp}
-          />
-        </label>
+        <div className="field-row">
+          <label className="field">
+            <span className="field-label">Datum</span>
+            <input
+              onChange={(event) => {
+                if (event.target.value) updatePost({ date: event.target.value });
+              }}
+              required
+              type="date"
+              value={activePost.date}
+            />
+          </label>
+          <label className="field">
+            <span className="field-label">Uhrzeit (optional)</span>
+            <input
+              onChange={(event) => updatePost({ time: event.target.value })}
+              type="time"
+              value={activePost.time}
+            />
+          </label>
+        </div>
         <label className="field">
           <span className="field-label">Darstellungsmodus</span>
           <select
@@ -257,16 +276,13 @@ export function MicroblogEditor({
             <option value="comments">Kommentaransicht</option>
           </select>
         </label>
-      </section>
+      </EditorDisclosure>
 
-      <section className="editor-section">
-        <div className="section-heading">
-          <span>05</span>
-          <div>
-            <h2>Reaktionen</h2>
-            <p>Fiktive Kennzahlen des ausgewählten Beitrags</p>
-          </div>
-        </div>
+      <EditorDisclosure
+        description="Fiktive Kennzahlen des ausgewählten Beitrags"
+        number="05"
+        title="Reaktionen"
+      >
         <div className="field-row field-row--three">
           {[
             ["Antworten", "replies"],
@@ -288,16 +304,13 @@ export function MicroblogEditor({
             </label>
           ))}
         </div>
-      </section>
+      </EditorDisclosure>
 
-      <section className="editor-section">
-        <div className="section-heading">
-          <span>06</span>
-          <div>
-            <h2>Kommentare und Antworten</h2>
-            <p>Zweistufige Diskussion zum ausgewählten Beitrag</p>
-          </div>
-        </div>
+      <EditorDisclosure
+        description="Zweistufige Diskussion zum ausgewählten Beitrag"
+        number="06"
+        title="Kommentare und Antworten"
+      >
         <CommentEditor
           comments={activePost.comments}
           idPrefix="microblog"
@@ -309,7 +322,7 @@ export function MicroblogEditor({
           onImageError={onImageError}
           onItemRemoved={(ids) => onImagesRemoved(activePost.id, ids)}
         />
-      </section>
+      </EditorDisclosure>
     </form>
   );
 }

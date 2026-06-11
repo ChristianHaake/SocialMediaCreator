@@ -12,20 +12,20 @@ direkte Antworten enthalten und in einer eigenen Kommentaransicht dargestellt
 werden. Der Messenger verwendet zwei frei editierbare Profile.
 
 Foto- und Mikroblog-Projekte können bis zu 50 Beiträge enthalten. Neue Beiträge
-werden direkt nach dem ausgewählten Beitrag eingefügt. Die Reihenfolge lässt
-sich am Griff per Maus oder Touch verändern. Alternativ wird der Griff mit
-Leertaste oder Enter aktiviert und mit den Pfeiltasten verschoben. Die
-separaten Hoch- und Runter-Schaltflächen funktionieren ebenfalls per Tastatur.
+benötigen ein Datum; die Uhrzeit ist optional. Die Reihenfolge wird automatisch
+aus diesen Angaben berechnet. Unter **Darstellung** legst du fest, ob die
+neuesten oder ältesten Beiträge zuerst erscheinen.
 
 Im Mikroblog-Modul kann die Timeline als Feed mit getrennten Beiträgen oder als
 zusammenhängender Thread mit Verbindungslinie dargestellt werden.
+Editorbereiche lassen sich über ihre Überschriften ein- und ausklappen.
 
 ## Konfiguration speichern
 
 Mit **Speichern** wird eine JSON-Konfigurationsdatei heruntergeladen. Sie enthält
 Texte, Zahlen und Anzeigeoptionen, aber keine Bilder. Nach dem erneuten Laden
-einer Konfiguration müssen Bilder deshalb wieder ausgewählt werden.
-Ältere Konfigurationen der Versionen 1, 2 und 3 werden automatisch migriert.
+einer Konfiguration müssen Bilder deshalb wieder ausgewählt werden. Unterstützt
+wird das aktuelle Config-Format Version 5.
 
 ## Unterstützte Bilder
 

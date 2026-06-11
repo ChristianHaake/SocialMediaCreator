@@ -13,11 +13,12 @@ import type {
   PostComment,
   PostViewMode,
   Theme,
+  TimelineSortOrder,
 } from "../types";
 
 type BaseConfigFile = {
   format: "social-media-creator-config";
-  version: 4;
+  version: 5;
 };
 
 export type PhotoPostConfigFile = BaseConfigFile & {
@@ -41,7 +42,6 @@ export type ConfigFile =
   | MicroblogConfigFile;
 
 const maxConfigSize = 1024 * 1024;
-const legacyFormat = "mockup-studio-config";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -64,8 +64,33 @@ function isTheme(value: unknown): value is Theme {
   return value === "light" || value === "dim" || value === "dark";
 }
 
+function isSortOrder(value: unknown): value is TimelineSortOrder {
+  return value === "newest" || value === "oldest";
+}
+
 function isViewMode(value: unknown): value is PostViewMode {
   return value === "post" || value === "comments";
+}
+
+function isDate(value: unknown): value is string {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return false;
+  }
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  );
+}
+
+function isOptionalTime(value: unknown): value is string {
+  return (
+    value === "" ||
+    (typeof value === "string" &&
+      /^([01]\d|2[0-3]):[0-5]\d$/.test(value))
+  );
 }
 
 function hasUniqueIds(values: Array<{ id: string }>) {
@@ -143,7 +168,8 @@ function isPhotoPost(value: unknown): value is PhotoPost {
       "username",
       "location",
       "caption",
-      "timestamp",
+      "date",
+      "time",
       "viewMode",
       "likes",
       "commentCount",
@@ -158,7 +184,8 @@ function isPhotoPost(value: unknown): value is PhotoPost {
     isStringWithin(value.username, fieldLimits.photoPost.username) &&
     isStringWithin(value.location, fieldLimits.photoPost.location) &&
     isStringWithin(value.caption, fieldLimits.photoPost.caption) &&
-    isStringWithin(value.timestamp, fieldLimits.common.timestamp) &&
+    isDate(value.date) &&
+    isOptionalTime(value.time) &&
     isViewMode(value.viewMode) &&
     isNonNegativeNumber(value.likes) &&
     isNonNegativeNumber(value.commentCount) &&
@@ -178,8 +205,9 @@ function isPhotoPost(value: unknown): value is PhotoPost {
 function isPhotoPostState(value: unknown): value is PhotoPostState {
   if (!isRecord(value)) return false;
   return (
-    hasOnlyKeys(value, ["theme", "activePostId", "posts"]) &&
+    hasOnlyKeys(value, ["theme", "sortOrder", "activePostId", "posts"]) &&
     isTheme(value.theme) &&
+    isSortOrder(value.sortOrder) &&
     isStringWithin(value.activePostId, fieldLimits.common.postId) &&
     Array.isArray(value.posts) &&
     value.posts.length > 0 &&
@@ -244,7 +272,8 @@ function isMicroblogPost(value: unknown): value is MicroblogPost {
       "displayName",
       "handle",
       "text",
-      "timestamp",
+      "date",
+      "time",
       "viewMode",
       "replies",
       "reposts",
@@ -256,7 +285,8 @@ function isMicroblogPost(value: unknown): value is MicroblogPost {
     isStringWithin(value.displayName, fieldLimits.microblog.displayName) &&
     isStringWithin(value.handle, fieldLimits.microblog.handle) &&
     typeof value.text === "string" &&
-    isStringWithin(value.timestamp, fieldLimits.common.timestamp) &&
+    isDate(value.date) &&
+    isOptionalTime(value.time) &&
     isViewMode(value.viewMode) &&
     isNonNegativeNumber(value.replies) &&
     isNonNegativeNumber(value.reposts) &&
@@ -268,9 +298,16 @@ function isMicroblogPost(value: unknown): value is MicroblogPost {
 function isMicroblogState(value: unknown): value is MicroblogState {
   if (!isRecord(value)) return false;
   return (
-    hasOnlyKeys(value, ["theme", "layoutMode", "activePostId", "posts"]) &&
+    hasOnlyKeys(value, [
+      "theme",
+      "layoutMode",
+      "sortOrder",
+      "activePostId",
+      "posts",
+    ]) &&
     isTheme(value.theme) &&
     (value.layoutMode === "feed" || value.layoutMode === "thread") &&
+    isSortOrder(value.sortOrder) &&
     isStringWithin(value.activePostId, fieldLimits.common.postId) &&
     Array.isArray(value.posts) &&
     value.posts.length > 0 &&
@@ -286,7 +323,7 @@ export function createPhotoPostConfig(
 ): PhotoPostConfigFile {
   return {
     format: "social-media-creator-config",
-    version: 4,
+    version: 5,
     module: "photoPost",
     data,
   };
@@ -297,7 +334,7 @@ export function createMessengerConfig(
 ): MessengerConfigFile {
   return {
     format: "social-media-creator-config",
-    version: 4,
+    version: 5,
     module: "messenger",
     data,
   };
@@ -308,168 +345,10 @@ export function createMicroblogConfig(
 ): MicroblogConfigFile {
   return {
     format: "social-media-creator-config",
-    version: 4,
+    version: 5,
     module: "microblog",
     data,
   };
-}
-
-function migrateComments(value: unknown): PostComment[] {
-  if (!Array.isArray(value)) return [];
-  return value
-    .filter(isRecord)
-    .map((comment, index) => ({
-      id:
-        typeof comment.id === "string"
-          ? comment.id
-          : `migrated-comment-${index + 1}`,
-      author: typeof comment.author === "string" ? comment.author : "",
-      text: typeof comment.text === "string" ? comment.text : "",
-      timestamp: "",
-      replies: [],
-    }));
-}
-
-function migratePhotoData(data: Record<string, unknown>): PhotoPostState | null {
-  const sourcePosts = Array.isArray(data.posts) ? data.posts : [data];
-  const posts = sourcePosts.filter(isRecord).map((post, index) => {
-    const id =
-      typeof post.id === "string" ? post.id : `photo-post-imported-${index + 1}`;
-    const mediaId = `photo-media-imported-${index + 1}`;
-    return {
-      id,
-      username: post.username as string,
-      location: post.location as string,
-      caption: post.caption as string,
-      timestamp: "vor einem Moment",
-      viewMode: "post" as const,
-      likes: post.likes as number,
-      commentCount:
-        typeof post.commentCount === "number"
-          ? post.commentCount
-          : typeof post.comments === "number"
-            ? post.comments
-            : Array.isArray(post.comments)
-              ? post.comments.length
-              : 0,
-      showLocation: post.showLocation as boolean,
-      showComments: post.showComments as boolean,
-      activeMediaId: mediaId,
-      media: [
-        {
-          id: mediaId,
-          imageAlt: typeof post.imageAlt === "string" ? post.imageAlt : "",
-          mode: "image" as const,
-          videoDuration: "",
-          videoViews: "",
-        },
-      ],
-      comments: migrateComments(post.comments),
-    };
-  });
-  if (posts.length === 0) return null;
-  const activePostId =
-    typeof data.activePostId === "string" ? data.activePostId : posts[0].id;
-  const migrated: PhotoPostState = { theme: "light", activePostId, posts };
-  return isPhotoPostState(migrated) ? migrated : null;
-}
-
-function migrateMessengerData(
-  data: Record<string, unknown>,
-): MessengerState | null {
-  if (!Array.isArray(data.messages)) return null;
-  const leftId = "messenger-profile-left";
-  const rightId = "messenger-profile-right";
-  const messages = data.messages.filter(isRecord).map((message, index) => ({
-    id:
-      typeof message.id === "string"
-        ? message.id
-        : `message-imported-${index + 1}`,
-    senderId: message.type === "sent" ? rightId : leftId,
-    text: message.text as string,
-    timestamp:
-      typeof message.time === "string"
-        ? message.time
-        : (message.timestamp as string),
-    seen: message.type === "sent",
-  }));
-  const migrated: MessengerState = {
-    theme: "light",
-    profiles: [
-      {
-        id: leftId,
-        name:
-          typeof data.contactName === "string"
-            ? data.contactName
-            : "Kontakt",
-        status: typeof data.status === "string" ? data.status : "",
-        side: "left",
-      },
-      { id: rightId, name: "Ich", status: "", side: "right" },
-    ],
-    messages,
-  };
-  return isMessengerState(migrated) ? migrated : null;
-}
-
-function legacyMicroblogTimestamp(post: Record<string, unknown>) {
-  const parts = [];
-  if (post.showTime !== false && typeof post.time === "string" && post.time) {
-    parts.push(post.time);
-  }
-  if (post.showDate !== false && typeof post.date === "string" && post.date) {
-    const [year, month, day] = post.date.split("-");
-    parts.push(year && month && day ? `${day}.${month}.${year}` : post.date);
-  }
-  return parts.join(" · ");
-}
-
-function migrateMicroblogData(
-  data: Record<string, unknown>,
-): MicroblogState | null {
-  const sourcePosts = Array.isArray(data.posts) ? data.posts : [data];
-  const posts = sourcePosts.filter(isRecord).map((post, index) => ({
-    id:
-      typeof post.id === "string"
-        ? post.id
-        : `microblog-post-imported-${index + 1}`,
-    displayName: post.displayName as string,
-    handle: post.handle as string,
-    text: post.text as string,
-    timestamp: legacyMicroblogTimestamp(post),
-    viewMode: "post" as const,
-    replies: post.replies as number,
-    reposts: post.reposts as number,
-    likes: post.likes as number,
-    comments: migrateComments(post.comments),
-  }));
-  if (posts.length === 0) return null;
-  const activePostId =
-    typeof data.activePostId === "string" ? data.activePostId : posts[0].id;
-  const migrated: MicroblogState = {
-    theme: "light",
-    layoutMode: "feed",
-    activePostId,
-    posts,
-  };
-  return isMicroblogState(migrated) ? migrated : null;
-}
-
-function migrateLegacy(value: Record<string, unknown>): ConfigFile | null {
-  if (!isRecord(value.data)) return null;
-  if (value.module === "photoPost") {
-    const data = migratePhotoData(value.data);
-    return data ? createPhotoPostConfig(data) : null;
-  }
-  if (value.module === "messenger") {
-    const data = migrateMessengerData(value.data);
-    return data ? createMessengerConfig(data) : null;
-  }
-  if (value.module === "microblog") {
-    const data = migrateMicroblogData(value.data);
-    return data ? createMicroblogConfig(data) : null;
-  }
-  return null;
 }
 
 export function parseConfig(contents: string): ConfigFile {
@@ -483,34 +362,13 @@ export function parseConfig(contents: string): ConfigFile {
   if (!isRecord(value)) {
     throw new Error("Die Datei ist keine SocialMediaCreator-Konfiguration.");
   }
-
-  if (
-    value.format === legacyFormat &&
-    (value.version === 1 || value.version === 2)
-  ) {
-    const migrated = migrateLegacy(value);
-    if (migrated) return migrated;
-    throw new Error("Die Modulkonfiguration ist unvollständig.");
-  }
-
   if (value.format !== "social-media-creator-config") {
     throw new Error("Die Datei ist keine SocialMediaCreator-Konfiguration.");
   }
-  if (value.version === 3) {
-    if (value.module === "photoPost" && isPhotoPostState(value.data)) {
-      return createPhotoPostConfig(value.data);
-    }
-    if (value.module === "messenger" && isMessengerState(value.data)) {
-      return createMessengerConfig(value.data);
-    }
-    if (value.module === "microblog" && isRecord(value.data)) {
-      const data = { ...value.data, layoutMode: "feed" };
-      if (isMicroblogState(data)) return createMicroblogConfig(data);
-    }
-    throw new Error("Die Modulkonfiguration ist unvollständig.");
-  }
-  if (value.version !== 4) {
-    throw new Error("Diese Konfigurationsversion wird nicht unterstützt.");
+  if (value.version !== 5) {
+    throw new Error(
+      "Diese Konfigurationsversion wird nicht unterstützt. Erforderlich ist Version 5.",
+    );
   }
   if (value.module === "photoPost" && isPhotoPostState(value.data)) {
     return value as PhotoPostConfigFile;

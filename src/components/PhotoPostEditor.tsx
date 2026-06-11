@@ -1,5 +1,4 @@
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
-import { arrayMove } from "@dnd-kit/sortable";
 import type { Dispatch, SetStateAction } from "react";
 import { fieldLimits } from "../constraints";
 import type {
@@ -10,10 +9,16 @@ import type {
   PhotoPostState,
 } from "../types";
 import { createId } from "../utils/ids";
+import {
+  formatTimelineDate,
+  sortTimelinePosts,
+  todayInputValue,
+} from "../utils/timeline";
 import { CommentEditor } from "./CommentEditor";
+import { EditorDisclosure } from "./EditorDisclosure";
 import { ImageUploadField } from "./ImageUploadField";
+import { TimelinePostList } from "./TimelinePostList";
 import { ThemeSelector } from "./ThemeSelector";
-import { SortablePostList } from "./SortablePostList";
 
 type PhotoPostEditorProps = {
   value: PhotoPostState;
@@ -53,7 +58,8 @@ function createPhotoPost(): PhotoPost {
     username: "neuer_account",
     location: "",
     caption: "Neuer Beitrag",
-    timestamp: "vor einem Moment",
+    date: todayInputValue(),
+    time: "",
     viewMode: "post",
     likes: 0,
     commentCount: 0,
@@ -86,6 +92,7 @@ export function PhotoPostEditor({
     media: {},
     commentImages: {},
   };
+  const sortedPosts = sortTimelinePosts(value.posts, value.sortOrder);
 
   function updatePost(changes: Partial<Omit<PhotoPost, "id">>) {
     onChange((current) => ({
@@ -109,20 +116,8 @@ export function PhotoPostEditor({
     onChange((current) => ({
       ...current,
       activePostId: post.id,
-      posts: current.posts.flatMap((item) =>
-        item.id === current.activePostId ? [item, post] : [item],
-      ),
+      posts: [...current.posts, post],
     }));
-  }
-
-  function movePost(activeId: string, overId: string) {
-    if (!overId || activeId === overId) return;
-    onChange((current) => {
-      const from = current.posts.findIndex((post) => post.id === activeId);
-      const to = current.posts.findIndex((post) => post.id === overId);
-      if (from < 0 || to < 0) return current;
-      return { ...current, posts: arrayMove(current.posts, from, to) };
-    });
   }
 
   function removePost(id: string) {
@@ -175,32 +170,43 @@ export function PhotoPostEditor({
 
   return (
     <form className="editor-form" onSubmit={(event) => event.preventDefault()}>
-      <section className="editor-section">
-        <div className="section-heading">
-          <span>01</span>
-          <div>
-            <h2>Darstellung</h2>
-            <p>Farbschema des gesamten Foto-Post-Moduls</p>
-          </div>
-        </div>
+      <EditorDisclosure
+        description="Farbschema und Reihenfolge der Timeline"
+        number="01"
+        title="Darstellung"
+      >
         <ThemeSelector
           onChange={(theme) => onChange((current) => ({ ...current, theme }))}
           value={value.theme}
         />
-      </section>
+        <label className="field">
+          <span className="field-label">Timeline-Reihenfolge</span>
+          <select
+            onChange={(event) =>
+              onChange((current) => ({
+                ...current,
+                sortOrder: event.target.value as PhotoPostState["sortOrder"],
+              }))
+            }
+            value={value.sortOrder}
+          >
+            <option value="newest">Neueste zuerst</option>
+            <option value="oldest">Älteste zuerst</option>
+          </select>
+        </label>
+      </EditorDisclosure>
 
-      <section className="editor-section">
-        <div className="section-heading section-heading--actions">
-          <span>02</span>
-          <div>
-            <h2>Beiträge</h2>
-            <p>
-              {value.posts.length}{" "}
-              {value.posts.length === 1 ? "Beitrag" : "Beiträge"} in Reihenfolge
-            </p>
-          </div>
+      <EditorDisclosure
+        defaultOpen
+        description={`${value.posts.length} ${
+          value.posts.length === 1 ? "Beitrag" : "Beiträge"
+        }, automatisch chronologisch sortiert`}
+        number="02"
+        title="Beiträge"
+      >
+        <div className="editor-section-actions">
           <button
-            className="button button--secondary section-heading__button"
+            className="button button--secondary"
             disabled={value.posts.length >= fieldLimits.common.posts}
             onClick={addPost}
             type="button"
@@ -209,28 +215,26 @@ export function PhotoPostEditor({
             Beitrag
           </button>
         </div>
-        <SortablePostList
+        <TimelinePostList
           activeId={activePost.id}
-          onMove={movePost}
           onRemove={removePost}
           onSelect={(activePostId) =>
             onChange((current) => ({ ...current, activePostId }))
           }
-          posts={value.posts.map((post) => ({
+          posts={sortedPosts.map((post) => ({
             id: post.id,
             summary: post.caption || "Ohne Beschreibung",
+            timestamp: formatTimelineDate(post.date, post.time),
           }))}
         />
-      </section>
+      </EditorDisclosure>
 
-      <section className="editor-section">
-        <div className="section-heading">
-          <span>03</span>
-          <div>
-            <h2>Profil und Ansicht</h2>
-            <p>Absender, Zeitstempel und Fokus des Beitrags</p>
-          </div>
-        </div>
+      <EditorDisclosure
+        defaultOpen
+        description="Absender, Veröffentlichungszeitpunkt und Fokus"
+        number="03"
+        title="Profil und Ansicht"
+      >
         <ImageUploadField
           id="profile-image"
           image={activeImages.profileImage}
@@ -238,31 +242,45 @@ export function PhotoPostEditor({
           onChange={(image) => onProfileImageChange(activePost.id, image)}
           onError={onImageError}
         />
-        <label className="field">
-          <span className="field-label">Benutzername</span>
-          <input
-            maxLength={fieldLimits.photoPost.username}
-            onChange={(event) => updatePost({ username: event.target.value })}
-            value={activePost.username}
-          />
-        </label>
-        <label className="field">
-          <span className="field-label">Ort</span>
-          <input
-            maxLength={fieldLimits.photoPost.location}
-            onChange={(event) => updatePost({ location: event.target.value })}
-            value={activePost.location}
-          />
-        </label>
-        <label className="field">
-          <span className="field-label">Zeitstempel</span>
-          <input
-            maxLength={fieldLimits.common.timestamp}
-            onChange={(event) => updatePost({ timestamp: event.target.value })}
-            placeholder="z. B. vor 2 Stunden"
-            value={activePost.timestamp}
-          />
-        </label>
+        <div className="field-row">
+          <label className="field">
+            <span className="field-label">Benutzername</span>
+            <input
+              maxLength={fieldLimits.photoPost.username}
+              onChange={(event) => updatePost({ username: event.target.value })}
+              value={activePost.username}
+            />
+          </label>
+          <label className="field">
+            <span className="field-label">Ort</span>
+            <input
+              maxLength={fieldLimits.photoPost.location}
+              onChange={(event) => updatePost({ location: event.target.value })}
+              value={activePost.location}
+            />
+          </label>
+        </div>
+        <div className="field-row">
+          <label className="field">
+            <span className="field-label">Datum</span>
+            <input
+              onChange={(event) => {
+                if (event.target.value) updatePost({ date: event.target.value });
+              }}
+              required
+              type="date"
+              value={activePost.date}
+            />
+          </label>
+          <label className="field">
+            <span className="field-label">Uhrzeit (optional)</span>
+            <input
+              onChange={(event) => updatePost({ time: event.target.value })}
+              type="time"
+              value={activePost.time}
+            />
+          </label>
+        </div>
         <label className="field">
           <span className="field-label">Darstellungsmodus</span>
           <select
@@ -287,17 +305,16 @@ export function PhotoPostEditor({
           />
           <span>Ort in der Vorschau anzeigen</span>
         </label>
-      </section>
+      </EditorDisclosure>
 
-      <section className="editor-section">
-        <div className="section-heading section-heading--actions">
-          <span>04</span>
-          <div>
-            <h2>Karussell</h2>
-            <p>Bis zu zehn Bilder oder Video-Thumbnails</p>
-          </div>
+      <EditorDisclosure
+        description="Bis zu zehn Bilder oder Video-Thumbnails"
+        number="04"
+        title="Karussell"
+      >
+        <div className="editor-section-actions">
           <button
-            className="button button--secondary section-heading__button"
+            className="button button--secondary"
             disabled={activePost.media.length >= fieldLimits.photoPost.media}
             onClick={addMedia}
             type="button"
@@ -422,16 +439,14 @@ export function PhotoPostEditor({
             </label>
           </div>
         )}
-      </section>
+      </EditorDisclosure>
 
-      <section className="editor-section">
-        <div className="section-heading">
-          <span>05</span>
-          <div>
-            <h2>Inhalt und Reaktionen</h2>
-            <p>Beschreibung und fiktive Kennzahlen</p>
-          </div>
-        </div>
+      <EditorDisclosure
+        defaultOpen
+        description="Beschreibung und fiktive Kennzahlen"
+        number="05"
+        title="Inhalt und Reaktionen"
+      >
         <label className="field">
           <span className="field-label">Beschreibung</span>
           <textarea
@@ -478,16 +493,13 @@ export function PhotoPostEditor({
           />
           <span>Kommentare anzeigen</span>
         </label>
-      </section>
+      </EditorDisclosure>
 
-      <section className="editor-section">
-        <div className="section-heading">
-          <span>06</span>
-          <div>
-            <h2>Kommentare und Antworten</h2>
-            <p>Zweistufige Diskussion zum ausgewählten Beitrag</p>
-          </div>
-        </div>
+      <EditorDisclosure
+        description="Zweistufige Diskussion zum ausgewählten Beitrag"
+        number="06"
+        title="Kommentare und Antworten"
+      >
         <CommentEditor
           comments={activePost.comments}
           idPrefix="photo"
@@ -499,7 +511,7 @@ export function PhotoPostEditor({
           onImageError={onImageError}
           onItemRemoved={(ids) => onImagesRemoved(activePost.id, ids)}
         />
-      </section>
+      </EditorDisclosure>
     </form>
   );
 }
