@@ -17,6 +17,8 @@ npm run dev
 npm test
 npm run lint
 npm run build
+npx playwright install chromium firefox webkit
+npm run test:e2e
 npm run smoke:production
 ```
 
@@ -31,6 +33,10 @@ Der aktuelle Stand enthält:
 - validierte JSON-Konfigurationen ohne Bilder
 - PNG- und JPG-Export
 - Zurücksetzen mit Schutz vor Datenverlust
+- semantische Modul-Tabs mit vollständiger Pfeiltastensteuerung
+- Fokusführung und Fokus-Rückgabe im Lehrkräfte-Dialog
+- Browser-E2E-Tests in Chromium, Firefox und WebKit
+- automatisierte Prüfung der Netzwerkfreiheit nach dem initialen Laden
 - Hilfe, Projektinformationen, Datenschutz und Impressum
 - gehärtete Cloudflare-Workers-Auslieferung mit SPA-Fallback
 

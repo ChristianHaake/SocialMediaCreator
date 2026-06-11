@@ -23,7 +23,10 @@ export function AppHeader({ onOpenTeacherInfo }: AppHeaderProps) {
         </span>
         <button
           className="text-button"
-          onClick={onOpenTeacherInfo}
+          onClick={(event) => {
+            event.currentTarget.focus();
+            onOpenTeacherInfo();
+          }}
           type="button"
         >
           <GraduationCap aria-hidden="true" size={18} />

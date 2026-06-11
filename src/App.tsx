@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import {
   type ChangeEvent,
+  type KeyboardEvent,
   useEffect,
   useRef,
   useState,
@@ -121,6 +122,7 @@ export function App() {
   const [teacherInfoOpen, setTeacherInfoOpen] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
   const configInputRef = useRef<HTMLInputElement>(null);
+  const moduleTabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const pathname =
     window.location.pathname.length > 1
       ? window.location.pathname.replace(/\/+$/, "")
@@ -145,6 +147,29 @@ export function App() {
     setImageError(null);
     setExportError(null);
     setConfigStatus(null);
+  }
+
+  function handleModuleKeyDown(
+    event: KeyboardEvent<HTMLButtonElement>,
+    currentIndex: number,
+  ) {
+    let nextIndex: number | null = null;
+
+    if (event.key === "ArrowRight") {
+      nextIndex = (currentIndex + 1) % modules.length;
+    } else if (event.key === "ArrowLeft") {
+      nextIndex = (currentIndex - 1 + modules.length) % modules.length;
+    } else if (event.key === "Home") {
+      nextIndex = 0;
+    } else if (event.key === "End") {
+      nextIndex = modules.length - 1;
+    }
+
+    if (nextIndex === null) return;
+
+    event.preventDefault();
+    selectModule(modules[nextIndex].id);
+    moduleTabRefs.current[nextIndex]?.focus();
   }
 
   function isModuleChanged(module: ModuleType) {
@@ -385,17 +410,29 @@ export function App() {
             </div>
           </section>
 
-          <nav aria-label="Format auswählen" className="module-tabs">
-            {modules.map(({ id, label, icon: Icon }) => (
+          <nav
+            aria-label="Format auswählen"
+            className="module-tabs"
+            role="tablist"
+          >
+            {modules.map(({ id, label, icon: Icon }, index) => (
               <button
-                aria-current={id === activeModule ? "page" : undefined}
+                aria-controls="module-panel"
+                aria-selected={id === activeModule}
                 className={
                   id === activeModule
                     ? "module-tab module-tab--active"
                     : "module-tab"
                 }
+                id={`module-tab-${id}`}
                 key={id}
                 onClick={() => selectModule(id)}
+                onKeyDown={(event) => handleModuleKeyDown(event, index)}
+                ref={(element) => {
+                  moduleTabRefs.current[index] = element;
+                }}
+                role="tab"
+                tabIndex={id === activeModule ? 0 : -1}
                 type="button"
               >
                 <Icon aria-hidden="true" size={19} />
@@ -421,7 +458,12 @@ export function App() {
             </button>
           </div>
 
-          <section className="workspace">
+          <section
+            aria-labelledby={`module-tab-${activeModule}`}
+            className="workspace"
+            id="module-panel"
+            role="tabpanel"
+          >
             <div
               className={`editor-panel ${
                 mobileView === "editor" ? "mobile-panel--active" : ""
