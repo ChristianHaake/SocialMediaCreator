@@ -9,6 +9,7 @@ import type {
   MessengerState,
 } from "../types";
 import { createId } from "../utils/ids";
+import { useTranslation } from "../i18n";
 import { ImageUploadField } from "./ImageUploadField";
 import { ThemeSelector } from "./ThemeSelector";
 
@@ -29,6 +30,7 @@ export function MessengerEditor({
   onProfileImageChange,
   onImageError,
 }: MessengerEditorProps) {
+  const { locale, t } = useTranslation();
   const [draft, setDraft] = useState<MessageDraft>({
     senderId: value.profiles[0].id,
     text: "",
@@ -91,8 +93,8 @@ export function MessengerEditor({
         <div className="section-heading">
           <span>01</span>
           <div>
-            <h2>Darstellung</h2>
-            <p>Farbschema des Messenger-Chats</p>
+            <h2>{t("common.appearance")}</h2>
+            <p>{t("messenger.themeDescription")}</p>
           </div>
         </div>
         <ThemeSelector
@@ -105,28 +107,30 @@ export function MessengerEditor({
         <div className="section-heading">
           <span>02</span>
           <div>
-            <h2>Chat-Profile</h2>
-            <p>Zwei feste Seiten mit frei editierbaren Profilen</p>
+            <h2>{t("messenger.profiles")}</h2>
+            <p>{t("messenger.profilesDescription")}</p>
           </div>
         </div>
         <p className="editor-notice">
-          Verwende fiktive Namen und keine echten privaten Chats.
+          {t("messenger.notice")}
         </p>
         <div className="profile-editor-list">
           {value.profiles.map((profile) => (
             <div className="message-editor-card" key={profile.id}>
               <strong>
-                {profile.side === "left" ? "Profil links" : "Profil rechts"}
+                {profile.side === "left"
+                  ? t("messenger.leftProfile")
+                  : t("messenger.rightProfile")}
               </strong>
               <ImageUploadField
                 id={`messenger-profile-image-${profile.side}`}
                 image={images[profile.id] ?? null}
-                label="Profilbild"
+                label={t("common.profileImage")}
                 onChange={(image) => onProfileImageChange(profile.id, image)}
                 onError={onImageError}
               />
               <label className="field">
-                <span className="field-label">Name</span>
+                <span className="field-label">{t("messenger.name")}</span>
                 <input
                   maxLength={fieldLimits.messenger.contactName}
                   onChange={(event) =>
@@ -136,7 +140,7 @@ export function MessengerEditor({
                 />
               </label>
               <label className="field">
-                <span className="field-label">Online-Status</span>
+                <span className="field-label">{t("messenger.status")}</span>
                 <input
                   maxLength={fieldLimits.messenger.status}
                   onChange={(event) =>
@@ -154,12 +158,12 @@ export function MessengerEditor({
         <div className="section-heading">
           <span>03</span>
           <div>
-            <h2>Neue Nachricht</h2>
-            <p>Nachricht einem der beiden Profile zuweisen</p>
+            <h2>{t("messenger.newMessage")}</h2>
+            <p>{t("messenger.newMessageDescription")}</p>
           </div>
         </div>
         <label className="field">
-          <span className="field-label">Absender</span>
+          <span className="field-label">{t("messenger.sender")}</span>
           <select
             onChange={(event) =>
               setDraft((current) => ({
@@ -177,7 +181,7 @@ export function MessengerEditor({
           </select>
         </label>
         <label className="field">
-          <span className="field-label">Nachrichtentext</span>
+          <span className="field-label">{t("messenger.messageText")}</span>
           <textarea
             maxLength={fieldLimits.messenger.messageText}
             onChange={(event) =>
@@ -186,13 +190,13 @@ export function MessengerEditor({
                 text: event.target.value,
               }))
             }
-            placeholder="Was soll in der Nachricht stehen?"
+            placeholder={t("messenger.placeholder")}
             rows={3}
             value={draft.text}
           />
         </label>
         <label className="field">
-          <span className="field-label">Zeitstempel</span>
+          <span className="field-label">{t("common.timestamp")}</span>
           <input
             maxLength={fieldLimits.common.timestamp}
             onChange={(event) =>
@@ -215,7 +219,7 @@ export function MessengerEditor({
             }
             type="checkbox"
           />
-          <span>Als gelesen oder gesehen markieren</span>
+          <span>{t("messenger.markSeen")}</span>
         </label>
         <button
           className="button button--primary full-width-button"
@@ -224,7 +228,7 @@ export function MessengerEditor({
           type="button"
         >
           <Plus aria-hidden="true" size={18} />
-          Hinzufügen
+          {t("common.add")}
         </button>
       </section>
 
@@ -232,21 +236,21 @@ export function MessengerEditor({
         <div className="section-heading">
           <span>04</span>
           <div>
-            <h2>Nachrichten</h2>
-            <p>{value.messages.length} Nachrichten bearbeiten und sortieren</p>
+            <h2>{t("messenger.messages")}</h2>
+            <p>{t("messenger.messagesDescription", { count: value.messages.length })}</p>
           </div>
         </div>
         {value.messages.length === 0 ? (
-          <p className="empty-state">Noch keine Nachrichten.</p>
+          <p className="empty-state">{t("messenger.empty")}</p>
         ) : (
           <ol className="message-editor-list">
             {value.messages.map((message, index) => (
               <li className="message-editor-card" key={message.id}>
                 <div className="message-editor-card__header">
-                  <strong>Nachricht {index + 1}</strong>
+                  <strong>{t("messenger.message")} {index + 1}</strong>
                   <div className="message-editor-card__actions">
                     <button
-                      aria-label={`Nachricht ${index + 1} nach oben verschieben`}
+                      aria-label={`${t("messenger.message")} ${index + 1} ${t("common.moveUp")}`}
                       className="compact-icon-button"
                       disabled={index === 0}
                       onClick={() => moveMessage(index, -1)}
@@ -255,7 +259,7 @@ export function MessengerEditor({
                       <ArrowUp aria-hidden="true" size={16} />
                     </button>
                     <button
-                      aria-label={`Nachricht ${index + 1} nach unten verschieben`}
+                      aria-label={`${t("messenger.message")} ${index + 1} ${t("common.moveDown")}`}
                       className="compact-icon-button"
                       disabled={index === value.messages.length - 1}
                       onClick={() => moveMessage(index, 1)}
@@ -264,7 +268,7 @@ export function MessengerEditor({
                       <ArrowDown aria-hidden="true" size={16} />
                     </button>
                     <button
-                      aria-label={`Nachricht ${index + 1} löschen`}
+                      aria-label={`${t("messenger.message")} ${index + 1} ${t("common.delete")}`}
                       className="compact-icon-button compact-icon-button--danger"
                       onClick={() =>
                         onChange((current) => ({
@@ -281,9 +285,13 @@ export function MessengerEditor({
                   </div>
                 </div>
                 <label className="field">
-                  <span className="field-label">Absender</span>
+                  <span className="field-label">{t("messenger.sender")}</span>
                   <select
-                    aria-label={`Absender von Nachricht ${index + 1}`}
+                    aria-label={
+                      locale === "de"
+                        ? `Absender von Nachricht ${index + 1}`
+                        : `Sender of message ${index + 1}`
+                    }
                     onChange={(event) =>
                       updateMessage(message.id, {
                         senderId: event.target.value,
@@ -299,9 +307,13 @@ export function MessengerEditor({
                   </select>
                 </label>
                 <label className="field">
-                  <span className="field-label">Text</span>
+                  <span className="field-label">{t("messenger.text")}</span>
                   <textarea
-                    aria-label={`Text von Nachricht ${index + 1}`}
+                    aria-label={
+                      locale === "de"
+                        ? `Text von Nachricht ${index + 1}`
+                        : `Text of message ${index + 1}`
+                    }
                     maxLength={fieldLimits.messenger.messageText}
                     onChange={(event) =>
                       updateMessage(message.id, { text: event.target.value })
@@ -311,9 +323,13 @@ export function MessengerEditor({
                   />
                 </label>
                 <label className="field">
-                  <span className="field-label">Zeitstempel</span>
+                  <span className="field-label">{t("common.timestamp")}</span>
                   <input
-                    aria-label={`Zeitstempel von Nachricht ${index + 1}`}
+                    aria-label={
+                      locale === "de"
+                        ? `Zeitstempel von Nachricht ${index + 1}`
+                        : `Timestamp of message ${index + 1}`
+                    }
                     maxLength={fieldLimits.common.timestamp}
                     onChange={(event) =>
                       updateMessage(message.id, {
@@ -331,7 +347,7 @@ export function MessengerEditor({
                     }
                     type="checkbox"
                   />
-                  <span>Gelesen oder gesehen</span>
+                  <span>{t("messenger.seen")}</span>
                 </label>
               </li>
             ))}

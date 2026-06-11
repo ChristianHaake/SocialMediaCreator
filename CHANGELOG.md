@@ -13,6 +13,11 @@ Veröffentlichung in eine versionierte Sektion verschoben.
 
 ### Hinzugefügt
 
+- Vollständige deutsche und englische Oberfläche inklusive Vorschauen,
+  Dialogen, Verifikation und Inhaltsseiten.
+- Sprachwahl über Browserpräferenz und Header-Umschalter mit lokaler
+  Speicherung.
+- Konfigurationsformat Version 6 speichert die Projektsprache.
 - Echte Foto- und Mikroblog-Timelines mit Pflichtdatum, optionaler Uhrzeit und
   automatischer chronologischer Sortierung.
 - Umschaltbare Timeline-Reihenfolge: neueste oder älteste Beiträge zuerst.
@@ -54,6 +59,10 @@ Veröffentlichung in eine versionierte Sektion verschoben.
 
 ### Geändert
 
+- Config V5 wird beim Import als deutsches Config-V6-Projekt übernommen.
+- Datums- und Zahlenformatierung folgt der gewählten Sprache.
+- Neue Elemente und Zurücksetzen verwenden lokalisierte Standardinhalte,
+  bestehende Nutzereingaben bleiben beim Sprachwechsel unverändert.
 - Die manuelle Beitragsreihenfolge per Drag-and-Drop und Pfeiltasten wurde
   durch die automatische Timeline-Sortierung ersetzt.
 - Freie Beitragszeitstempel wurden durch ein Pflichtdatum und eine optionale

@@ -1,5 +1,6 @@
 import { X } from "lucide-react";
 import { useEffect, useRef, type KeyboardEvent } from "react";
+import { useTranslation } from "../i18n";
 
 type TeacherInfoDialogProps = {
   open: boolean;
@@ -10,6 +11,7 @@ export function TeacherInfoDialog({
   open,
   onClose,
 }: TeacherInfoDialogProps) {
+  const { t } = useTranslation();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
@@ -75,11 +77,11 @@ export function TeacherInfoDialog({
       >
         <div className="info-dialog__header">
           <div>
-            <span className="panel-kicker">Für den Unterricht</span>
-            <h2 id="teacher-dialog-title">Hinweise für Lehrkräfte</h2>
+            <span className="panel-kicker">{t("teacher.kicker")}</span>
+            <h2 id="teacher-dialog-title">{t("teacher.title")}</h2>
           </div>
           <button
-            aria-label="Dialog schließen"
+            aria-label={t("teacher.close")}
             className="icon-button"
             onClick={onClose}
             ref={closeButtonRef}
@@ -90,20 +92,13 @@ export function TeacherInfoDialog({
         </div>
         <div className="info-dialog__content">
           <ul>
-            <li>Texte und ausgewählte Bilder werden nicht hochgeladen.</li>
-            <li>Es gibt keine Anmeldung, Datenbank oder Nutzungsanalyse.</li>
-            <li>
-              Konfigurationen und Bilder werden ausschließlich lokal erzeugt.
-            </li>
-            <li>
-              Das Werkzeug eignet sich für fiktive Beiträge, Rollenarbeit,
-              Medienanalyse und Quellenkritik.
-            </li>
+            <li>{t("teacher.item1")}</li>
+            <li>{t("teacher.item2")}</li>
+            <li>{t("teacher.item3")}</li>
+            <li>{t("teacher.item4")}</li>
           </ul>
           <p>
-            Verwende keine echten personenbezogenen Daten oder privaten
-            Chatverläufe. Technische Verbindungsdaten entstehen beim Abruf der
-            Website über den Hosting-Anbieter.
+            {t("teacher.note")}
           </p>
         </div>
       </div>

@@ -2,6 +2,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { fieldLimits } from "../constraints";
 import type { ImageState, PostComment } from "../types";
 import { createId } from "../utils/ids";
+import { useTranslation } from "../i18n";
 import { ImageUploadField } from "./ImageUploadField";
 
 type CommentEditorProps = {
@@ -23,14 +24,15 @@ export function CommentEditor({
   onImageError,
   onItemRemoved,
 }: CommentEditorProps) {
+  const { t } = useTranslation();
   function addComment() {
     onChange([
       ...comments,
       {
         id: createId(`${idPrefix}-comment`),
         author: "account",
-        text: "Neuer Kommentar",
-        timestamp: "gerade eben",
+        text: t("comment.new"),
+        timestamp: t("comment.justNow"),
         replies: [],
       },
     ]);
@@ -59,8 +61,8 @@ export function CommentEditor({
         {
           id: createId(`${idPrefix}-reply`),
           author: "account",
-          text: "Neue Antwort",
-          timestamp: "gerade eben",
+          text: t("comment.newReply"),
+          timestamp: t("comment.justNow"),
         },
       ],
     });
@@ -70,7 +72,12 @@ export function CommentEditor({
     <>
       <div className="comment-editor-heading">
         <p>
-          {comments.length} {comments.length === 1 ? "Kommentar" : "Kommentare"}
+          {t(
+            comments.length === 1
+              ? "comment.count.one"
+              : "comment.count.other",
+            { count: comments.length },
+          )}
         </p>
         <button
           className="button button--secondary"
@@ -79,20 +86,20 @@ export function CommentEditor({
           type="button"
         >
           <Plus aria-hidden="true" size={17} />
-          Kommentar
+          {t("common.comment")}
         </button>
       </div>
 
       {comments.length === 0 ? (
-        <p className="empty-state">Noch keine Kommentare angehängt.</p>
+        <p className="empty-state">{t("comment.empty")}</p>
       ) : (
         <ol className="message-editor-list">
           {comments.map((comment, commentIndex) => (
             <li className="message-editor-card" key={comment.id}>
               <div className="message-editor-card__header">
-                <strong>Kommentar {commentIndex + 1}</strong>
+                <strong>{t("common.comment")} {commentIndex + 1}</strong>
                 <button
-                  aria-label={`Kommentar ${commentIndex + 1} löschen`}
+                  aria-label={`${t("common.comment")} ${commentIndex + 1} ${t("common.delete")}`}
                   className="compact-icon-button compact-icon-button--danger"
                   onClick={() => removeComment(comment)}
                   type="button"
@@ -103,12 +110,12 @@ export function CommentEditor({
               <ImageUploadField
                 id={`${idPrefix}-comment-image-${comment.id}`}
                 image={images[comment.id] ?? null}
-                label="Profilbild"
+                label={t("common.profileImage")}
                 onChange={(image) => onImageChange(comment.id, image)}
                 onError={onImageError}
               />
               <label className="field">
-                <span className="field-label">Autor</span>
+                <span className="field-label">{t("common.author")}</span>
                 <input
                   maxLength={fieldLimits.common.commentAuthor}
                   onChange={(event) =>
@@ -118,7 +125,7 @@ export function CommentEditor({
                 />
               </label>
               <label className="field">
-                <span className="field-label">Zeitstempel</span>
+                <span className="field-label">{t("common.timestamp")}</span>
                 <input
                   maxLength={fieldLimits.common.timestamp}
                   onChange={(event) =>
@@ -130,7 +137,7 @@ export function CommentEditor({
                 />
               </label>
               <label className="field">
-                <span className="field-label">Kommentartext</span>
+                <span className="field-label">{t("comment.text")}</span>
                 <textarea
                   maxLength={fieldLimits.common.commentText}
                   onChange={(event) =>
@@ -143,7 +150,7 @@ export function CommentEditor({
 
               <div className="reply-editor">
                 <div className="comment-editor-heading">
-                  <strong>Antworten</strong>
+                  <strong>{t("common.replies")}</strong>
                   <button
                     className="button button--secondary"
                     disabled={
@@ -153,15 +160,15 @@ export function CommentEditor({
                     type="button"
                   >
                     <Plus aria-hidden="true" size={16} />
-                    Antwort
+                    {t("common.reply")}
                   </button>
                 </div>
                 {comment.replies.map((reply, replyIndex) => (
                   <div className="reply-editor__card" key={reply.id}>
                     <div className="message-editor-card__header">
-                      <strong>Antwort {replyIndex + 1}</strong>
+                      <strong>{t("common.reply")} {replyIndex + 1}</strong>
                       <button
-                        aria-label={`Antwort ${replyIndex + 1} löschen`}
+                        aria-label={`${t("common.reply")} ${replyIndex + 1} ${t("common.delete")}`}
                         className="compact-icon-button compact-icon-button--danger"
                         onClick={() => {
                           updateComment(comment.id, {
@@ -179,12 +186,12 @@ export function CommentEditor({
                     <ImageUploadField
                       id={`${idPrefix}-reply-image-${reply.id}`}
                       image={images[reply.id] ?? null}
-                      label="Profilbild"
+                      label={t("common.profileImage")}
                       onChange={(image) => onImageChange(reply.id, image)}
                       onError={onImageError}
                     />
                     <label className="field">
-                      <span className="field-label">Autor</span>
+                      <span className="field-label">{t("common.author")}</span>
                       <input
                         maxLength={fieldLimits.common.commentAuthor}
                         onChange={(event) =>
@@ -200,7 +207,7 @@ export function CommentEditor({
                       />
                     </label>
                     <label className="field">
-                      <span className="field-label">Zeitstempel</span>
+                      <span className="field-label">{t("common.timestamp")}</span>
                       <input
                         maxLength={fieldLimits.common.timestamp}
                         onChange={(event) =>
@@ -216,7 +223,7 @@ export function CommentEditor({
                       />
                     </label>
                     <label className="field">
-                      <span className="field-label">Antworttext</span>
+                      <span className="field-label">{t("comment.replyText")}</span>
                       <textarea
                         maxLength={fieldLimits.common.commentText}
                         onChange={(event) =>

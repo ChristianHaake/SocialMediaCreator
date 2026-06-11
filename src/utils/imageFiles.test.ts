@@ -27,9 +27,7 @@ describe("validateImageFile", () => {
       type: "image/svg+xml",
     });
 
-    await expect(validateImageFile(file)).resolves.toContain(
-      "PNG-, JPG- oder WebP",
-    );
+    await expect(validateImageFile(file)).resolves.toBe("image.invalidType");
   });
 
   it("rejects images larger than 10 MB", async () => {
@@ -37,7 +35,7 @@ describe("validateImageFile", () => {
       type: "image/jpeg",
     });
 
-    await expect(validateImageFile(file)).resolves.toContain("höchstens 10 MB");
+    await expect(validateImageFile(file)).resolves.toBe("image.tooLarge");
   });
 
   it("rejects files with a forged image MIME type", async () => {
@@ -45,9 +43,7 @@ describe("validateImageFile", () => {
       type: "image/png",
     });
 
-    await expect(validateImageFile(file)).resolves.toContain(
-      "kein gültiges",
-    );
+    await expect(validateImageFile(file)).resolves.toBe("image.invalidData");
   });
 
   it("rejects signed but undecodable image files", async () => {
@@ -61,6 +57,6 @@ describe("validateImageFile", () => {
       { type: "image/jpeg" },
     );
 
-    await expect(validateImageFile(file)).resolves.toContain("beschädigt");
+    await expect(validateImageFile(file)).resolves.toBe("image.decodeFailed");
   });
 });

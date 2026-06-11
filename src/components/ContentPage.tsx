@@ -1,6 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useTranslation } from "../i18n";
 
 type ContentPageProps = {
   content: string;
@@ -8,11 +9,12 @@ type ContentPageProps = {
 };
 
 export function ContentPage({ content, title }: ContentPageProps) {
+  const { t } = useTranslation();
   return (
     <main className="content-shell">
       <a className="back-link" href="/">
         <ArrowLeft aria-hidden="true" size={18} />
-        Zurück zur App
+        {t("content.back")}
       </a>
       <article className="markdown-page">
         <h1>{title}</h1>

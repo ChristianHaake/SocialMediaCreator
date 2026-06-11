@@ -4,8 +4,10 @@ import {
   verifyImageMarker,
   type VerificationResult,
 } from "../utils/exportImage";
+import { useTranslation } from "../i18n";
 
 export function VerificationPage() {
+  const { numberLocale, t } = useTranslation();
   const [result, setResult] = useState<VerificationResult | null>(null);
   const [checking, setChecking] = useState(false);
 
@@ -25,18 +27,14 @@ export function VerificationPage() {
     <main className="content-shell">
       <a className="back-link" href="/">
         <ArrowLeft aria-hidden="true" size={18} />
-        Zurück zur App
+        {t("content.back")}
       </a>
       <article className="markdown-page verification-page">
-        <h1>Bild verifizieren</h1>
-        <p>
-          Prüfe lokal, ob eine PNG- oder JPG-Datei einen intakten
-          SocialMediaCreator-Herkunftsmarker enthält. Die Datei wird nicht
-          hochgeladen.
-        </p>
+        <h1>{t("verify.title")}</h1>
+        <p>{t("verify.description")}</p>
         <label className="verification-upload button button--primary">
           <FileCheck2 aria-hidden="true" size={19} />
-          {checking ? "Prüfe Datei..." : "Bild auswählen"}
+          {checking ? t("verify.checking") : t("verify.choose")}
           <input
             accept=".png,.jpg,.jpeg,image/png,image/jpeg"
             className="visually-hidden"
@@ -50,10 +48,14 @@ export function VerificationPage() {
           <div className="verification-result verification-result--valid" role="status">
             <FileCheck2 aria-hidden="true" />
             <div>
-              <h2>Gültiger Herkunftsmarker</h2>
+              <h2>{t("verify.valid")}</h2>
               <p>
-                Modul: {result.marker.module}. Exportiert am{" "}
-                {new Date(result.marker.exportedAt).toLocaleString("de-DE")}.
+                {t("verify.validText", {
+                  module: result.marker.module,
+                  date: new Date(result.marker.exportedAt).toLocaleString(
+                    numberLocale,
+                  ),
+                })}
               </p>
             </div>
           </div>
@@ -62,11 +64,8 @@ export function VerificationPage() {
           <div className="verification-result verification-result--warning" role="alert">
             <FileWarning aria-hidden="true" />
             <div>
-              <h2>Datei nachträglich verändert</h2>
-              <p>
-                Der Marker ist vorhanden, die Prüfsumme stimmt aber nicht mit
-                den Bilddaten überein.
-              </p>
+              <h2>{t("verify.modified")}</h2>
+              <p>{t("verify.modifiedText")}</p>
             </div>
           </div>
         )}
@@ -74,20 +73,14 @@ export function VerificationPage() {
           <div className="verification-result" role="status">
             <FileQuestion aria-hidden="true" />
             <div>
-              <h2>Kein unterstützter Marker</h2>
-              <p>
-                Die Datei wurde nicht mit einem erkennbaren
-                SocialMediaCreator-Marker exportiert oder der Marker wurde
-                entfernt.
-              </p>
+              <h2>{t("verify.none")}</h2>
+              <p>{t("verify.noneText")}</p>
             </div>
           </div>
         )}
 
         <aside className="verification-disclaimer">
-          Der Marker ist ein pädagogischer Herkunftshinweis. Er ist kein
-          fälschungssicherer Echtheitsbeweis und kann durch erneutes Speichern,
-          Plattformverarbeitung oder Bildbearbeitung entfernt werden.
+          {t("verify.disclaimer")}
         </aside>
       </article>
     </main>

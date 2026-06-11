@@ -1,4 +1,5 @@
 import type { ImageState } from "../types";
+import type { ImageErrorCode } from "../i18n";
 
 const acceptedImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 const maxImageSize = 10 * 1024 * 1024;
@@ -45,22 +46,24 @@ async function canDecodeImage(file: File) {
   });
 }
 
-export async function validateImageFile(file: File): Promise<string | null> {
+export async function validateImageFile(
+  file: File,
+): Promise<ImageErrorCode | null> {
   if (!acceptedImageTypes.has(file.type)) {
-    return "Bitte wähle eine PNG-, JPG- oder WebP-Datei aus.";
+    return "image.invalidType";
   }
 
   if (file.size > maxImageSize) {
-    return "Das Bild darf höchstens 10 MB groß sein.";
+    return "image.tooLarge";
   }
 
   const header = new Uint8Array(await file.slice(0, 12).arrayBuffer());
   if (!hasImageSignature(file.type, header)) {
-    return "Die Datei enthält kein gültiges PNG-, JPG- oder WebP-Bild.";
+    return "image.invalidData";
   }
 
   if (!(await canDecodeImage(file))) {
-    return "Das Bild ist beschädigt oder kann nicht gelesen werden.";
+    return "image.decodeFailed";
   }
 
   return null;

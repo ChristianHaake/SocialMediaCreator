@@ -1,6 +1,14 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    if (!window.localStorage.getItem("social-media-creator-locale")) {
+      window.localStorage.setItem("social-media-creator-locale", "de");
+    }
+  });
+});
+
 async function openSection(page: Page, title: string) {
   const details = page
     .locator("details.editor-disclosure")
@@ -9,6 +17,34 @@ async function openSection(page: Page, title: string) {
     await details.locator("summary").click();
   }
 }
+
+test("language switch preserves content and exports locale in config v6", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByLabel("Benutzername").fill("custom_account");
+  await page.getByRole("button", { name: "EN", exact: true }).click();
+
+  await expect(
+    page.getByRole("heading", { name: "Create your photo posts." }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Username")).toHaveValue("custom_account");
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await expect(page.locator(".photo-post__date")).toHaveText("06/11/2026");
+
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Save" }).click();
+  const download = await downloadPromise;
+  const path = await download.path();
+  expect(path).not.toBeNull();
+  const config = JSON.parse(await readFile(path!, "utf8"));
+  expect(config.version).toBe(6);
+  expect(config.locale).toBe("en");
+
+  await page.goto("/hilfe");
+  await expect(page.getByRole("heading", { name: "Help" })).toBeVisible();
+  await expect(page.getByText("Quick start")).toBeVisible();
+});
 
 test("module tabs support keyboard navigation and preserve state", async ({
   page,
@@ -143,6 +179,49 @@ test("configuration import validates before replacing editor state", async ({
       exact: true,
     }),
   ).toBeVisible();
+
+  await input.setInputFiles({
+    name: "microblog-en.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(
+      JSON.stringify({
+        format: "social-media-creator-config",
+        version: 6,
+        locale: "en",
+        module: "microblog",
+        data: {
+          theme: "light",
+          layoutMode: "feed",
+          sortOrder: "newest",
+          activePostId: "english-post",
+          posts: [
+            {
+              id: "english-post",
+              displayName: "Imported project",
+              handle: "import_test",
+              text: "Imported post",
+              date: "2026-06-11",
+              time: "12:30",
+              viewMode: "post",
+              replies: 1,
+              reposts: 2,
+              likes: 3,
+              comments: [],
+            },
+          ],
+        },
+      }),
+    ),
+  });
+
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await expect(
+    page.getByRole("heading", { name: "Write your microblog posts." }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Display name")).toHaveValue("Imported project");
+  await expect(page.getByRole("status")).toContainText(
+    "Configuration loaded. Images must be selected again.",
+  );
 });
 
 test("photo and microblog feeds support multiple posts with comments", async ({

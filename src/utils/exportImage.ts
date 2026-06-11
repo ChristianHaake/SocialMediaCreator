@@ -1,5 +1,5 @@
 import { toJpeg, toPng } from "html-to-image";
-import type { ModuleType } from "../types";
+import type { Locale, ModuleType } from "../types";
 
 export type ImageExportFormat = "png" | "jpg";
 export type ExportFormat = ImageExportFormat | "pdf";
@@ -187,12 +187,16 @@ function loadImage(dataUrl: string) {
 export async function exportElementAsPdf(
   element: HTMLElement,
   fileName: string,
+  locale: Locale = "de",
 ) {
   const { jsPDF } = await import("jspdf");
   const pdf = new jsPDF({ format: "a4", orientation: "portrait", unit: "mm" });
   pdf.setProperties({
     title: "SocialMediaCreator Simulation",
-    subject: "Lokal erzeugte SocialMediaCreator Simulation",
+    subject:
+      locale === "de"
+        ? "Lokal erzeugte SocialMediaCreator Simulation"
+        : "Locally created SocialMediaCreator simulation",
     author: "SocialMediaCreator",
     creator: "SocialMediaCreator",
   });

@@ -9,6 +9,7 @@ import { forwardRef } from "react";
 import type { MicroblogImages, MicroblogState } from "../types";
 import { formatTimelineDate, sortTimelinePosts } from "../utils/timeline";
 import { CommentThread } from "./CommentThread";
+import { useTranslation } from "../i18n";
 
 type MicroblogPreviewProps = {
   value: MicroblogState;
@@ -28,6 +29,7 @@ export const MicroblogPreview = forwardRef<
   HTMLDivElement,
   MicroblogPreviewProps
 >(function MicroblogPreview({ value, images }, ref) {
+  const { locale, numberLocale, t } = useTranslation();
   const sortedPosts = sortTimelinePosts(value.posts, value.sortOrder);
   return (
     <div
@@ -35,7 +37,8 @@ export const MicroblogPreview = forwardRef<
       ref={ref}
     >
       {sortedPosts.map((post, index) => {
-        const displayName = post.displayName.trim() || "Anzeigename";
+        const displayName =
+          post.displayName.trim() || t("microblog.displayName");
         const postImages = images[post.id];
         return (
           <article
@@ -77,28 +80,28 @@ export const MicroblogPreview = forwardRef<
             {post.viewMode === "post" && (
               <>
                 <p className="microblog-preview__text">
-                  {post.text || "Dein Beitrag erscheint hier."}
+                  {post.text || t("microblog.placeholder")}
                 </p>
                 <p className="microblog-preview__meta">
-                  {formatTimelineDate(post.date, post.time)}
+                  {formatTimelineDate(post.date, post.time, locale)}
                 </p>
                 <div
                   className="microblog-preview__actions"
-                  aria-label="Reaktionen"
+                  aria-label={t("microblog.reactions")}
                 >
                   <span>
                     <MessageCircle aria-hidden="true" size={19} />
-                    {post.replies.toLocaleString("de-DE")}
+                    {post.replies.toLocaleString(numberLocale)}
                   </span>
                   <span>
                     <Repeat2 aria-hidden="true" size={20} />
-                    {post.reposts.toLocaleString("de-DE")}
+                    {post.reposts.toLocaleString(numberLocale)}
                   </span>
                   <span>
                     <Heart aria-hidden="true" size={19} />
-                    {post.likes.toLocaleString("de-DE")}
+                    {post.likes.toLocaleString(numberLocale)}
                   </span>
-                  <span aria-label="Teilen">
+                  <span aria-label={t("microblog.share")}>
                     <Share aria-hidden="true" size={18} />
                   </span>
                 </div>
