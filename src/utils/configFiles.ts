@@ -17,7 +17,7 @@ import type {
 
 type BaseConfigFile = {
   format: "social-media-creator-config";
-  version: 3;
+  version: 4;
 };
 
 export type PhotoPostConfigFile = BaseConfigFile & {
@@ -268,8 +268,9 @@ function isMicroblogPost(value: unknown): value is MicroblogPost {
 function isMicroblogState(value: unknown): value is MicroblogState {
   if (!isRecord(value)) return false;
   return (
-    hasOnlyKeys(value, ["theme", "activePostId", "posts"]) &&
+    hasOnlyKeys(value, ["theme", "layoutMode", "activePostId", "posts"]) &&
     isTheme(value.theme) &&
+    (value.layoutMode === "feed" || value.layoutMode === "thread") &&
     isStringWithin(value.activePostId, fieldLimits.common.postId) &&
     Array.isArray(value.posts) &&
     value.posts.length > 0 &&
@@ -285,7 +286,7 @@ export function createPhotoPostConfig(
 ): PhotoPostConfigFile {
   return {
     format: "social-media-creator-config",
-    version: 3,
+    version: 4,
     module: "photoPost",
     data,
   };
@@ -296,7 +297,7 @@ export function createMessengerConfig(
 ): MessengerConfigFile {
   return {
     format: "social-media-creator-config",
-    version: 3,
+    version: 4,
     module: "messenger",
     data,
   };
@@ -307,7 +308,7 @@ export function createMicroblogConfig(
 ): MicroblogConfigFile {
   return {
     format: "social-media-creator-config",
-    version: 3,
+    version: 4,
     module: "microblog",
     data,
   };
@@ -445,7 +446,12 @@ function migrateMicroblogData(
   if (posts.length === 0) return null;
   const activePostId =
     typeof data.activePostId === "string" ? data.activePostId : posts[0].id;
-  const migrated: MicroblogState = { theme: "light", activePostId, posts };
+  const migrated: MicroblogState = {
+    theme: "light",
+    layoutMode: "feed",
+    activePostId,
+    posts,
+  };
   return isMicroblogState(migrated) ? migrated : null;
 }
 
@@ -490,7 +496,20 @@ export function parseConfig(contents: string): ConfigFile {
   if (value.format !== "social-media-creator-config") {
     throw new Error("Die Datei ist keine SocialMediaCreator-Konfiguration.");
   }
-  if (value.version !== 3) {
+  if (value.version === 3) {
+    if (value.module === "photoPost" && isPhotoPostState(value.data)) {
+      return createPhotoPostConfig(value.data);
+    }
+    if (value.module === "messenger" && isMessengerState(value.data)) {
+      return createMessengerConfig(value.data);
+    }
+    if (value.module === "microblog" && isRecord(value.data)) {
+      const data = { ...value.data, layoutMode: "feed" };
+      if (isMicroblogState(data)) return createMicroblogConfig(data);
+    }
+    throw new Error("Die Modulkonfiguration ist unvollständig.");
+  }
+  if (value.version !== 4) {
     throw new Error("Diese Konfigurationsversion wird nicht unterstützt.");
   }
   if (value.module === "photoPost" && isPhotoPostState(value.data)) {

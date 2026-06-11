@@ -158,6 +158,142 @@ test("photo and microblog feeds support multiple posts with comments", async ({
   );
 });
 
+test("feed posts support pointer and keyboard sorting", async ({ page }) => {
+  await page.goto("/");
+
+  await page.getByRole("button", { name: "Beitrag", exact: true }).click();
+  await page.getByLabel("Beschreibung").fill("Per Drag verschoben");
+
+  const handles = page.getByRole("button", { name: /Beitrag \d verschieben/ });
+  await expect(handles).toHaveCount(2);
+  const secondHandle = handles.nth(1);
+  await secondHandle.scrollIntoViewIfNeeded();
+
+  await secondHandle.focus();
+  await page.keyboard.press("Space");
+  await expect(page.locator(".post-selector-list")).toHaveAttribute(
+    "aria-busy",
+    "true",
+  );
+  await page.keyboard.press("ArrowUp");
+  await page.keyboard.press("Space");
+  await expect(page.locator(".photo-post").nth(0)).toContainText(
+    "Per Drag verschoben",
+  );
+
+  const reorderedHandles = page.getByRole("button", {
+    name: /Beitrag \d verschieben/,
+  });
+  const reorderedFirst = reorderedHandles.nth(0);
+  const reorderedSecond = reorderedHandles.nth(1);
+  await reorderedFirst.scrollIntoViewIfNeeded();
+  const firstBox = await reorderedFirst.boundingBox();
+  const secondBox = await reorderedSecond.boundingBox();
+  expect(firstBox).not.toBeNull();
+  expect(secondBox).not.toBeNull();
+  await page.mouse.move(
+    firstBox!.x + firstBox!.width / 2,
+    firstBox!.y + firstBox!.height / 2,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    firstBox!.x + firstBox!.width / 2,
+    firstBox!.y + firstBox!.height / 2 + 12,
+    { steps: 4 },
+  );
+  await page.mouse.move(
+    secondBox!.x + secondBox!.width / 2,
+    secondBox!.y + secondBox!.height / 2,
+    { steps: 12 },
+  );
+  await page.mouse.up();
+  await expect(page.locator(".photo-post").nth(1)).toContainText(
+    "Per Drag verschoben",
+  );
+});
+
+test("feed posts support touch sorting", async ({
+  browser,
+  browserName,
+}, testInfo) => {
+  test.skip(browserName !== "chromium", "Touch input is covered in Chromium.");
+  const context = await browser.newContext({
+    baseURL: testInfo.project.use.baseURL as string,
+    hasTouch: true,
+    viewport: { width: 390, height: 844 },
+  });
+  const page = await context.newPage();
+  await page.goto("/");
+  await page.getByRole("button", { name: "Beitrag", exact: true }).click();
+  await page.getByLabel("Beschreibung").fill("Per Touch verschoben");
+
+  const handles = page.getByRole("button", { name: /Beitrag \d verschieben/ });
+  await expect(handles).toHaveCount(2);
+  const first = handles.nth(0);
+  const second = handles.nth(1);
+  await second.scrollIntoViewIfNeeded();
+  const firstBox = await first.boundingBox();
+  const secondBox = await second.boundingBox();
+  expect(firstBox).not.toBeNull();
+  expect(secondBox).not.toBeNull();
+
+  const touchX = secondBox!.x + secondBox!.width / 2;
+  const startY = secondBox!.y + secondBox!.height / 2;
+  const endY = firstBox!.y + firstBox!.height / 2;
+  await second.dispatchEvent("touchstart", {
+    changedTouches: [{ identifier: 1, clientX: touchX, clientY: startY }],
+    targetTouches: [{ identifier: 1, clientX: touchX, clientY: startY }],
+    touches: [{ identifier: 1, clientX: touchX, clientY: startY }],
+  });
+  await page.waitForTimeout(180);
+  await expect(page.locator(".post-selector-list")).toHaveAttribute(
+    "aria-busy",
+    "true",
+  );
+  for (const progress of [0.15, 0.35, 0.6, 0.85, 1]) {
+    const clientY = startY + (endY - startY) * progress;
+    await second.dispatchEvent("touchmove", {
+      changedTouches: [{ identifier: 1, clientX: touchX, clientY }],
+      targetTouches: [{ identifier: 1, clientX: touchX, clientY }],
+      touches: [{ identifier: 1, clientX: touchX, clientY }],
+    });
+  }
+  await second.dispatchEvent("touchend", {
+    changedTouches: [{ identifier: 1, clientX: touchX, clientY: endY }],
+    targetTouches: [],
+    touches: [],
+  });
+
+  await expect(page.locator(".photo-post").nth(0)).toContainText(
+    "Per Touch verschoben",
+  );
+  await context.close();
+});
+
+test("microblog feed and thread layouts follow the selected order", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("tab", { name: "Mikroblog" }).click();
+  await expect(page.locator(".microblog-feed")).toHaveClass(
+    /microblog-feed--feed/,
+  );
+
+  await page.getByLabel("Timeline-Darstellung").selectOption("thread");
+  await expect(page.locator(".microblog-feed")).toHaveClass(
+    /microblog-feed--thread/,
+  );
+
+  await page.getByRole("button", { name: "Beitrag", exact: true }).click();
+  await page.getByLabel("Beitragstext").fill("Zweiter Thread-Beitrag");
+  await page
+    .getByRole("button", { name: "Beitrag 2 nach oben verschieben" })
+    .click();
+  await expect(page.locator(".microblog-preview").nth(0)).toContainText(
+    "Zweiter Thread-Beitrag",
+  );
+});
+
 test("two-profile messenger supports sender, timestamp, seen status and themes", async ({
   page,
 }) => {
@@ -221,6 +357,7 @@ test("PDF export and local image verification are available", async ({
   page,
 }) => {
   await page.goto("/");
+  await page.getByRole("button", { name: "Beitrag", exact: true }).click();
   await page.getByRole("button", { name: "Medium", exact: true }).click();
 
   const pdfDownload = page.waitForEvent("download");
@@ -230,7 +367,7 @@ test("PDF export and local image verification are available", async ({
   const pdfPath = await pdf.path();
   expect(pdfPath).not.toBeNull();
   const pdfText = await readFile(pdfPath!, "latin1");
-  expect(pdfText.match(/\/Type \/Page\b/g)).toHaveLength(2);
+  expect(pdfText.match(/\/Type \/Page\b/g)).toHaveLength(3);
 
   const imageDownload = page.waitForEvent("download");
   await page.getByRole("button", { name: "PNG" }).click();

@@ -1,4 +1,5 @@
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
+import { arrayMove } from "@dnd-kit/sortable";
 import type { Dispatch, SetStateAction } from "react";
 import { fieldLimits } from "../constraints";
 import type {
@@ -12,6 +13,7 @@ import { createId } from "../utils/ids";
 import { CommentEditor } from "./CommentEditor";
 import { ImageUploadField } from "./ImageUploadField";
 import { ThemeSelector } from "./ThemeSelector";
+import { SortablePostList } from "./SortablePostList";
 
 type PhotoPostEditorProps = {
   value: PhotoPostState;
@@ -107,8 +109,20 @@ export function PhotoPostEditor({
     onChange((current) => ({
       ...current,
       activePostId: post.id,
-      posts: [...current.posts, post],
+      posts: current.posts.flatMap((item) =>
+        item.id === current.activePostId ? [item, post] : [item],
+      ),
     }));
+  }
+
+  function movePost(activeId: string, overId: string) {
+    if (!overId || activeId === overId) return;
+    onChange((current) => {
+      const from = current.posts.findIndex((post) => post.id === activeId);
+      const to = current.posts.findIndex((post) => post.id === overId);
+      if (from < 0 || to < 0) return current;
+      return { ...current, posts: arrayMove(current.posts, from, to) };
+    });
   }
 
   function removePost(id: string) {
@@ -195,42 +209,18 @@ export function PhotoPostEditor({
             Beitrag
           </button>
         </div>
-        <ol className="post-selector-list">
-          {value.posts.map((post, index) => (
-            <li
-              className={
-                post.id === activePost.id
-                  ? "post-selector post-selector--active"
-                  : "post-selector"
-              }
-              key={post.id}
-            >
-              <button
-                aria-label={`Beitrag ${index + 1} auswählen`}
-                className="post-selector__select"
-                onClick={() =>
-                  onChange((current) => ({
-                    ...current,
-                    activePostId: post.id,
-                  }))
-                }
-                type="button"
-              >
-                <strong>Beitrag {index + 1}</strong>
-                <span>{post.caption || "Ohne Beschreibung"}</span>
-              </button>
-              <button
-                aria-label={`Beitrag ${index + 1} löschen`}
-                className="compact-icon-button compact-icon-button--danger"
-                disabled={value.posts.length === 1}
-                onClick={() => removePost(post.id)}
-                type="button"
-              >
-                <Trash2 aria-hidden="true" size={16} />
-              </button>
-            </li>
-          ))}
-        </ol>
+        <SortablePostList
+          activeId={activePost.id}
+          onMove={movePost}
+          onRemove={removePost}
+          onSelect={(activePostId) =>
+            onChange((current) => ({ ...current, activePostId }))
+          }
+          posts={value.posts.map((post) => ({
+            id: post.id,
+            summary: post.caption || "Ohne Beschreibung",
+          }))}
+        />
       </section>
 
       <section className="editor-section">

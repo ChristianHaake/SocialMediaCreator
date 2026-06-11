@@ -307,3 +307,15 @@ Nicht enthalten:
 - Messenger-Profile werden als feste linke und rechte Seite bearbeitet.
 - Die Verifikationsseite erklärt deutlich, dass der lokale Herkunftsmarker
   kein fälschungssicherer Echtheitsbeweis ist.
+
+## 16. Sprint-8-Erweiterungen
+
+- Die Beitragsauswahl enthält einen separaten Drag-Griff sowie Hoch-, Runter-
+  und Löschen-Schaltflächen.
+- Ein aktiver Sortiervorgang wird durch angehobene Karte, reduzierte Deckkraft
+  und `aria-busy` angezeigt.
+- Neue Beiträge erscheinen direkt unter dem ausgewählten Beitrag.
+- Foto-Feeds verwenden klar getrennte Karten und Trennflächen.
+- Mikroblog bietet einen Feed-Modus mit Trennlinien und einen kompakten
+  Thread-Modus mit vertikaler Verbindungslinie zwischen den Hauptbeiträgen.
+- Die Sortierung funktioniert mit Maus, Touch und Tastatur.

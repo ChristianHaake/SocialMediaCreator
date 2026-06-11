@@ -39,7 +39,7 @@ Der aktuelle Stand enthält:
 - freie Zeitstempel, Themes und zweistufige Kommentare
 - Foto-Karussells und Video-Simulationen
 - lokale Profil- und Beitragsbilder
-- validierte Config-V3-Dateien ohne Bilder mit V1/V2-Migration
+- validierte Config-V4-Dateien ohne Bilder mit V1/V2/V3-Migration
 - PNG-, JPG- und PDF-Export
 - lokale Herkunftsmarker und Bildverifikation
 - Zurücksetzen mit Schutz vor Datenverlust
