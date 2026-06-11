@@ -1,5 +1,14 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
+
+async function openSection(page: Page, title: string) {
+  const details = page
+    .locator("details.editor-disclosure")
+    .filter({ has: page.getByRole("heading", { name: title, exact: true }) });
+  if (!(await details.getAttribute("open"))) {
+    await details.locator("summary").click();
+  }
+}
 
 test("module tabs support keyboard navigation and preserve state", async ({
   page,
@@ -84,7 +93,9 @@ test("configuration import validates before replacing editor state", async ({
     buffer: Buffer.from('{"format":"mockup-studio-config","version":1}'),
   });
 
-  await expect(page.getByRole("alert")).toContainText("unvollständig");
+  await expect(page.getByRole("alert")).toContainText(
+    "keine SocialMediaCreator-Konfiguration",
+  );
   await expect(username).toHaveValue("bleibt_erhalten");
 
   await input.setInputFiles({
@@ -92,20 +103,29 @@ test("configuration import validates before replacing editor state", async ({
     mimeType: "application/json",
     buffer: Buffer.from(
       JSON.stringify({
-        format: "mockup-studio-config",
-        version: 1,
+        format: "social-media-creator-config",
+        version: 5,
         module: "microblog",
         data: {
-          displayName: "Importiertes Projekt",
-          handle: "import_test",
-          text: "Importierter Beitrag",
-          date: "2026-06-11",
-          time: "12:30",
-          showDate: true,
-          showTime: true,
-          replies: 1,
-          reposts: 2,
-          likes: 3,
+          theme: "light",
+          layoutMode: "feed",
+          sortOrder: "newest",
+          activePostId: "import-post",
+          posts: [
+            {
+              id: "import-post",
+              displayName: "Importiertes Projekt",
+              handle: "import_test",
+              text: "Importierter Beitrag",
+              date: "2026-06-11",
+              time: "12:30",
+              viewMode: "post",
+              replies: 1,
+              reposts: 2,
+              likes: 3,
+              comments: [],
+            },
+          ],
         },
       }),
     ),
@@ -132,6 +152,7 @@ test("photo and microblog feeds support multiple posts with comments", async ({
 
   await page.getByRole("button", { name: "Beitrag", exact: true }).click();
   await page.getByLabel("Beschreibung").fill("Zweiter Foto-Beitrag");
+  await openSection(page, "Kommentare und Antworten");
   await page.getByRole("button", { name: "Kommentar", exact: true }).click();
   await page.getByLabel("Kommentartext").last().fill("Foto-Kommentar");
 
@@ -146,6 +167,7 @@ test("photo and microblog feeds support multiple posts with comments", async ({
   await page.getByRole("tab", { name: "Mikroblog" }).click();
   await page.getByRole("button", { name: "Beitrag", exact: true }).click();
   await page.getByLabel("Beitragstext").fill("Zweiter Mikroblog-Beitrag");
+  await openSection(page, "Kommentare und Antworten");
   await page.getByRole("button", { name: "Kommentar", exact: true }).click();
   await page.getByLabel("Kommentartext").last().fill("Mikroblog-Kommentar");
 
@@ -158,116 +180,27 @@ test("photo and microblog feeds support multiple posts with comments", async ({
   );
 });
 
-test("feed posts support pointer and keyboard sorting", async ({ page }) => {
+test("photo posts follow date, optional time and timeline order", async ({
+  page,
+}) => {
   await page.goto("/");
 
   await page.getByRole("button", { name: "Beitrag", exact: true }).click();
-  await page.getByLabel("Beschreibung").fill("Per Drag verschoben");
-
-  const handles = page.getByRole("button", { name: /Beitrag \d verschieben/ });
-  await expect(handles).toHaveCount(2);
-  const secondHandle = handles.nth(1);
-  await secondHandle.scrollIntoViewIfNeeded();
-
-  await secondHandle.focus();
-  await page.keyboard.press("Space");
-  await expect(page.locator(".post-selector-list")).toHaveAttribute(
-    "aria-busy",
-    "true",
-  );
-  await page.keyboard.press("ArrowUp");
-  await page.keyboard.press("Space");
+  await page.getByLabel("Beschreibung").fill("Chronologisch neuer");
+  await page.getByLabel("Datum").fill("2026-06-12");
+  await page.getByLabel("Uhrzeit (optional)").fill("08:30");
   await expect(page.locator(".photo-post").nth(0)).toContainText(
-    "Per Drag verschoben",
+    "Chronologisch neuer",
   );
 
-  const reorderedHandles = page.getByRole("button", {
-    name: /Beitrag \d verschieben/,
-  });
-  const reorderedFirst = reorderedHandles.nth(0);
-  const reorderedSecond = reorderedHandles.nth(1);
-  await reorderedFirst.scrollIntoViewIfNeeded();
-  const firstBox = await reorderedFirst.boundingBox();
-  const secondBox = await reorderedSecond.boundingBox();
-  expect(firstBox).not.toBeNull();
-  expect(secondBox).not.toBeNull();
-  await page.mouse.move(
-    firstBox!.x + firstBox!.width / 2,
-    firstBox!.y + firstBox!.height / 2,
-  );
-  await page.mouse.down();
-  await page.mouse.move(
-    firstBox!.x + firstBox!.width / 2,
-    firstBox!.y + firstBox!.height / 2 + 12,
-    { steps: 4 },
-  );
-  await page.mouse.move(
-    secondBox!.x + secondBox!.width / 2,
-    secondBox!.y + secondBox!.height / 2,
-    { steps: 12 },
-  );
-  await page.mouse.up();
+  await openSection(page, "Darstellung");
+  await page.getByLabel("Timeline-Reihenfolge").selectOption("oldest");
   await expect(page.locator(".photo-post").nth(1)).toContainText(
-    "Per Drag verschoben",
+    "Chronologisch neuer",
   );
-});
-
-test("feed posts support touch sorting", async ({
-  browser,
-  browserName,
-}, testInfo) => {
-  test.skip(browserName !== "chromium", "Touch input is covered in Chromium.");
-  const context = await browser.newContext({
-    baseURL: testInfo.project.use.baseURL as string,
-    hasTouch: true,
-    viewport: { width: 390, height: 844 },
-  });
-  const page = await context.newPage();
-  await page.goto("/");
-  await page.getByRole("button", { name: "Beitrag", exact: true }).click();
-  await page.getByLabel("Beschreibung").fill("Per Touch verschoben");
-
-  const handles = page.getByRole("button", { name: /Beitrag \d verschieben/ });
-  await expect(handles).toHaveCount(2);
-  const first = handles.nth(0);
-  const second = handles.nth(1);
-  await second.scrollIntoViewIfNeeded();
-  const firstBox = await first.boundingBox();
-  const secondBox = await second.boundingBox();
-  expect(firstBox).not.toBeNull();
-  expect(secondBox).not.toBeNull();
-
-  const touchX = secondBox!.x + secondBox!.width / 2;
-  const startY = secondBox!.y + secondBox!.height / 2;
-  const endY = firstBox!.y + firstBox!.height / 2;
-  await second.dispatchEvent("touchstart", {
-    changedTouches: [{ identifier: 1, clientX: touchX, clientY: startY }],
-    targetTouches: [{ identifier: 1, clientX: touchX, clientY: startY }],
-    touches: [{ identifier: 1, clientX: touchX, clientY: startY }],
-  });
-  await page.waitForTimeout(180);
-  await expect(page.locator(".post-selector-list")).toHaveAttribute(
-    "aria-busy",
-    "true",
+  await expect(page.locator(".photo-post").nth(1)).toContainText(
+    "12.06.2026 · 08:30",
   );
-  for (const progress of [0.15, 0.35, 0.6, 0.85, 1]) {
-    const clientY = startY + (endY - startY) * progress;
-    await second.dispatchEvent("touchmove", {
-      changedTouches: [{ identifier: 1, clientX: touchX, clientY }],
-      targetTouches: [{ identifier: 1, clientX: touchX, clientY }],
-      touches: [{ identifier: 1, clientX: touchX, clientY }],
-    });
-  }
-  await second.dispatchEvent("touchend", {
-    changedTouches: [{ identifier: 1, clientX: touchX, clientY: endY }],
-    targetTouches: [],
-    touches: [],
-  });
-
-  await expect(page.locator(".photo-post").nth(0)).toContainText(
-    "Per Touch verschoben",
-  );
-  await context.close();
 });
 
 test("microblog feed and thread layouts follow the selected order", async ({
@@ -279,6 +212,7 @@ test("microblog feed and thread layouts follow the selected order", async ({
     /microblog-feed--feed/,
   );
 
+  await openSection(page, "Darstellung");
   await page.getByLabel("Timeline-Darstellung").selectOption("thread");
   await expect(page.locator(".microblog-feed")).toHaveClass(
     /microblog-feed--thread/,
@@ -286,10 +220,12 @@ test("microblog feed and thread layouts follow the selected order", async ({
 
   await page.getByRole("button", { name: "Beitrag", exact: true }).click();
   await page.getByLabel("Beitragstext").fill("Zweiter Thread-Beitrag");
-  await page
-    .getByRole("button", { name: "Beitrag 2 nach oben verschieben" })
-    .click();
+  await page.getByLabel("Datum").fill("2026-06-12");
   await expect(page.locator(".microblog-preview").nth(0)).toContainText(
+    "Zweiter Thread-Beitrag",
+  );
+  await page.getByLabel("Timeline-Reihenfolge").selectOption("oldest");
+  await expect(page.locator(".microblog-preview").nth(1)).toContainText(
     "Zweiter Thread-Beitrag",
   );
 });
@@ -331,6 +267,7 @@ test("carousel, video simulation, reply chains and comment view work together", 
 }) => {
   await page.goto("/");
 
+  await openSection(page, "Karussell");
   await page.getByRole("button", { name: "Medium", exact: true }).click();
   await page.getByLabel("Medientyp").selectOption("video");
   await page.getByLabel("Videolänge").fill("0:42");
@@ -340,6 +277,7 @@ test("carousel, video simulation, reply chains and comment view work together", 
     "1.240 Aufrufe · 0:42",
   );
 
+  await openSection(page, "Kommentare und Antworten");
   await page.getByRole("button", { name: "Antwort", exact: true }).click();
   await page.getByLabel("Antworttext").last().fill("Neue verschachtelte Antwort");
   await page.getByLabel("Darstellungsmodus").selectOption("comments");
@@ -358,6 +296,7 @@ test("PDF export and local image verification are available", async ({
 }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Beitrag", exact: true }).click();
+  await openSection(page, "Karussell");
   await page.getByRole("button", { name: "Medium", exact: true }).click();
 
   const pdfDownload = page.waitForEvent("download");

@@ -13,11 +13,13 @@ Veröffentlichung in eine versionierte Sektion verschoben.
 
 ### Hinzugefügt
 
-- Sortierbare Foto- und Mikroblog-Feeds mit Drag-and-Drop, Touch-Steuerung und
-  barrierearmen Pfeiltasten.
+- Echte Foto- und Mikroblog-Timelines mit Pflichtdatum, optionaler Uhrzeit und
+  automatischer chronologischer Sortierung.
+- Umschaltbare Timeline-Reihenfolge: neueste oder älteste Beiträge zuerst.
+- Kompakte Editorbereiche, die selten benötigte Optionen einklappen.
+- Konfigurationsformat Version 5 mit strukturierten Datumswerten.
 - Umschaltbare Mikroblog-Darstellung als getrennter Feed oder verbundener
   Thread.
-- Konfigurationsformat Version 4 mit Migration aus Version 3.
 - Light-, Dim- und Dark-Mode pro Simulationsmodul.
 - Zwei explizite Messenger-Profile mit Profilbildern, Status,
   Nachrichtenzuweisung, freien Zeitstempeln und Gesehen-Status.
@@ -52,11 +54,14 @@ Veröffentlichung in eine versionierte Sektion verschoben.
 
 ### Geändert
 
-- Neue Beiträge werden direkt hinter dem aktuell ausgewählten Beitrag
-  eingefügt.
+- Die manuelle Beitragsreihenfolge per Drag-and-Drop und Pfeiltasten wurde
+  durch die automatische Timeline-Sortierung ersetzt.
+- Freie Beitragszeitstempel wurden durch ein Pflichtdatum und eine optionale
+  Uhrzeit ersetzt.
+- Config-Versionen 1 bis 4 werden nach dem bewussten Formatbruch nicht mehr
+  importiert.
 - PDF-Exporte beginnen jeden Hauptbeitrag auf einer neuen Seite und übernehmen
   die festgelegte Feed-Reihenfolge.
-- Mikroblog-Datum und -Uhrzeit wurden durch einen freien Zeitstempel ersetzt.
 - PNG- und JPG-Exporte werden Blob-basiert erzeugt und mit einem prüfbaren
   lokalen Marker versehen.
 - Produktname und Exportdateinamen wurden auf `SocialMediaCreator` umgestellt.

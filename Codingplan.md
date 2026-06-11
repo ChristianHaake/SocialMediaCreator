@@ -285,10 +285,22 @@ Nicht enthalten:
 
 - Config V4 ergänzt `layoutMode: "feed" | "thread"` für Mikroblog-Projekte und
   migriert V1 bis V3 auf den Feed-Modus.
-- Foto- und Mikroblog-Beiträge werden ID-basiert per Drag-and-Drop, Touch,
-  Tastatur oder Pfeilschaltflächen sortiert.
+- Die in Sprint 8 eingeführte manuelle Beitragssortierung wurde in der
+  nachfolgenden Timeline-Stufe durch chronologische Sortierung ersetzt.
 - Neue Beiträge werden hinter dem aktiven Beitrag eingefügt.
 - Mikroblog-Vorschauen unterstützen getrennte Feed-Einträge und verbundene
   Thread-Beiträge.
 - Bildexporte übernehmen die vollständige Reihenfolge; PDF beginnt jeden
   Hauptbeitrag auf einer neuen Seite.
+
+## 13. Timeline und kompakter Editor
+
+- Config V5 ersetzt freie Beitragszeitstempel durch `date` und `time`.
+- `date` ist ein gültiges ISO-Datum und verpflichtend; `time` ist optional.
+- Foto- und Mikroblog-Projekte speichern `sortOrder: "newest" | "oldest"`.
+- Editor, Vorschau und Export verwenden dieselbe stabile chronologische
+  Sortierung. Manuelle Beitragssortierung entfällt.
+- Config-Versionen 1 bis 4 werden nicht migriert oder importiert.
+- Editorbereiche verwenden native Disclosure-Elemente. Beiträge, Profil und
+  Inhalt sind standardmäßig geöffnet; Darstellung, Medien, Reaktionen und
+  Kommentare werden bei Bedarf aufgeklappt.

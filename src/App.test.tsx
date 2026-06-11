@@ -1,5 +1,6 @@
 import {
   cleanup,
+  fireEvent,
   render,
   screen,
   waitFor,
@@ -69,33 +70,30 @@ describe("App", () => {
     ).toBeInTheDocument();
   });
 
-  it("inserts photo posts after the selected post and reorders them", async () => {
+  it("sorts photo posts by their structured timeline date", async () => {
     const user = userEvent.setup();
     render(<App />);
 
     await user.click(screen.getByRole("button", { name: "Beitrag" }));
-    await user.click(
-      screen.getByRole("button", { name: "Beitrag 1 auswählen" }),
-    );
-    await user.click(screen.getByRole("button", { name: "Beitrag" }));
-
     const caption = screen.getByLabelText("Beschreibung");
     await user.clear(caption);
-    await user.type(caption, "Eingefügter Beitrag");
+    await user.type(caption, "Neuerer Beitrag");
+    fireEvent.change(screen.getByLabelText("Datum"), {
+      target: { value: "2026-06-12" },
+    });
 
     let previews = document.querySelectorAll(".photo-post");
-    expect(previews).toHaveLength(3);
-    expect(previews[1]).toHaveTextContent("Eingefügter Beitrag");
+    expect(previews).toHaveLength(2);
+    expect(previews[0]).toHaveTextContent("Neuerer Beitrag");
 
-    await user.click(
-      screen.getByRole("button", {
-        name: "Beitrag 2 nach oben verschieben",
-      }),
+    await user.selectOptions(
+      screen.getByLabelText("Timeline-Reihenfolge"),
+      "oldest",
     );
     previews = document.querySelectorAll(".photo-post");
-    expect(previews[0]).toHaveTextContent("Eingefügter Beitrag");
+    expect(previews[1]).toHaveTextContent("Neuerer Beitrag");
     expect(screen.getByLabelText("Beschreibung")).toHaveValue(
-      "Eingefügter Beitrag",
+      "Neuerer Beitrag",
     );
   });
 
@@ -383,7 +381,7 @@ describe("App", () => {
     ).toBeInTheDocument();
   });
 
-  it("switches microblog feed and thread layouts and reorders posts", async () => {
+  it("switches microblog layouts and sorts posts chronologically", async () => {
     const user = userEvent.setup();
     render(<App />);
 
@@ -404,14 +402,18 @@ describe("App", () => {
     const text = screen.getByLabelText("Beitragstext");
     await user.clear(text);
     await user.type(text, "Thread-Fortsetzung");
-    await user.click(
-      screen.getByRole("button", {
-        name: "Beitrag 2 nach oben verschieben",
-      }),
-    );
+    fireEvent.change(screen.getByLabelText("Datum"), {
+      target: { value: "2026-06-12" },
+    });
 
-    const posts = document.querySelectorAll(".microblog-preview");
+    let posts = document.querySelectorAll(".microblog-preview");
     expect(posts[0]).toHaveTextContent("Thread-Fortsetzung");
+    await user.selectOptions(
+      screen.getByLabelText("Timeline-Reihenfolge"),
+      "oldest",
+    );
+    posts = document.querySelectorAll(".microblog-preview");
+    expect(posts[1]).toHaveTextContent("Thread-Fortsetzung");
     expect(screen.getByLabelText("Beitragstext")).toHaveValue(
       "Thread-Fortsetzung",
     );
@@ -430,20 +432,25 @@ describe("App", () => {
     expect(text).toHaveValue("a".repeat(281));
   });
 
-  it("updates the free microblog timestamp", async () => {
+  it("updates the structured microblog date and optional time", async () => {
     const user = userEvent.setup();
     render(<App />);
 
     await user.click(screen.getByRole("tab", { name: "Mikroblog" }));
     const preview = document.querySelector(".microblog-preview");
     expect(preview).not.toBeNull();
-    expect(within(preview as HTMLElement).getByText("10:15 · 11.06.2026")).toBeInTheDocument();
-
-    const timestamp = screen.getAllByLabelText("Zeitstempel")[0];
-    await user.clear(timestamp);
-    await user.type(timestamp, "vor 2 Stunden");
     expect(
-      within(preview as HTMLElement).getByText("vor 2 Stunden"),
+      within(preview as HTMLElement).getByText("11.06.2026 · 10:15"),
+    ).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Datum"), {
+      target: { value: "2026-06-12" },
+    });
+    fireEvent.change(screen.getByLabelText("Uhrzeit (optional)"), {
+      target: { value: "" },
+    });
+    expect(
+      within(preview as HTMLElement).getByText("12.06.2026"),
     ).toBeInTheDocument();
   });
 

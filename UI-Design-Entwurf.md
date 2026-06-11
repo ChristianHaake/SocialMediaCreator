@@ -308,14 +308,15 @@ Nicht enthalten:
 - Die Verifikationsseite erklärt deutlich, dass der lokale Herkunftsmarker
   kein fälschungssicherer Echtheitsbeweis ist.
 
-## 16. Sprint-8-Erweiterungen
+## 16. Timeline-Erweiterungen
 
-- Die Beitragsauswahl enthält einen separaten Drag-Griff sowie Hoch-, Runter-
-  und Löschen-Schaltflächen.
-- Ein aktiver Sortiervorgang wird durch angehobene Karte, reduzierte Deckkraft
-  und `aria-busy` angezeigt.
-- Neue Beiträge erscheinen direkt unter dem ausgewählten Beitrag.
+- Die Beitragsauswahl zeigt die automatisch berechnete Position und den
+  formatierten Veröffentlichungszeitpunkt.
+- Die Timeline-Reihenfolge wird global als „Neueste zuerst“ oder „Älteste
+  zuerst“ gewählt. Manuelle Sortiergriffe entfallen.
+- Datum und optionale Uhrzeit werden mit nativen Eingabefeldern erfasst.
 - Foto-Feeds verwenden klar getrennte Karten und Trennflächen.
 - Mikroblog bietet einen Feed-Modus mit Trennlinien und einen kompakten
   Thread-Modus mit vertikaler Verbindungslinie zwischen den Hauptbeiträgen.
-- Die Sortierung funktioniert mit Maus, Touch und Tastatur.
+- Selten benötigte Editorbereiche sind einklappbar; zentrale Beitragsfelder
+  bleiben standardmäßig sichtbar.

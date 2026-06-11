@@ -1,0 +1,222 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - link "SocialMediaCreator Werkstatt für digitale Formate" [ref=e5] [cursor=pointer]:
+      - /url: /
+      - img [ref=e7]
+      - generic [ref=e11]:
+        - strong [ref=e12]: SocialMediaCreator
+        - generic [ref=e13]: Werkstatt für digitale Formate
+    - generic [ref=e14]:
+      - generic [ref=e15]:
+        - img [ref=e16]
+        - text: Inhalte bleiben lokal
+      - button "Für Lehrkräfte" [ref=e18] [cursor=pointer]:
+        - img [ref=e19]
+        - text: Für Lehrkräfte
+  - main [ref=e22]:
+    - generic [ref=e24]:
+      - text: Fiktiv. Lokal. Exportierbar.
+      - heading "Erstelle deine Foto-Posts." [level=1] [ref=e25]
+      - paragraph [ref=e26]: Gestalte fiktive Beiträge und beobachte jede Änderung direkt in der Vorschau. Ohne Anmeldung und ohne Upload.
+    - tablist "Format auswählen" [ref=e27]:
+      - tab "Foto-Post" [selected] [ref=e28] [cursor=pointer]:
+        - img [ref=e29]
+        - generic [ref=e32]: Foto-Post
+      - tab "Messenger-Chat" [ref=e33] [cursor=pointer]:
+        - img [ref=e34]
+        - generic [ref=e36]: Messenger-Chat
+      - tab "Mikroblog" [ref=e37] [cursor=pointer]:
+        - img [ref=e38]
+        - generic [ref=e40]: Mikroblog
+    - tabpanel "Foto-Post" [ref=e41]:
+      - generic [ref=e42]:
+        - generic [ref=e43]:
+          - generic [ref=e44]:
+            - text: Editor
+            - heading "Foto-Posts bearbeiten" [level=2] [ref=e45]
+          - button "Zurücksetzen" [ref=e46] [cursor=pointer]:
+            - img [ref=e47]
+            - generic [ref=e50]: Zurücksetzen
+        - generic [ref=e51]:
+          - group [ref=e52]:
+            - generic "01 Darstellung Farbschema und Reihenfolge der Timeline" [ref=e53] [cursor=pointer]:
+              - generic [ref=e54]: "01"
+              - generic [ref=e55]:
+                - heading "Darstellung" [level=2] [ref=e56]
+                - paragraph [ref=e57]: Farbschema und Reihenfolge der Timeline
+              - img [ref=e58]
+            - option "Neueste zuerst" [selected]
+            - option "Älteste zuerst"
+          - group [ref=e60]:
+            - generic "02 Beiträge 1 Beitrag, automatisch chronologisch sortiert" [ref=e61] [cursor=pointer]:
+              - generic [ref=e62]: "02"
+              - generic [ref=e63]:
+                - heading "Beiträge" [level=2] [ref=e64]
+                - paragraph [ref=e65]: 1 Beitrag, automatisch chronologisch sortiert
+              - img [ref=e66]
+            - generic [ref=e68]:
+              - button "Beitrag" [ref=e70] [cursor=pointer]:
+                - img [ref=e71]
+                - text: Beitrag
+              - list [ref=e72]:
+                - listitem [ref=e73]:
+                  - button "Beitrag 1 auswählen" [ref=e74] [cursor=pointer]:
+                    - strong [ref=e75]: Beitrag 1
+                    - generic [ref=e76]: Heute dokumentieren wir unsere Projektidee.
+                    - generic [ref=e77]: 11.06.2026
+                  - button "Beitrag 1 löschen" [disabled] [ref=e79]:
+                    - img [ref=e80]
+          - group [ref=e83]:
+            - generic "03 Profil und Ansicht Absender, Veröffentlichungszeitpunkt und Fokus" [ref=e84] [cursor=pointer]:
+              - generic [ref=e85]: "03"
+              - generic [ref=e86]:
+                - heading "Profil und Ansicht" [level=2] [ref=e87]
+                - paragraph [ref=e88]: Absender, Veröffentlichungszeitpunkt und Fokus
+              - img [ref=e89]
+            - generic [ref=e91]:
+              - generic [ref=e92]:
+                - generic [ref=e93]: Profilbild
+                - generic [ref=e94]:
+                  - generic [ref=e95] [cursor=pointer]:
+                    - img [ref=e96]
+                    - text: Bild auswählen
+                  - button "Bild auswählen" [ref=e100]
+                - generic [ref=e101]: PNG, JPG oder WebP, maximal 10 MB
+              - generic [ref=e102]:
+                - generic [ref=e103]:
+                  - generic [ref=e104]: Benutzername
+                  - textbox "Benutzername" [ref=e105]: projekt_kurs
+                - generic [ref=e106]:
+                  - generic [ref=e107]: Ort
+                  - textbox "Ort" [ref=e108]: Lernwerkstatt
+              - generic [ref=e109]:
+                - generic [ref=e110]:
+                  - generic [ref=e111]: Datum
+                  - textbox "Datum" [ref=e112]: 2026-06-11
+                - generic [ref=e113]:
+                  - generic [ref=e114]: Uhrzeit (optional)
+                  - textbox "Uhrzeit (optional)" [ref=e115]
+              - generic [ref=e116]:
+                - generic [ref=e117]: Darstellungsmodus
+                - combobox "Darstellungsmodus" [ref=e118]:
+                  - option "Vollständiger Beitrag" [selected]
+                  - option "Kommentaransicht"
+              - generic [ref=e119]:
+                - checkbox "Ort in der Vorschau anzeigen" [checked] [ref=e120]
+                - generic [ref=e121]: Ort in der Vorschau anzeigen
+          - group [ref=e122]:
+            - generic "04 Karussell Bis zu zehn Bilder oder Video-Thumbnails" [ref=e123] [cursor=pointer]:
+              - generic [ref=e124]: "04"
+              - generic [ref=e125]:
+                - heading "Karussell" [level=2] [ref=e126]
+                - paragraph [ref=e127]: Bis zu zehn Bilder oder Video-Thumbnails
+              - img [ref=e128]
+            - option "Bild" [selected]
+            - option "Video-Simulation"
+          - group [ref=e130]:
+            - generic "05 Inhalt und Reaktionen Beschreibung und fiktive Kennzahlen" [ref=e131] [cursor=pointer]:
+              - generic [ref=e132]: "05"
+              - generic [ref=e133]:
+                - heading "Inhalt und Reaktionen" [level=2] [ref=e134]
+                - paragraph [ref=e135]: Beschreibung und fiktive Kennzahlen
+              - img [ref=e136]
+            - generic [ref=e138]:
+              - generic [ref=e139]:
+                - generic [ref=e140]: Beschreibung
+                - textbox "Beschreibung" [ref=e141]: Heute dokumentieren wir unsere Projektidee.
+              - generic [ref=e142]:
+                - generic [ref=e143]:
+                  - generic [ref=e144]: Likes
+                  - spinbutton "Likes" [ref=e145]: "128"
+                - generic [ref=e146]:
+                  - generic [ref=e147]: Kommentaranzahl
+                  - spinbutton "Kommentaranzahl" [ref=e148]: "14"
+              - generic [ref=e149]:
+                - checkbox "Kommentare anzeigen" [checked] [ref=e150]
+                - generic [ref=e151]: Kommentare anzeigen
+          - group [ref=e152]:
+            - generic "06 Kommentare und Antworten Zweistufige Diskussion zum ausgewählten Beitrag" [ref=e153] [cursor=pointer]:
+              - generic [ref=e154]: "06"
+              - generic [ref=e155]:
+                - heading "Kommentare und Antworten" [level=2] [ref=e156]
+                - paragraph [ref=e157]: Zweistufige Diskussion zum ausgewählten Beitrag
+              - img [ref=e158]
+      - generic [ref=e160]:
+        - generic [ref=e161]:
+          - generic [ref=e162]:
+            - text: Live-Vorschau
+            - paragraph [ref=e163]: Wird lokal in deinem Browser gerendert
+          - generic [ref=e164]: Live
+        - article [ref=e168]:
+          - generic [ref=e169]:
+            - generic [ref=e170]: P
+            - generic [ref=e171]:
+              - strong [ref=e172]: projekt_kurs
+              - generic [ref=e173]: Lernwerkstatt
+            - generic [ref=e174]: ···
+          - generic [ref=e177]:
+            - img [ref=e178]
+            - generic [ref=e182]: Dein Bild erscheint hier
+          - generic [ref=e183]:
+            - generic [ref=e184]:
+              - img [ref=e185]
+              - img [ref=e187]
+              - img [ref=e189]
+              - img [ref=e192]
+            - strong [ref=e194]: 128 Likes
+            - paragraph [ref=e195]:
+              - strong [ref=e196]: projekt_kurs
+              - text: Heute dokumentieren wir unsere Projektidee.
+            - generic [ref=e198]:
+              - generic [ref=e199]:
+                - generic [ref=e200]: L
+                - generic [ref=e201]:
+                  - paragraph [ref=e202]:
+                    - strong [ref=e203]: lernteam
+                    - text: Welche Quelle habt ihr für die Aussage verwendet?
+                  - generic [ref=e204]: vor 5 Minuten
+              - generic [ref=e205]:
+                - generic [ref=e206]: P
+                - generic [ref=e207]:
+                  - paragraph [ref=e208]:
+                    - strong [ref=e209]: projekt_kurs
+                    - text: Wir haben zwei voneinander unabhängige Quellen verglichen.
+                  - generic [ref=e210]: vor 2 Minuten
+            - paragraph [ref=e211]: 14 Kommentare ansehen
+            - text: 11.06.2026
+        - generic [ref=e212]:
+          - generic [ref=e213]:
+            - generic [ref=e214]: Projekt
+            - button "Laden" [ref=e215] [cursor=pointer]:
+              - img [ref=e216]
+              - text: Laden
+            - button "Choose File" [ref=e220]
+            - button "Speichern" [ref=e221] [cursor=pointer]:
+              - img [ref=e222]
+              - text: Speichern
+          - generic [ref=e226]:
+            - generic [ref=e227]: Bild
+            - button "JPG" [ref=e228] [cursor=pointer]:
+              - img [ref=e229]
+              - text: JPG
+            - button "PNG" [ref=e232] [cursor=pointer]:
+              - img [ref=e233]
+              - text: PNG
+            - button "PDF" [ref=e236] [cursor=pointer]:
+              - img [ref=e237]
+              - text: PDF
+  - contentinfo [ref=e241]:
+    - generic [ref=e242]: SocialMediaCreator · Inhalte bleiben auf deinem Gerät
+    - navigation "Fußnavigation" [ref=e243]:
+      - link "Hilfe" [ref=e244] [cursor=pointer]:
+        - /url: /hilfe
+      - link "Über das Projekt" [ref=e245] [cursor=pointer]:
+        - /url: /ueber
+      - link "Bild verifizieren" [ref=e246] [cursor=pointer]:
+        - /url: /verifizieren
+      - link "Datenschutz" [ref=e247] [cursor=pointer]:
+        - /url: /datenschutz
+      - link "Impressum" [ref=e248] [cursor=pointer]:
+        - /url: /impressum
+      - link "GitHub" [ref=e249] [cursor=pointer]:
+        - /url: https://github.com/ChristianHaake/SocialMediaCreator
