@@ -18,7 +18,7 @@ export function ImageUploadField({
   onChange,
   onError,
 }: ImageUploadFieldProps) {
-  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
 
@@ -26,7 +26,7 @@ export function ImageUploadField({
       return;
     }
 
-    const error = validateImageFile(file);
+    const error = await validateImageFile(file);
     if (error) {
       onError(error);
       return;

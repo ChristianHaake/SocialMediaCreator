@@ -25,7 +25,10 @@ console.log(`Smoke-Test: ${baseUrl.origin}`);
 
 const root = await request("/");
 check(root.response.status === 200, "Startseite liefert HTTP 200");
-check(root.body.includes("<title>Mockup Studio</title>"), "Dokumenttitel vorhanden");
+check(
+  root.body.includes("<title>SocialMediaCreator</title>"),
+  "Dokumenttitel vorhanden",
+);
 check(!root.body.includes("/cdn-cgi/challenge-platform/"), "Keine Cloudflare-JavaScript-Detection injiziert");
 
 const expectedHeaders = {

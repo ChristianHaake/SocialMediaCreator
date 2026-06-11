@@ -40,6 +40,35 @@ describe("App", () => {
     expect(screen.queryByText("Lernwerkstatt")).not.toBeInTheDocument();
   });
 
+  it("creates multiple photo posts and attaches comments", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Beitrag" }));
+    const caption = screen.getByLabelText("Beschreibung");
+    await user.clear(caption);
+    await user.type(caption, "Zweiter Foto-Beitrag");
+
+    await user.click(screen.getByRole("button", { name: "Kommentar" }));
+    const commentInputs = screen.getAllByLabelText("Kommentartext");
+    await user.clear(commentInputs.at(-1) as HTMLElement);
+    await user.type(
+      commentInputs.at(-1) as HTMLElement,
+      "Kommentar am zweiten Beitrag",
+    );
+
+    expect(document.querySelectorAll(".photo-post")).toHaveLength(2);
+    const previews = document.querySelectorAll(".photo-post");
+    expect(
+      within(previews[1] as HTMLElement).getByText("Zweiter Foto-Beitrag"),
+    ).toBeInTheDocument();
+    expect(
+      within(previews[1] as HTMLElement).getByText(
+        "Kommentar am zweiten Beitrag",
+      ),
+    ).toBeInTheDocument();
+  });
+
   it("asks before resetting changed content", async () => {
     const user = userEvent.setup();
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
@@ -101,6 +130,18 @@ describe("App", () => {
     ).toBeInTheDocument();
   });
 
+  it("renders the local image verification route", () => {
+    window.history.replaceState({}, "", "/verifizieren");
+    render(<App />);
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Bild verifizieren" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/kein fälschungssicherer Echtheitsbeweis/),
+    ).toBeInTheDocument();
+  });
+
   it("adds and edits messenger messages in the live preview", async () => {
     const user = userEvent.setup();
     render(<App />);
@@ -125,7 +166,10 @@ describe("App", () => {
       within(preview as HTMLElement).getByText("Geänderte erste Nachricht"),
     ).toBeInTheDocument();
 
-    await user.click(screen.getByLabelText("Gesendet"));
+    await user.selectOptions(
+      screen.getAllByLabelText("Absender")[0],
+      "messenger-profile-right",
+    );
     await user.type(
       screen.getByPlaceholderText("Was soll in der Nachricht stehen?"),
       "Neue Nachricht aus dem Test",
@@ -183,7 +227,7 @@ describe("App", () => {
     await user.click(
       screen.getByRole("tab", { name: "Messenger-Chat" }),
     );
-    const contactName = screen.getByLabelText("Kontaktname");
+    const contactName = screen.getAllByLabelText("Name")[0];
     await user.clear(contactName);
     await user.type(contactName, "Medienkurs");
 
@@ -192,7 +236,7 @@ describe("App", () => {
       screen.getByRole("tab", { name: "Messenger-Chat" }),
     );
 
-    expect(screen.getByLabelText("Kontaktname")).toHaveValue("Medienkurs");
+    expect(screen.getAllByLabelText("Name")[0]).toHaveValue("Medienkurs");
   });
 
   it("switches module tabs with arrow, home and end keys", async () => {
@@ -226,7 +270,7 @@ describe("App", () => {
     expect(
       screen.getByRole("heading", {
         level: 1,
-        name: "Formuliere deinen Mikroblog-Beitrag.",
+        name: "Formuliere deine Mikroblog-Beiträge.",
       }),
     ).toBeInTheDocument();
 
@@ -251,6 +295,39 @@ describe("App", () => {
     expect(screen.getByLabelText("Anzeigename")).toHaveValue("Quellenlabor");
   });
 
+  it("creates multiple microblog posts and attaches comments", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("tab", { name: "Mikroblog" }));
+    await user.click(screen.getByRole("button", { name: "Beitrag" }));
+
+    const postText = screen.getByLabelText("Beitragstext");
+    await user.clear(postText);
+    await user.type(postText, "Zweiter Mikroblog-Beitrag");
+
+    await user.click(screen.getByRole("button", { name: "Kommentar" }));
+    const commentInputs = screen.getAllByLabelText("Kommentartext");
+    await user.clear(commentInputs.at(-1) as HTMLElement);
+    await user.type(
+      commentInputs.at(-1) as HTMLElement,
+      "Antwort am zweiten Beitrag",
+    );
+
+    expect(document.querySelectorAll(".microblog-preview")).toHaveLength(2);
+    const previews = document.querySelectorAll(".microblog-preview");
+    expect(
+      within(previews[1] as HTMLElement).getByText(
+        "Zweiter Mikroblog-Beitrag",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(previews[1] as HTMLElement).getByText(
+        "Antwort am zweiten Beitrag",
+      ),
+    ).toBeInTheDocument();
+  });
+
   it("shows a non-blocking warning for long microblog posts", async () => {
     const user = userEvent.setup();
     render(<App />);
@@ -264,7 +341,7 @@ describe("App", () => {
     expect(text).toHaveValue("a".repeat(281));
   });
 
-  it("can hide microblog date and time independently", async () => {
+  it("updates the free microblog timestamp", async () => {
     const user = userEvent.setup();
     render(<App />);
 
@@ -273,8 +350,47 @@ describe("App", () => {
     expect(preview).not.toBeNull();
     expect(within(preview as HTMLElement).getByText("10:15 · 11.06.2026")).toBeInTheDocument();
 
-    await user.click(screen.getByLabelText("Uhrzeit anzeigen"));
-    expect(within(preview as HTMLElement).getByText("11.06.2026")).toBeInTheDocument();
-    expect(within(preview as HTMLElement).queryByText("10:15 · 11.06.2026")).not.toBeInTheDocument();
+    const timestamp = screen.getAllByLabelText("Zeitstempel")[0];
+    await user.clear(timestamp);
+    await user.type(timestamp, "vor 2 Stunden");
+    expect(
+      within(preview as HTMLElement).getByText("vor 2 Stunden"),
+    ).toBeInTheDocument();
+  });
+
+  it("switches themes and dedicated comment views", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByLabelText("Dark"));
+    expect(document.querySelector(".photo-feed")).toHaveClass("theme-dark");
+
+    await user.selectOptions(
+      screen.getByLabelText("Darstellungsmodus"),
+      "comments",
+    );
+    expect(document.querySelector(".photo-post")).toHaveClass(
+      "photo-post--comments",
+    );
+    expect(screen.getByText("vor 5 Minuten")).toBeInTheDocument();
+    expect(screen.getByText("vor 2 Minuten")).toBeInTheDocument();
+  });
+
+  it("adds and reorders carousel media with video metadata", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Medium" }));
+    expect(screen.getByText("2/2")).toBeInTheDocument();
+    await user.selectOptions(screen.getByLabelText("Medientyp"), "video");
+    await user.type(screen.getByLabelText("Videolänge"), "0:42");
+    await user.type(screen.getByLabelText("Aufrufe"), "1.240");
+
+    expect(screen.getByText("1.240 Aufrufe · 0:42")).toBeInTheDocument();
+    await user.click(
+      screen.getByRole("button", { name: "Medium 2 nach oben verschieben" }),
+    );
+    expect(screen.getByRole("button", { name: "Medium 1 nach oben verschieben" }))
+      .toBeDisabled();
   });
 });

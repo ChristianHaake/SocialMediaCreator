@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { readFile } from "node:fs/promises";
 
 test("module tabs support keyboard navigation and preserve state", async ({
   page,
@@ -22,7 +23,7 @@ test("module tabs support keyboard navigation and preserve state", async ({
   await expect(
     page.getByRole("heading", {
       level: 1,
-      name: "Formuliere deinen Mikroblog-Beitrag.",
+      name: "Formuliere deine Mikroblog-Beiträge.",
     }),
   ).toBeVisible();
 
@@ -58,15 +59,218 @@ test("all modules export images and configuration files", async ({ page }) => {
     const configDownload = page.waitForEvent("download");
     await page.getByRole("button", { name: "Speichern" }).click();
     expect((await configDownload).suggestedFilename()).toMatch(
-      /mockup-studio-.+\.json/,
+      /social-media-creator-.+\.json/,
     );
 
     const imageDownload = page.waitForEvent("download");
     await page.getByRole("button", { name: "PNG" }).click();
     expect((await imageDownload).suggestedFilename()).toMatch(
-      /mockup-studio-.+\.png/,
+      /social-media-creator-.+\.png/,
     );
   }
+});
+
+test("configuration import validates before replacing editor state", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const username = page.getByLabel("Benutzername");
+  await username.fill("bleibt_erhalten");
+
+  const input = page.locator('input[type="file"][accept*="json"]');
+  await input.setInputFiles({
+    name: "invalid.json",
+    mimeType: "application/json",
+    buffer: Buffer.from('{"format":"mockup-studio-config","version":1}'),
+  });
+
+  await expect(page.getByRole("alert")).toContainText("unvollständig");
+  await expect(username).toHaveValue("bleibt_erhalten");
+
+  await input.setInputFiles({
+    name: "microblog.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(
+      JSON.stringify({
+        format: "mockup-studio-config",
+        version: 1,
+        module: "microblog",
+        data: {
+          displayName: "Importiertes Projekt",
+          handle: "import_test",
+          text: "Importierter Beitrag",
+          date: "2026-06-11",
+          time: "12:30",
+          showDate: true,
+          showTime: true,
+          replies: 1,
+          reposts: 2,
+          likes: 3,
+        },
+      }),
+    ),
+  });
+
+  await expect(page.getByRole("tab", { name: "Mikroblog" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await expect(page.getByLabel("Anzeigename")).toHaveValue(
+    "Importiertes Projekt",
+  );
+  await expect(
+    page.locator(".microblog-preview").getByText("Importierter Beitrag", {
+      exact: true,
+    }),
+  ).toBeVisible();
+});
+
+test("photo and microblog feeds support multiple posts with comments", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  await page.getByRole("button", { name: "Beitrag", exact: true }).click();
+  await page.getByLabel("Beschreibung").fill("Zweiter Foto-Beitrag");
+  await page.getByRole("button", { name: "Kommentar", exact: true }).click();
+  await page.getByLabel("Kommentartext").last().fill("Foto-Kommentar");
+
+  await expect(page.locator(".photo-post")).toHaveCount(2);
+  await expect(page.locator(".photo-post").nth(1)).toContainText(
+    "Zweiter Foto-Beitrag",
+  );
+  await expect(page.locator(".photo-post").nth(1)).toContainText(
+    "Foto-Kommentar",
+  );
+
+  await page.getByRole("tab", { name: "Mikroblog" }).click();
+  await page.getByRole("button", { name: "Beitrag", exact: true }).click();
+  await page.getByLabel("Beitragstext").fill("Zweiter Mikroblog-Beitrag");
+  await page.getByRole("button", { name: "Kommentar", exact: true }).click();
+  await page.getByLabel("Kommentartext").last().fill("Mikroblog-Kommentar");
+
+  await expect(page.locator(".microblog-preview")).toHaveCount(2);
+  await expect(page.locator(".microblog-preview").nth(1)).toContainText(
+    "Zweiter Mikroblog-Beitrag",
+  );
+  await expect(page.locator(".microblog-preview").nth(1)).toContainText(
+    "Mikroblog-Kommentar",
+  );
+});
+
+test("two-profile messenger supports sender, timestamp, seen status and themes", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("tab", { name: "Messenger-Chat" }).click();
+
+  await page.getByLabel("Name").nth(0).fill("Linkes Profil");
+  await page.getByLabel("Name").nth(1).fill("Rechtes Profil");
+  await page.getByLabel("Online-Status").nth(0).fill("beschäftigt");
+  await page
+    .locator(".segmented-control label")
+    .filter({ hasText: "Dark" })
+    .click();
+  await expect(page.locator(".messenger-preview")).toHaveClass(/theme-dark/);
+
+  await page.getByLabel("Absender").nth(0).selectOption({
+    label: "Rechtes Profil",
+  });
+  await page
+    .getByPlaceholder("Was soll in der Nachricht stehen?")
+    .fill("Nachricht von rechts");
+  await page.getByLabel("Zeitstempel").nth(0).fill("vor 1 Minute");
+  await page.getByLabel("Als gelesen oder gesehen markieren").check();
+  await page.getByRole("button", { name: "Hinzufügen" }).click();
+
+  const lastMessage = page.locator(".message-row").last();
+  await expect(lastMessage).toHaveClass(/message-row--right/);
+  await expect(lastMessage).toContainText("Nachricht von rechts");
+  await expect(lastMessage).toContainText("vor 1 Minute");
+  await expect(lastMessage.getByText("Gesehen")).toBeAttached();
+});
+
+test("carousel, video simulation, reply chains and comment view work together", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  await page.getByRole("button", { name: "Medium", exact: true }).click();
+  await page.getByLabel("Medientyp").selectOption("video");
+  await page.getByLabel("Videolänge").fill("0:42");
+  await page.getByLabel("Aufrufe").fill("1.240");
+  await expect(page.locator(".carousel-counter").last()).toHaveText("2/2");
+  await expect(page.locator(".video-meta")).toContainText(
+    "1.240 Aufrufe · 0:42",
+  );
+
+  await page.getByRole("button", { name: "Antwort", exact: true }).click();
+  await page.getByLabel("Antworttext").last().fill("Neue verschachtelte Antwort");
+  await page.getByLabel("Darstellungsmodus").selectOption("comments");
+
+  await expect(page.locator(".photo-post")).toHaveClass(
+    /photo-post--comments/,
+  );
+  await expect(page.locator(".photo-post__media-list")).toBeHidden();
+  await expect(page.locator(".comment-thread__item--reply").last()).toContainText(
+    "Neue verschachtelte Antwort",
+  );
+});
+
+test("PDF export and local image verification are available", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Medium", exact: true }).click();
+
+  const pdfDownload = page.waitForEvent("download");
+  await page.getByRole("button", { name: "PDF" }).click();
+  const pdf = await pdfDownload;
+  expect(pdf.suggestedFilename()).toMatch(/\.pdf$/);
+  const pdfPath = await pdf.path();
+  expect(pdfPath).not.toBeNull();
+  const pdfText = await readFile(pdfPath!, "latin1");
+  expect(pdfText.match(/\/Type \/Page\b/g)).toHaveLength(2);
+
+  const imageDownload = page.waitForEvent("download");
+  await page.getByRole("button", { name: "PNG" }).click();
+  const image = await imageDownload;
+  const imagePath = await image.path();
+  expect(imagePath).not.toBeNull();
+
+  await page.goto("/verifizieren");
+  await page.locator('input[type="file"]').setInputFiles(imagePath!);
+  await expect(
+    page.getByRole("heading", { name: "Gültiger Herkunftsmarker" }),
+  ).toBeVisible();
+  await expect(page.getByText("kein fälschungssicherer Echtheitsbeweis")).toBeVisible();
+});
+
+test("image uploads reject invalid files and accept decodable images", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  const input = page.locator("#profile-image");
+  await input.setInputFiles({
+    name: "fake.png",
+    mimeType: "image/png",
+    buffer: Buffer.from("not an image"),
+  });
+  await expect(page.getByRole("alert")).toContainText("kein gültiges");
+
+  const onePixelPng = Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+    "base64",
+  );
+  await input.setInputFiles({
+    name: "pixel.png",
+    mimeType: "image/png",
+    buffer: onePixelPng,
+  });
+
+  await expect(page.getByText("pixel.png")).toBeVisible();
+  await expect(page.getByRole("alert")).toBeHidden();
 });
 
 test("core workflows do not request network resources after loading", async ({

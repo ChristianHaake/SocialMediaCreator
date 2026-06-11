@@ -4,18 +4,31 @@
 2. Passe Texte, Zahlen und Anzeigeoptionen im Editor an.
 3. Wähle bei Bedarf lokale Bilder aus.
 4. Prüfe das Ergebnis in der Live-Vorschau.
-5. Speichere das fertige Mockup als PNG oder JPG.
+5. Speichere das fertige Mockup als PNG, JPG oder PDF.
+
+Für jedes Modul kann zwischen Light, Dim und Dark gewechselt werden.
+Foto-Posts unterstützen Karussells und Video-Simulationen. Kommentare können
+direkte Antworten enthalten und in einer eigenen Kommentaransicht dargestellt
+werden. Der Messenger verwendet zwei frei editierbare Profile.
 
 ## Konfiguration speichern
 
 Mit **Speichern** wird eine JSON-Konfigurationsdatei heruntergeladen. Sie enthält
 Texte, Zahlen und Anzeigeoptionen, aber keine Bilder. Nach dem erneuten Laden
 einer Konfiguration müssen Bilder deshalb wieder ausgewählt werden.
+Ältere Konfigurationen der Versionen 1 und 2 werden automatisch migriert.
 
 ## Unterstützte Bilder
 
 Akzeptiert werden PNG, JPG/JPEG und WebP bis maximal 10 MB pro Datei. Die Bilder
 werden direkt im Browser verarbeitet und nicht an die Anwendung übertragen.
+
+## Bild verifizieren
+
+PNG- und JPG-Exporte enthalten einen lokalen Herkunftsmarker. Unter
+[Bild verifizieren](/verifizieren) kann geprüft werden, ob dieser Marker
+vorhanden und unverändert ist. Er ist ein pädagogischer Herkunftshinweis und
+kein fälschungssicherer Echtheitsbeweis.
 
 ## Datenschutzgerechte Nutzung
 

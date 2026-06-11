@@ -1,6 +1,6 @@
 ## Zweck
 
-Mockup Studio ist eine browserbasierte Werkstatt für fiktive digitale
+SocialMediaCreator ist eine browserbasierte Werkstatt für fiktive digitale
 Kommunikationsformate. Lernende können Beiträge gestalten, ohne ein Konto bei
 einem sozialen Netzwerk zu benötigen oder Inhalte auf eine Plattform
 hochzuladen.
@@ -15,8 +15,9 @@ hochzuladen.
 
 ## Entwicklungsstand
 
-Version 0.2 enthält Foto-Post und Messenger-Chat. Das Mikroblog-Modul folgt in
-einem weiteren Entwicklungsschritt.
+Der aktuelle Stand enthält Foto-Post, Messenger-Chat und Mikroblog. Alle drei
+Module unterstützen Live-Vorschau, lokale Bilder, Konfigurationsdateien sowie
+PNG- und JPG-Export.
 
 ## Quellcode
 

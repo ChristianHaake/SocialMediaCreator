@@ -6,11 +6,12 @@ import {
   Share,
 } from "lucide-react";
 import { forwardRef } from "react";
-import type { ImageState, MicroblogState } from "../types";
+import type { MicroblogImages, MicroblogState } from "../types";
+import { CommentThread } from "./CommentThread";
 
 type MicroblogPreviewProps = {
   value: MicroblogState;
-  profileImage: ImageState | null;
+  images: MicroblogImages;
 };
 
 function initialFor(displayName: string) {
@@ -22,67 +23,90 @@ function formatHandle(handle: string) {
   return `@${normalized || "handle"}`;
 }
 
-function formatDate(date: string) {
-  const [year, month, day] = date.split("-");
-  return year && month && day ? `${day}.${month}.${year}` : date;
-}
-
 export const MicroblogPreview = forwardRef<
   HTMLDivElement,
   MicroblogPreviewProps
->(function MicroblogPreview({ value, profileImage }, ref) {
-  const displayName = value.displayName.trim() || "Anzeigename";
-  const meta = [
-    value.showTime && value.time ? value.time : null,
-    value.showDate && value.date ? formatDate(value.date) : null,
-  ].filter(Boolean);
-
+>(function MicroblogPreview({ value, images }, ref) {
   return (
-    <article className="microblog-preview" ref={ref}>
-      <div className="microblog-preview__header">
-        {profileImage ? (
-          <img
-            alt=""
-            className="microblog-preview__avatar"
-            src={profileImage.url}
-          />
-        ) : (
-          <div className="microblog-preview__avatar microblog-preview__avatar--initial">
-            {initialFor(displayName)}
-          </div>
-        )}
-        <div className="microblog-preview__identity">
-          <strong>{displayName}</strong>
-          <span>{formatHandle(value.handle)}</span>
-        </div>
-        <MoreHorizontal aria-hidden="true" size={21} />
-      </div>
+    <div
+      className={`microblog-feed simulation-theme theme-${value.theme}`}
+      ref={ref}
+    >
+      {value.posts.map((post) => {
+        const displayName = post.displayName.trim() || "Anzeigename";
+        const postImages = images[post.id];
+        return (
+          <article
+            className={
+              post.viewMode === "comments"
+                ? "microblog-preview microblog-preview--comments"
+                : "microblog-preview"
+            }
+            key={post.id}
+          >
+            <div className="microblog-preview__header">
+              {postImages?.profileImage ? (
+                <img
+                  alt=""
+                  className="microblog-preview__avatar"
+                  src={postImages.profileImage.url}
+                />
+              ) : (
+                <div className="microblog-preview__avatar microblog-preview__avatar--initial">
+                  {initialFor(displayName)}
+                </div>
+              )}
+              <div className="microblog-preview__identity">
+                <strong>{displayName}</strong>
+                <span>{formatHandle(post.handle)}</span>
+              </div>
+              <MoreHorizontal aria-hidden="true" size={21} />
+            </div>
 
-      <p className="microblog-preview__text">
-        {value.text || "Dein Beitrag erscheint hier."}
-      </p>
+            {post.viewMode === "post" && (
+              <>
+                <p className="microblog-preview__text">
+                  {post.text || "Dein Beitrag erscheint hier."}
+                </p>
+                {post.timestamp && (
+                  <p className="microblog-preview__meta">{post.timestamp}</p>
+                )}
+                <div
+                  className="microblog-preview__actions"
+                  aria-label="Reaktionen"
+                >
+                  <span>
+                    <MessageCircle aria-hidden="true" size={19} />
+                    {post.replies.toLocaleString("de-DE")}
+                  </span>
+                  <span>
+                    <Repeat2 aria-hidden="true" size={20} />
+                    {post.reposts.toLocaleString("de-DE")}
+                  </span>
+                  <span>
+                    <Heart aria-hidden="true" size={19} />
+                    {post.likes.toLocaleString("de-DE")}
+                  </span>
+                  <span aria-label="Teilen">
+                    <Share aria-hidden="true" size={18} />
+                  </span>
+                </div>
+              </>
+            )}
 
-      {meta.length > 0 && (
-        <p className="microblog-preview__meta">{meta.join(" · ")}</p>
-      )}
-
-      <div className="microblog-preview__actions" aria-label="Reaktionen">
-        <span>
-          <MessageCircle aria-hidden="true" size={19} />
-          {value.replies.toLocaleString("de-DE")}
-        </span>
-        <span>
-          <Repeat2 aria-hidden="true" size={20} />
-          {value.reposts.toLocaleString("de-DE")}
-        </span>
-        <span>
-          <Heart aria-hidden="true" size={19} />
-          {value.likes.toLocaleString("de-DE")}
-        </span>
-        <span aria-label="Teilen">
-          <Share aria-hidden="true" size={18} />
-        </span>
-      </div>
-    </article>
+            {post.viewMode === "comments" && (
+              <p className="comment-view-context">{post.text}</p>
+            )}
+            {post.comments.length > 0 && (
+              <CommentThread
+                comments={post.comments}
+                images={postImages?.commentImages ?? {}}
+                variant="microblog"
+              />
+            )}
+          </article>
+        );
+      })}
+    </div>
   );
 });

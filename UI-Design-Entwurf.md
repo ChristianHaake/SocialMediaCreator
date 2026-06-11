@@ -5,7 +5,7 @@
 Die Anwendung ist eine Mockup-Werkstatt für fiktive digitale
 Kommunikationsformate, kein Kopierwerkzeug für bestehende soziale Netzwerke.
 
-Arbeitstitel: **Mockup Studio**
+Produktname: **SocialMediaCreator**
 
 Untertitel:
 
@@ -39,6 +39,7 @@ Aktionsleiste
   Konfiguration speichern
   PNG speichern
   JPG speichern
+  PDF speichern
 
 Footer
   Hilfe
@@ -268,7 +269,7 @@ Impressum und Datenschutz. Jede Seite enthält:
 - lesbare Inhaltsbreite
 - denselben Footer
 
-Die Seiten werden über normale SPA-Routen ausgeliefert. Cloudflare Pages erhält
+Die Seiten werden über normale SPA-Routen ausgeliefert. Cloudflare Workers erhält
 eine passende Fallback-Regel für direkte Aufrufe.
 
 ## 14. Version 0.1
@@ -291,3 +292,18 @@ Nicht enthalten:
 - Vorlagenbibliothek
 - automatische Wiederherstellung nach Neuladen
 - Originaldesigns oder Logos bestehender Plattformen
+
+## 15. Sprint-7-Erweiterungen
+
+- Jedes Modul erhält eine klar beschriftete Auswahl für Light, Dim und Dark.
+- Foto-Post und Mikroblog bieten einen Darstellungsmodus für den vollständigen
+  Beitrag oder eine fokussierte Kommentarspalte.
+- Kommentare zeigen Profilbild, Autor, Zeitstempel und maximal eine
+  eingerückte Antwortebene.
+- Foto-Karussells verwenden eine auswählbare Medienliste, Punkte und
+  Bildzähler. Der Bildexport zeigt alle Slides als Kontaktbogen.
+- Video-Simulationen verwenden ein Bild-Thumbnail mit Play-Overlay,
+  Videolänge und Aufrufzahl.
+- Messenger-Profile werden als feste linke und rechte Seite bearbeitet.
+- Die Verifikationsseite erklärt deutlich, dass der lokale Herkunftsmarker
+  kein fälschungssicherer Echtheitsbeweis ist.
