@@ -13,6 +13,11 @@ Veröffentlichung in eine versionierte Sektion verschoben.
 
 ### Hinzugefügt
 
+- Klare Master-Detail-Eingabe für Foto-Post und Mikroblog mit getrennten
+  Projekteinstellungen, Beitragsverwaltung und Feldern des aktiven Beitrags.
+- Beitragskarten mit Autor, Datum, Textauszug, Timeline-Position und sichtbarem
+  Aktivstatus; mobil als horizontal scrollbarere Liste.
+- Auswahl und Bearbeitung eines Beitrags direkt aus der Live-Vorschau.
 - Sichtbarer Bildungs-Disclaimer auf allen Generatoransichten.
 - Zweisprachige Seiten für Lehrkräfte, verantwortungsvollen Einsatz und
   Nutzungsbedingungen mit fünf Unterrichtsszenarien und FAQ.
@@ -66,6 +71,12 @@ Veröffentlichung in eine versionierte Sektion verschoben.
 
 ### Geändert
 
+- Neue Beiträge werden sofort aktiviert, in Sicht gescrollt und fokussieren
+  das Autorenfeld.
+- Löschdialoge nennen Autor und Datum; nach dem Löschen wird ein sinnvoller
+  Nachbarbeitrag aktiviert.
+- Die Auswahlmarkierung der Live-Vorschau wird in Bild- und PDF-Exporten
+  ausgeblendet.
 - Impressum, Datenschutz und Projektbeschreibung enthalten vollständige
   Betreiber-, Cloudflare-Workers- und Web-Analytics-Angaben.
 - Der Lehrkräfte-Kurzdialog verlinkt auf die vollständige Informationsseite.

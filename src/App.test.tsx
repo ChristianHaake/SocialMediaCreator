@@ -112,7 +112,7 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "Reset" }));
     expect(screen.getByText("Learning Lab")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Post" }));
+    await user.click(screen.getByRole("button", { name: "Add new post" }));
     expect(screen.getByLabelText("Caption")).toHaveValue("New post");
 
     await user.click(screen.getByRole("button", { name: "Comment" }));
@@ -136,6 +136,78 @@ describe("App", () => {
     );
   });
 
+  it("separates project settings, post management and the active editor", () => {
+    render(<App />);
+
+    expect(
+      screen.getByRole("heading", { name: "Projekteinstellungen" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Beiträge verwalten" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        name: "Ausgewählten Beitrag bearbeiten",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("Aktiv").length).toBeGreaterThan(0);
+  });
+
+  it("activates a new post and focuses its author field", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(
+      screen.getByRole("button", { name: "Neuen Beitrag hinzufügen" }),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Benutzername")).toHaveFocus();
+    });
+    expect(screen.getByLabelText("Benutzername")).toHaveValue(
+      "neuer_account",
+    );
+  });
+
+  it("selects a post from the preview without changing its content", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(
+      screen.getByRole("button", { name: "Neuen Beitrag hinzufügen" }),
+    );
+    expect(screen.getByLabelText("Benutzername")).toHaveValue(
+      "neuer_account",
+    );
+
+    const previewEditButtons = screen.getAllByRole("button", {
+      name: "Beitrag bearbeiten",
+    });
+    await user.click(previewEditButtons.at(-1) as HTMLElement);
+
+    expect(screen.getByLabelText("Benutzername")).toHaveValue("projekt_kurs");
+    expect(document.querySelectorAll(".photo-post--selected")).toHaveLength(1);
+  });
+
+  it("keeps a post when its localized deletion is cancelled", async () => {
+    const user = userEvent.setup();
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    render(<App />);
+
+    await user.click(
+      screen.getByRole("button", { name: "Neuen Beitrag hinzufügen" }),
+    );
+    const deleteButton = screen
+      .getAllByRole("button", { name: /^Beitrag von .* löschen$/ })
+      .find((button) => !button.hasAttribute("disabled"));
+    await user.click(deleteButton as HTMLElement);
+
+    expect(confirm).toHaveBeenCalledWith(
+      expect.stringContaining("neuer_account"),
+    );
+    expect(document.querySelectorAll(".photo-post")).toHaveLength(2);
+  });
+
   it("can hide optional preview content", async () => {
     const user = userEvent.setup();
     render(<App />);
@@ -149,7 +221,9 @@ describe("App", () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(screen.getByRole("button", { name: "Beitrag" }));
+    await user.click(
+      screen.getByRole("button", { name: "Neuen Beitrag hinzufügen" }),
+    );
     const caption = screen.getByLabelText("Beschreibung");
     await user.clear(caption);
     await user.type(caption, "Zweiter Foto-Beitrag");
@@ -182,7 +256,9 @@ describe("App", () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(screen.getByRole("button", { name: "Beitrag" }));
+    await user.click(
+      screen.getByRole("button", { name: "Neuen Beitrag hinzufügen" }),
+    );
     const caption = screen.getByLabelText("Beschreibung");
     await user.clear(caption);
     await user.type(caption, "Neuerer Beitrag");
@@ -207,26 +283,28 @@ describe("App", () => {
 
   it("deletes first, middle and last feed posts without removing the project", async () => {
     const user = userEvent.setup();
+    vi.spyOn(window, "confirm").mockReturnValue(true);
     render(<App />);
 
-    await user.click(screen.getByRole("button", { name: "Beitrag" }));
-    await user.click(screen.getByRole("button", { name: "Beitrag" }));
-    await user.click(screen.getByRole("button", { name: "Beitrag" }));
+    const addPost = screen.getByRole("button", {
+      name: "Neuen Beitrag hinzufügen",
+    });
+    await user.click(addPost);
+    await user.click(addPost);
+    await user.click(addPost);
     expect(document.querySelectorAll(".photo-post")).toHaveLength(4);
 
-    await user.click(
-      screen.getByRole("button", { name: "Beitrag 4 löschen" }),
-    );
-    await user.click(
-      screen.getByRole("button", { name: "Beitrag 2 löschen" }),
-    );
-    await user.click(
-      screen.getByRole("button", { name: "Beitrag 1 löschen" }),
-    );
+    for (let index = 0; index < 3; index += 1) {
+      const deleteButton = screen
+        .getAllByRole("button", { name: /^Beitrag von .* löschen$/ })
+        .find((button) => !button.hasAttribute("disabled"));
+      expect(deleteButton).toBeDefined();
+      await user.click(deleteButton as HTMLElement);
+    }
 
     expect(document.querySelectorAll(".photo-post")).toHaveLength(1);
     expect(
-      screen.getByRole("button", { name: "Beitrag 1 löschen" }),
+      screen.getByRole("button", { name: /^Beitrag von .* löschen$/ }),
     ).toBeDisabled();
   });
 
@@ -476,7 +554,9 @@ describe("App", () => {
     render(<App />);
 
     await user.click(screen.getByRole("tab", { name: "Mikroblog" }));
-    await user.click(screen.getByRole("button", { name: "Beitrag" }));
+    await user.click(
+      screen.getByRole("button", { name: "Neuen Beitrag hinzufügen" }),
+    );
 
     const postText = screen.getByLabelText("Beitragstext");
     await user.clear(postText);
@@ -527,7 +607,9 @@ describe("App", () => {
       "microblog-feed--thread",
     );
 
-    await user.click(screen.getByRole("button", { name: "Beitrag" }));
+    await user.click(
+      screen.getByRole("button", { name: "Neuen Beitrag hinzufügen" }),
+    );
     const text = screen.getByLabelText("Beitragstext");
     await user.clear(text);
     await user.type(text, "Thread-Fortsetzung");

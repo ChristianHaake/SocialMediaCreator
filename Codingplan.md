@@ -312,6 +312,17 @@ Nicht enthalten:
 - Editorbereiche verwenden native Disclosure-Elemente. Beiträge, Profil und
   Inhalt sind standardmäßig geöffnet; Darstellung, Medien, Reaktionen und
   Kommentare werden bei Bedarf aufgeklappt.
+- Foto-Post und Mikroblog verwenden eine gemeinsame Master-Detail-Struktur:
+  Projekteinstellungen, kompakte Beitragsnavigation und eine klar umrahmte
+  Detailkarte für den aktiven Beitrag.
+- Beitragskarten identifizieren Einträge über Autor, formatiertes Datum und
+  Textauszug. Generische Bezeichnungen wie „Post 1“ sind keine primäre
+  Identität.
+- Auswahl über Beitragsliste oder Live-Vorschau hält Editor und Vorschau
+  synchron. Auf Mobilgeräten führt die Vorschauauswahl zurück zum Editor.
+- Neue Beiträge werden aktiviert, zur Detailkarte gescrollt und fokussieren
+  das erste Autorenfeld. Das serialisierte Config-V6-Modell bleibt dabei
+  unverändert.
 
 ## 14. Mehrsprachigkeit
 

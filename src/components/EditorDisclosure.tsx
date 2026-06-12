@@ -6,7 +6,7 @@ type EditorDisclosureProps = {
   children: ReactNode;
   defaultOpen?: boolean;
   description: string;
-  number: string;
+  number?: string;
   title: string;
 };
 
@@ -27,7 +27,7 @@ export function EditorDisclosure({
       open={isOpen}
     >
       <summary className="section-heading">
-        <span>{number}</span>
+        {number && <span>{number}</span>}
         <div>
           <h2>{title}</h2>
           <p>{description}</p>
