@@ -26,6 +26,7 @@ import { PhotoPostPreview } from "./components/PhotoPostPreview";
 import { TeacherInfoDialog } from "./components/TeacherInfoDialog";
 import { VerificationPage } from "./components/VerificationPage";
 import { contentPages, isContentPath } from "./content";
+import { getTranslation, LocaleProvider, useTranslation } from "./i18n";
 import type {
   ImageState,
   MessengerImages,
@@ -34,11 +35,12 @@ import type {
   PhotoPostImages,
 } from "./types";
 import {
-  defaultMessenger,
-  defaultMicroblog,
-  defaultPhotoPost,
+  getDefaultMessenger,
+  getDefaultMicroblog,
+  getDefaultPhotoPost,
 } from "./types";
 import {
+  ConfigFileError,
   downloadModuleConfig,
   readConfigFile,
 } from "./utils/configFiles";
@@ -50,51 +52,6 @@ import {
 } from "./utils/exportImage";
 
 type MobileView = "editor" | "preview";
-
-const modules = [
-  {
-    id: "photoPost" as const,
-    label: "Foto-Post",
-    icon: Camera,
-  },
-  {
-    id: "messenger" as const,
-    label: "Messenger-Chat",
-    icon: MessageSquareText,
-  },
-  {
-    id: "microblog" as const,
-    label: "Mikroblog",
-    icon: PenLine,
-  },
-];
-
-const moduleCopy: Record<
-  ModuleType,
-  { eyebrow: string; title: string; description: string; editorTitle: string }
-> = {
-  photoPost: {
-    eyebrow: "Fiktiv. Lokal. Exportierbar.",
-    title: "Erstelle deine Foto-Posts.",
-    description:
-      "Gestalte fiktive Beiträge und beobachte jede Änderung direkt in der Vorschau. Ohne Anmeldung und ohne Upload.",
-    editorTitle: "Foto-Posts bearbeiten",
-  },
-  messenger: {
-    eyebrow: "Dialoge nachvollziehbar gestalten.",
-    title: "Baue deinen Messenger-Chat.",
-    description:
-      "Erstelle einen fiktiven Dialog, ordne Nachrichten und exportiere den vollständigen Verlauf direkt im Browser.",
-    editorTitle: "Messenger-Chat bearbeiten",
-  },
-  microblog: {
-    eyebrow: "Kurz. Klar. Kontextbezogen.",
-    title: "Formuliere deine Mikroblog-Beiträge.",
-    description:
-      "Gestalte kurze fiktive Beiträge mit Profil, Zeitangaben und Reaktionen. Der Zeichenzähler informiert, ohne dich zu begrenzen.",
-    editorTitle: "Mikroblog-Beiträge bearbeiten",
-  },
-};
 
 function revokeImage(image: ImageState | null | undefined) {
   if (image) URL.revokeObjectURL(image.url);
@@ -119,11 +76,15 @@ function revokeMessengerImages(images: MessengerImages) {
   Object.values(images).forEach(revokeImage);
 }
 
-export function App() {
+function AppContent() {
+  const { locale, setLocale, t } = useTranslation();
+  const initialPhotoPost = useRef(getDefaultPhotoPost(locale));
+  const initialMessenger = useRef(getDefaultMessenger(locale));
+  const initialMicroblog = useRef(getDefaultMicroblog(locale));
   const [activeModule, setActiveModule] = useState<ModuleType>("photoPost");
-  const [photoPost, setPhotoPost] = useState(defaultPhotoPost);
-  const [messenger, setMessenger] = useState(defaultMessenger);
-  const [microblog, setMicroblog] = useState(defaultMicroblog);
+  const [photoPost, setPhotoPost] = useState(initialPhotoPost.current);
+  const [messenger, setMessenger] = useState(initialMessenger.current);
+  const [microblog, setMicroblog] = useState(initialMicroblog.current);
   const [photoImages, setPhotoImages] = useState<PhotoPostImages>({});
   const [messengerImages, setMessengerImages] = useState<MessengerImages>({});
   const [microblogImages, setMicroblogImages] =
@@ -147,6 +108,38 @@ export function App() {
     window.location.pathname.length > 1
       ? window.location.pathname.replace(/\/+$/, "")
       : "/";
+  const modules = [
+    { id: "photoPost" as const, label: t("module.photo"), icon: Camera },
+    {
+      id: "messenger" as const,
+      label: t("module.messenger"),
+      icon: MessageSquareText,
+    },
+    { id: "microblog" as const, label: t("module.microblog"), icon: PenLine },
+  ];
+  const moduleCopy: Record<
+    ModuleType,
+    { eyebrow: string; title: string; description: string; editorTitle: string }
+  > = {
+    photoPost: {
+      eyebrow: t("photo.eyebrow"),
+      title: t("photo.title"),
+      description: t("photo.description"),
+      editorTitle: t("photo.editorTitle"),
+    },
+    messenger: {
+      eyebrow: t("messenger.eyebrow"),
+      title: t("messenger.title"),
+      description: t("messenger.description"),
+      editorTitle: t("messenger.editorTitle"),
+    },
+    microblog: {
+      eyebrow: t("microblog.eyebrow"),
+      title: t("microblog.title"),
+      description: t("microblog.description"),
+      editorTitle: t("microblog.editorTitle"),
+    },
+  };
 
   photoImagesRef.current = photoImages;
   messengerImagesRef.current = messengerImages;
@@ -211,20 +204,20 @@ export function App() {
   function isModuleChanged(module: ModuleType) {
     if (module === "photoPost") {
       return (
-        JSON.stringify(photoPost) !== JSON.stringify(defaultPhotoPost) ||
+        JSON.stringify(photoPost) !== JSON.stringify(initialPhotoPost.current) ||
         Object.keys(photoImages).length > 0
       );
     }
 
     if (module === "messenger") {
       return (
-        JSON.stringify(messenger) !== JSON.stringify(defaultMessenger) ||
+        JSON.stringify(messenger) !== JSON.stringify(initialMessenger.current) ||
         Object.keys(messengerImages).length > 0
       );
     }
 
     return (
-      JSON.stringify(microblog) !== JSON.stringify(defaultMicroblog) ||
+      JSON.stringify(microblog) !== JSON.stringify(initialMicroblog.current) ||
       Object.keys(microblogImages).length > 0
     );
   }
@@ -427,17 +420,23 @@ export function App() {
   function resetActiveModule() {
     if (
       isModuleChanged(activeModule) &&
-      !window.confirm("Aktuelle Eingaben wirklich zurücksetzen?")
+      !window.confirm(t("app.resetConfirm"))
     ) {
       return;
     }
 
     if (activeModule === "photoPost") {
-      setPhotoPost(defaultPhotoPost);
+      const next = getDefaultPhotoPost(locale);
+      initialPhotoPost.current = next;
+      setPhotoPost(next);
     } else if (activeModule === "messenger") {
-      setMessenger(defaultMessenger);
+      const next = getDefaultMessenger(locale);
+      initialMessenger.current = next;
+      setMessenger(next);
     } else {
-      setMicroblog(defaultMicroblog);
+      const next = getDefaultMicroblog(locale);
+      initialMicroblog.current = next;
+      setMicroblog(next);
     }
     clearModuleImages(activeModule);
     setImageError(null);
@@ -449,7 +448,7 @@ export function App() {
     if (
       activeHasImages &&
       !window.confirm(
-        "Bilder sind nicht Teil der Konfigurationsdatei und müssen nach dem Laden erneut ausgewählt werden. Trotzdem speichern?",
+        t("app.saveImagesConfirm"),
       )
     ) {
       return;
@@ -461,11 +460,11 @@ export function App() {
         : activeModule === "messenger"
           ? messenger
           : microblog;
-    downloadModuleConfig(activeModule, data);
+    downloadModuleConfig(activeModule, data, locale);
 
     setConfigStatus({
       type: "success",
-      message: "Konfiguration ohne Bilder gespeichert.",
+      message: t("app.saved"),
     });
   }
 
@@ -481,36 +480,39 @@ export function App() {
       if (
         isModuleChanged(config.module) &&
         !window.confirm(
-          "Beim Laden werden die Eingaben dieses Moduls ersetzt. Ausgewählte Bilder werden entfernt. Konfiguration laden?",
+          t("app.loadConfirm"),
         )
       ) {
         return;
       }
 
       if (config.module === "photoPost") {
+        initialPhotoPost.current = config.data;
         setPhotoPost(config.data);
       } else if (config.module === "messenger") {
+        initialMessenger.current = config.data;
         setMessenger(config.data);
       } else {
+        initialMicroblog.current = config.data;
         setMicroblog(config.data);
       }
 
+      setLocale(config.locale);
       clearModuleImages(config.module);
       setActiveModule(config.module);
       setMobileView("editor");
       setImageError(null);
       setConfigStatus({
         type: "success",
-        message:
-          "Konfiguration geladen. Bilder müssen erneut ausgewählt werden.",
+        message: getTranslation(config.locale, "app.loaded"),
       });
     } catch (error) {
       setConfigStatus({
         type: "error",
         message:
-          error instanceof Error
-            ? error.message
-            : "Die Konfiguration konnte nicht geladen werden.",
+          error instanceof ConfigFileError
+            ? t(error.code)
+            : t("config.loadFailed"),
       });
     }
   }
@@ -533,7 +535,7 @@ export function App() {
       );
     } catch {
       setExportError(
-        "Das Bild konnte nicht erstellt werden. Bitte versuche es erneut.",
+        t("app.imageExportError"),
       );
     } finally {
       setExporting(null);
@@ -552,10 +554,11 @@ export function App() {
           : activeModule === "messenger"
             ? "social-media-creator-messenger-chat"
             : "social-media-creator-mikroblog",
+        locale,
       );
     } catch {
       setExportError(
-        "Das PDF konnte nicht erstellt werden. Bitte versuche es erneut.",
+        t("app.pdfExportError"),
       );
     } finally {
       setExporting(null);
@@ -658,11 +661,11 @@ export function App() {
       {pathname === "/verifizieren" ? (
         <VerificationPage />
       ) : isContentPath(pathname) ? (
-        <ContentPage {...contentPages[pathname]} />
+        <ContentPage {...contentPages[locale][pathname]} />
       ) : pathname !== "/" ? (
         <ContentPage
-          content="Die angeforderte Seite existiert nicht. Kehre zur App zurück oder verwende einen Link aus der Fußnavigation."
-          title="Seite nicht gefunden"
+          content={t("app.notFoundText")}
+          title={t("app.notFound")}
         />
       ) : (
         <main>
@@ -675,7 +678,7 @@ export function App() {
           </section>
 
           <nav
-            aria-label="Format auswählen"
+            aria-label={t("app.format")}
             className="module-tabs"
             role="tablist"
           >
@@ -705,20 +708,20 @@ export function App() {
             ))}
           </nav>
 
-          <div aria-label="Ansicht auswählen" className="mobile-view-toggle">
+          <div aria-label={t("app.view")} className="mobile-view-toggle">
             <button
               aria-pressed={mobileView === "editor"}
               onClick={() => setMobileView("editor")}
               type="button"
             >
-              Bearbeiten
+              {t("app.edit")}
             </button>
             <button
               aria-pressed={mobileView === "preview"}
               onClick={() => setMobileView("preview")}
               type="button"
             >
-              Vorschau
+              {t("app.preview")}
             </button>
           </div>
 
@@ -735,17 +738,17 @@ export function App() {
             >
               <div className="panel-heading">
                 <div>
-                  <span className="panel-kicker">Editor</span>
+                  <span className="panel-kicker">{t("app.editor")}</span>
                   <h2>{activeCopy.editorTitle}</h2>
                 </div>
                 <button
                   className="icon-button"
                   onClick={resetActiveModule}
-                  title="Zurücksetzen"
+                  title={t("app.reset")}
                   type="button"
                 >
                   <RotateCcw aria-hidden="true" size={18} />
-                  <span className="visually-hidden">Zurücksetzen</span>
+                  <span className="visually-hidden">{t("app.reset")}</span>
                 </button>
               </div>
 
@@ -765,12 +768,12 @@ export function App() {
             >
               <div className="preview-panel__header">
                 <div>
-                  <span className="panel-kicker">Live-Vorschau</span>
-                  <p>Wird lokal in deinem Browser gerendert</p>
+                  <span className="panel-kicker">{t("app.livePreview")}</span>
+                  <p>{t("app.localRender")}</p>
                 </div>
                 <span className="live-indicator">
                   <span />
-                  Live
+                  {t("app.live")}
                 </span>
               </div>
 
@@ -782,14 +785,14 @@ export function App() {
 
               <div className="action-bar">
                 <div className="action-group">
-                  <span>Projekt</span>
+                  <span>{t("app.project")}</span>
                   <button
                     className="button button--secondary"
                     onClick={() => configInputRef.current?.click()}
                     type="button"
                   >
                     <FileUp aria-hidden="true" size={17} />
-                    Laden
+                    {t("app.load")}
                   </button>
                   <input
                     accept=".json,application/json"
@@ -804,11 +807,11 @@ export function App() {
                     type="button"
                   >
                     <FileDown aria-hidden="true" size={17} />
-                    Speichern
+                    {t("app.save")}
                   </button>
                 </div>
                 <div className="action-group">
-                  <span>Bild</span>
+                  <span>{t("app.image")}</span>
                   <button
                     className="button button--secondary"
                     disabled={exporting !== null}
@@ -816,7 +819,7 @@ export function App() {
                     type="button"
                   >
                     <Download aria-hidden="true" size={17} />
-                    {exporting === "jpg" ? "Erstelle..." : "JPG"}
+                    {exporting === "jpg" ? t("app.creating") : "JPG"}
                   </button>
                   <button
                     className="button button--primary"
@@ -825,7 +828,7 @@ export function App() {
                     type="button"
                   >
                     <Download aria-hidden="true" size={17} />
-                    {exporting === "png" ? "Erstelle..." : "PNG"}
+                    {exporting === "png" ? t("app.creating") : "PNG"}
                   </button>
                   <button
                     className="button button--secondary"
@@ -834,7 +837,7 @@ export function App() {
                     type="button"
                   >
                     <FileDown aria-hidden="true" size={17} />
-                    {exporting === "pdf" ? "Erstelle..." : "PDF"}
+                    {exporting === "pdf" ? t("app.creating") : "PDF"}
                   </button>
                 </div>
               </div>
@@ -862,5 +865,13 @@ export function App() {
         open={teacherInfoOpen}
       />
     </div>
+  );
+}
+
+export function App() {
+  return (
+    <LocaleProvider>
+      <AppContent />
+    </LocaleProvider>
   );
 }

@@ -7,6 +7,7 @@ import type {
   MicroblogPost,
   MicroblogState,
   ModuleType,
+  Locale,
   PhotoMedia,
   PhotoPost,
   PhotoPostState,
@@ -15,10 +16,12 @@ import type {
   Theme,
   TimelineSortOrder,
 } from "../types";
+import type { ConfigErrorCode } from "../i18n";
 
 type BaseConfigFile = {
   format: "social-media-creator-config";
-  version: 5;
+  version: 6;
+  locale: Locale;
 };
 
 export type PhotoPostConfigFile = BaseConfigFile & {
@@ -43,6 +46,12 @@ export type ConfigFile =
 
 const maxConfigSize = 1024 * 1024;
 
+export class ConfigFileError extends Error {
+  constructor(public code: ConfigErrorCode) {
+    super(code);
+  }
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -62,6 +71,10 @@ function isNonNegativeNumber(value: unknown): value is number {
 
 function isTheme(value: unknown): value is Theme {
   return value === "light" || value === "dim" || value === "dark";
+}
+
+function isLocale(value: unknown): value is Locale {
+  return value === "de" || value === "en";
 }
 
 function isSortOrder(value: unknown): value is TimelineSortOrder {
@@ -320,10 +333,12 @@ function isMicroblogState(value: unknown): value is MicroblogState {
 
 export function createPhotoPostConfig(
   data: PhotoPostState,
+  locale: Locale = "de",
 ): PhotoPostConfigFile {
   return {
     format: "social-media-creator-config",
-    version: 5,
+    version: 6,
+    locale,
     module: "photoPost",
     data,
   };
@@ -331,10 +346,12 @@ export function createPhotoPostConfig(
 
 export function createMessengerConfig(
   data: MessengerState,
+  locale: Locale = "de",
 ): MessengerConfigFile {
   return {
     format: "social-media-creator-config",
-    version: 5,
+    version: 6,
+    locale,
     module: "messenger",
     data,
   };
@@ -342,10 +359,12 @@ export function createMessengerConfig(
 
 export function createMicroblogConfig(
   data: MicroblogState,
+  locale: Locale = "de",
 ): MicroblogConfigFile {
   return {
     format: "social-media-creator-config",
-    version: 5,
+    version: 6,
+    locale,
     module: "microblog",
     data,
   };
@@ -356,19 +375,32 @@ export function parseConfig(contents: string): ConfigFile {
   try {
     value = JSON.parse(contents);
   } catch {
-    throw new Error("Die Datei enthält kein gültiges JSON.");
+    throw new ConfigFileError("config.invalidJson");
   }
 
   if (!isRecord(value)) {
-    throw new Error("Die Datei ist keine SocialMediaCreator-Konfiguration.");
+    throw new ConfigFileError("config.invalidFormat");
   }
   if (value.format !== "social-media-creator-config") {
-    throw new Error("Die Datei ist keine SocialMediaCreator-Konfiguration.");
+    throw new ConfigFileError("config.invalidFormat");
   }
-  if (value.version !== 5) {
-    throw new Error(
-      "Diese Konfigurationsversion wird nicht unterstützt. Erforderlich ist Version 5.",
-    );
+  if (value.version === 5) {
+    if (value.module === "photoPost" && isPhotoPostState(value.data)) {
+      return createPhotoPostConfig(value.data, "de");
+    }
+    if (value.module === "messenger" && isMessengerState(value.data)) {
+      return createMessengerConfig(value.data, "de");
+    }
+    if (value.module === "microblog" && isMicroblogState(value.data)) {
+      return createMicroblogConfig(value.data, "de");
+    }
+    throw new ConfigFileError("config.incomplete");
+  }
+  if (value.version !== 6) {
+    throw new ConfigFileError("config.unsupportedVersion");
+  }
+  if (!isLocale(value.locale)) {
+    throw new ConfigFileError("config.incomplete");
   }
   if (value.module === "photoPost" && isPhotoPostState(value.data)) {
     return value as PhotoPostConfigFile;
@@ -379,20 +411,20 @@ export function parseConfig(contents: string): ConfigFile {
   if (value.module === "microblog" && isMicroblogState(value.data)) {
     return value as MicroblogConfigFile;
   }
-  throw new Error("Die Modulkonfiguration ist unvollständig.");
+  throw new ConfigFileError("config.incomplete");
 }
 
 export function parsePhotoPostConfig(contents: string): PhotoPostConfigFile {
   const config = parseConfig(contents);
   if (config.module !== "photoPost") {
-    throw new Error("Die Datei enthält keine Foto-Post-Konfiguration.");
+    throw new ConfigFileError("config.wrongModule");
   }
   return config;
 }
 
 export async function readConfigFile(file: File) {
   if (file.size > maxConfigSize) {
-    throw new Error("Die Konfigurationsdatei darf höchstens 1 MB groß sein.");
+    throw new ConfigFileError("config.tooLarge");
   }
   return parseConfig(await file.text());
 }
@@ -411,27 +443,31 @@ function downloadConfig(config: ConfigFile, fileName: string) {
 export function downloadModuleConfig(
   module: ModuleType,
   data: PhotoPostState | MessengerState | MicroblogState,
+  locale: Locale,
 ) {
   if (module === "photoPost") {
     downloadConfig(
-      createPhotoPostConfig(data as PhotoPostState),
+      createPhotoPostConfig(data as PhotoPostState, locale),
       "social-media-creator-foto-post.json",
     );
     return;
   }
   if (module === "messenger") {
     downloadConfig(
-      createMessengerConfig(data as MessengerState),
+      createMessengerConfig(data as MessengerState, locale),
       "social-media-creator-messenger-chat.json",
     );
     return;
   }
   downloadConfig(
-    createMicroblogConfig(data as MicroblogState),
+    createMicroblogConfig(data as MicroblogState, locale),
     "social-media-creator-mikroblog.json",
   );
 }
 
-export function downloadPhotoPostConfig(data: PhotoPostState) {
-  downloadModuleConfig("photoPost", data);
+export function downloadPhotoPostConfig(
+  data: PhotoPostState,
+  locale: Locale = "de",
+) {
+  downloadModuleConfig("photoPost", data, locale);
 }

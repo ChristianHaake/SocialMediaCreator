@@ -320,3 +320,11 @@ Nicht enthalten:
   Thread-Modus mit vertikaler Verbindungslinie zwischen den Hauptbeiträgen.
 - Selten benötigte Editorbereiche sind einklappbar; zentrale Beitragsfelder
   bleiben standardmäßig sichtbar.
+
+## 17. Sprachumschaltung
+
+- Im Header steht ein kompakter Umschalter für Deutsch und Englisch.
+- Die aktive Sprache ist visuell und über `aria-pressed` erkennbar.
+- Auf kleinen Bildschirmen bleibt der Umschalter sichtbar; die Wortmarke wird
+  zugunsten der Bedienbarkeit reduziert.
+- Sprachwechsel verändern nur Systemtexte, nicht die eingegebenen Inhalte.

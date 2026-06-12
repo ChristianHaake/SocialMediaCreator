@@ -1,6 +1,7 @@
 import { ImagePlus, Trash2 } from "lucide-react";
 import type { ChangeEvent } from "react";
 import type { ImageState } from "../types";
+import { useTranslation } from "../i18n";
 import { createImageState, validateImageFile } from "../utils/imageFiles";
 
 type ImageUploadFieldProps = {
@@ -18,6 +19,7 @@ export function ImageUploadField({
   onChange,
   onError,
 }: ImageUploadFieldProps) {
+  const { t } = useTranslation();
   async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
@@ -28,7 +30,7 @@ export function ImageUploadField({
 
     const error = await validateImageFile(file);
     if (error) {
-      onError(error);
+      onError(t(error));
       return;
     }
 
@@ -42,7 +44,7 @@ export function ImageUploadField({
       <div className="image-upload__actions">
         <label className="button button--secondary" htmlFor={id}>
           <ImagePlus aria-hidden="true" size={18} />
-          {image ? "Bild ersetzen" : "Bild auswählen"}
+          {image ? t("image.replace") : t("image.choose")}
         </label>
         <input
           accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
@@ -53,7 +55,7 @@ export function ImageUploadField({
         />
         {image && (
           <button
-            aria-label={`${label} entfernen`}
+            aria-label={t("image.remove", { label })}
             className="icon-button"
             onClick={() => onChange(null)}
             type="button"
@@ -63,7 +65,7 @@ export function ImageUploadField({
         )}
       </div>
       <span className="field-hint">
-        {image?.fileName ?? "PNG, JPG oder WebP, maximal 10 MB"}
+        {image?.fileName ?? t("image.hint")}
       </span>
     </div>
   );

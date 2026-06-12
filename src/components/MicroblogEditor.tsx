@@ -8,6 +8,7 @@ import type {
   MicroblogState,
 } from "../types";
 import { createId } from "../utils/ids";
+import { useTranslation } from "../i18n";
 import {
   formatTimelineDate,
   sortTimelinePosts,
@@ -34,12 +35,12 @@ type MicroblogEditorProps = {
   onImageError: (message: string | null) => void;
 };
 
-function createMicroblogPost(): MicroblogPost {
+function createMicroblogPost(locale: "de" | "en"): MicroblogPost {
   return {
     id: createId("microblog-post"),
-    displayName: "Neues Profil",
-    handle: "neues_profil",
-    text: "Neuer Beitrag",
+    displayName: locale === "de" ? "Neues Profil" : "New profile",
+    handle: locale === "de" ? "neues_profil" : "new_profile",
+    text: locale === "de" ? "Neuer Beitrag" : "New post",
     date: todayInputValue(),
     time: "",
     viewMode: "post",
@@ -60,6 +61,7 @@ export function MicroblogEditor({
   onPostRemoved,
   onImageError,
 }: MicroblogEditorProps) {
+  const { locale, t } = useTranslation();
   const activePost =
     value.posts.find((post) => post.id === value.activePostId) ?? value.posts[0];
   const activeImages = images[activePost.id] ?? {
@@ -78,7 +80,7 @@ export function MicroblogEditor({
   }
 
   function addPost() {
-    const post = createMicroblogPost();
+    const post = createMicroblogPost(locale);
     onChange((current) => ({
       ...current,
       activePostId: post.id,
@@ -106,16 +108,16 @@ export function MicroblogEditor({
   return (
     <form className="editor-form" onSubmit={(event) => event.preventDefault()}>
       <EditorDisclosure
-        description="Farbschema, Layout und Reihenfolge"
+        description={t("microblog.appearanceDescription")}
         number="01"
-        title="Darstellung"
+        title={t("common.appearance")}
       >
         <ThemeSelector
           onChange={(theme) => onChange((current) => ({ ...current, theme }))}
           value={value.theme}
         />
         <label className="field">
-          <span className="field-label">Timeline-Darstellung</span>
+          <span className="field-label">{t("microblog.timelineLayout")}</span>
           <select
             onChange={(event) =>
               onChange((current) => ({
@@ -125,12 +127,12 @@ export function MicroblogEditor({
             }
             value={value.layoutMode}
           >
-            <option value="feed">Feed mit getrennten Beiträgen</option>
-            <option value="thread">Verbundener Thread</option>
+            <option value="feed">{t("microblog.feed")}</option>
+            <option value="thread">{t("microblog.thread")}</option>
           </select>
         </label>
         <label className="field">
-          <span className="field-label">Timeline-Reihenfolge</span>
+          <span className="field-label">{t("common.timelineOrder")}</span>
           <select
             onChange={(event) =>
               onChange((current) => ({
@@ -140,19 +142,22 @@ export function MicroblogEditor({
             }
             value={value.sortOrder}
           >
-            <option value="newest">Neueste zuerst</option>
-            <option value="oldest">Älteste zuerst</option>
+            <option value="newest">{t("common.newest")}</option>
+            <option value="oldest">{t("common.oldest")}</option>
           </select>
         </label>
       </EditorDisclosure>
 
       <EditorDisclosure
         defaultOpen
-        description={`${value.posts.length} ${
-          value.posts.length === 1 ? "Beitrag" : "Beiträge"
-        }, automatisch chronologisch sortiert`}
+        description={t(
+          value.posts.length === 1
+            ? "photo.postsDescription.one"
+            : "photo.postsDescription.other",
+          { count: value.posts.length },
+        )}
         number="02"
-        title="Beiträge"
+        title={t("common.posts")}
       >
         <div className="editor-section-actions">
           <button
@@ -162,7 +167,7 @@ export function MicroblogEditor({
             type="button"
           >
             <Plus aria-hidden="true" size={17} />
-            Beitrag
+            {t("common.post")}
           </button>
         </div>
         <TimelinePostList
@@ -173,28 +178,28 @@ export function MicroblogEditor({
           }
           posts={sortedPosts.map((post) => ({
             id: post.id,
-            summary: post.text || "Ohne Text",
-            timestamp: formatTimelineDate(post.date, post.time),
+            summary: post.text || t("common.noText"),
+            timestamp: formatTimelineDate(post.date, post.time, locale),
           }))}
         />
       </EditorDisclosure>
 
       <EditorDisclosure
         defaultOpen
-        description="Absender des ausgewählten Beitrags"
+        description={t("microblog.profileDescription")}
         number="03"
-        title="Profil"
+        title={t("microblog.profile")}
       >
         <ImageUploadField
           id="microblog-profile-image"
           image={activeImages.profileImage}
-          label="Profilbild"
+          label={t("common.profileImage")}
           onChange={(image) => onProfileImageChange(activePost.id, image)}
           onError={onImageError}
         />
         <div className="field-row">
           <label className="field">
-            <span className="field-label">Anzeigename</span>
+            <span className="field-label">{t("microblog.displayName")}</span>
             <input
               maxLength={fieldLimits.microblog.displayName}
               onChange={(event) =>
@@ -216,14 +221,14 @@ export function MicroblogEditor({
 
       <EditorDisclosure
         defaultOpen
-        description="Text, Veröffentlichungszeitpunkt und Ansicht"
+        description={t("microblog.contentDescription")}
         number="04"
-        title="Inhalt und Ansicht"
+        title={t("microblog.contentTitle")}
       >
         <label className="field">
-          <span className="field-label">Beitragstext</span>
+          <span className="field-label">{t("microblog.postText")}</span>
           <textarea
-            aria-label="Beitragstext"
+            aria-label={t("microblog.postText")}
             onChange={(event) => updatePost({ text: event.target.value })}
             rows={6}
             value={activePost.text}
@@ -235,15 +240,15 @@ export function MicroblogEditor({
                 : "field-hint"
             }
           >
-            {activePost.text.length} Zeichen
+            {t("microblog.characters", { count: activePost.text.length })}
             {activePost.text.length > 280
-              ? " · länger als 280 Zeichen"
+              ? t("microblog.long")
               : ""}
           </span>
         </label>
         <div className="field-row">
           <label className="field">
-            <span className="field-label">Datum</span>
+            <span className="field-label">{t("common.date")}</span>
             <input
               onChange={(event) => {
                 if (event.target.value) updatePost({ date: event.target.value });
@@ -254,7 +259,7 @@ export function MicroblogEditor({
             />
           </label>
           <label className="field">
-            <span className="field-label">Uhrzeit (optional)</span>
+            <span className="field-label">{t("common.timeOptional")}</span>
             <input
               onChange={(event) => updatePost({ time: event.target.value })}
               type="time"
@@ -263,7 +268,7 @@ export function MicroblogEditor({
           </label>
         </div>
         <label className="field">
-          <span className="field-label">Darstellungsmodus</span>
+          <span className="field-label">{t("common.viewMode")}</span>
           <select
             onChange={(event) =>
               updatePost({
@@ -272,22 +277,22 @@ export function MicroblogEditor({
             }
             value={activePost.viewMode}
           >
-            <option value="post">Vollständiger Beitrag</option>
-            <option value="comments">Kommentaransicht</option>
+            <option value="post">{t("common.fullPost")}</option>
+            <option value="comments">{t("common.commentView")}</option>
           </select>
         </label>
       </EditorDisclosure>
 
       <EditorDisclosure
-        description="Fiktive Kennzahlen des ausgewählten Beitrags"
+        description={t("microblog.reactionsDescription")}
         number="05"
-        title="Reaktionen"
+        title={t("microblog.reactions")}
       >
         <div className="field-row field-row--three">
           {[
-            ["Antworten", "replies"],
-            ["Reposts", "reposts"],
-            ["Likes", "likes"],
+            [t("common.replies"), "replies"],
+            [t("microblog.reposts"), "reposts"],
+            [t("microblog.likes"), "likes"],
           ].map(([label, key]) => (
             <label className="field" key={key}>
               <span className="field-label">{label}</span>
@@ -307,9 +312,9 @@ export function MicroblogEditor({
       </EditorDisclosure>
 
       <EditorDisclosure
-        description="Zweistufige Diskussion zum ausgewählten Beitrag"
+        description={t("comment.discussion")}
         number="06"
-        title="Kommentare und Antworten"
+        title={`${t("common.comments")} ${locale === "de" ? "und" : "and"} ${t("common.replies")}`}
       >
         <CommentEditor
           comments={activePost.comments}

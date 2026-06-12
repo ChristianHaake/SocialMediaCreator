@@ -1,6 +1,7 @@
 import { ArrowLeft, CheckCheck, MoreVertical, Phone, Video } from "lucide-react";
 import { forwardRef } from "react";
 import type { MessengerImages, MessengerState } from "../types";
+import { useTranslation } from "../i18n";
 
 type MessengerPreviewProps = {
   value: MessengerState;
@@ -15,6 +16,7 @@ export const MessengerPreview = forwardRef<
   HTMLDivElement,
   MessengerPreviewProps
 >(function MessengerPreview({ value, images }, ref) {
+  const { t } = useTranslation();
   const leftProfile = value.profiles.find((profile) => profile.side === "left")!;
 
   return (
@@ -36,8 +38,8 @@ export const MessengerPreview = forwardRef<
           </div>
         )}
         <div className="messenger-preview__identity">
-          <strong>{leftProfile.name.trim() || "Kontakt"}</strong>
-          <span>{leftProfile.status.trim() || "zuletzt online"}</span>
+          <strong>{leftProfile.name.trim() || t("messenger.contact")}</strong>
+          <span>{leftProfile.status.trim() || t("messenger.lastOnline")}</span>
         </div>
         <Video aria-hidden="true" size={20} />
         <Phone aria-hidden="true" size={19} />
@@ -45,10 +47,10 @@ export const MessengerPreview = forwardRef<
       </div>
 
       <div className="messenger-preview__chat">
-        <span className="messenger-preview__date">HEUTE</span>
+        <span className="messenger-preview__date">{t("messenger.today")}</span>
         {value.messages.length === 0 ? (
           <p className="messenger-preview__empty">
-            Nachrichten erscheinen hier.
+            {t("messenger.previewEmpty")}
           </p>
         ) : (
           value.messages.map((message) => {
@@ -76,17 +78,17 @@ export const MessengerPreview = forwardRef<
                   className={`message-bubble message-bubble--${sender.side}`}
                 >
                   <strong className="message-bubble__sender">
-                    {sender.name || "Profil"}
+                    {sender.name || t("messenger.profile")}
                   </strong>
                   <span className="message-bubble__text">
-                    {message.text || "Leere Nachricht"}
+                    {message.text || t("messenger.emptyMessage")}
                   </span>
                   <span className="message-bubble__meta">
                     {message.timestamp}
                     {message.seen && (
                       <>
                         <CheckCheck aria-hidden="true" size={15} />
-                        <span className="visually-hidden">Gesehen</span>
+                        <span className="visually-hidden">{t("messenger.seen")}</span>
                       </>
                     )}
                   </span>

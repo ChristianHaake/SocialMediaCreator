@@ -304,3 +304,15 @@ Nicht enthalten:
 - Editorbereiche verwenden native Disclosure-Elemente. Beiträge, Profil und
   Inhalt sind standardmäßig geöffnet; Darstellung, Medien, Reaktionen und
   Kommentare werden bei Bedarf aufgeklappt.
+
+## 14. Mehrsprachigkeit
+
+- Eine typisierte React-Context-Schicht stellt Deutsch und Englisch ohne
+  zusätzliche Laufzeitabhängigkeit bereit.
+- Browserpräferenz bestimmt die erstmalige Sprache; manuelle Auswahl wird in
+  `localStorage` gespeichert.
+- UI, Vorschau-Systemtexte, Dialoge, Verifikation und Inhaltsseiten sind
+  lokalisiert. Nutzereingaben werden beim Sprachwechsel nicht verändert.
+- Config V6 ergänzt `locale: "de" | "en"`; V5 wird als Deutsch migriert.
+- Validierungsfunktionen liefern stabile Fehlercodes, die erst in der
+  Oberfläche übersetzt werden.

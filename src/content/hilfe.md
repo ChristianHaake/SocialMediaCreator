@@ -25,7 +25,8 @@ Editorbereiche lassen sich über ihre Überschriften ein- und ausklappen.
 Mit **Speichern** wird eine JSON-Konfigurationsdatei heruntergeladen. Sie enthält
 Texte, Zahlen und Anzeigeoptionen, aber keine Bilder. Nach dem erneuten Laden
 einer Konfiguration müssen Bilder deshalb wieder ausgewählt werden. Unterstützt
-wird das aktuelle Config-Format Version 5.
+wird das aktuelle Config-Format Version 6. Dateien der Version 5 werden als
+deutsche Projekte importiert.
 
 ## Unterstützte Bilder
 

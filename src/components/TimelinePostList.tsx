@@ -1,4 +1,5 @@
 import { Trash2 } from "lucide-react";
+import { useTranslation } from "../i18n";
 
 type TimelinePost = {
   id: string;
@@ -19,6 +20,7 @@ export function TimelinePostList({
   onRemove,
   onSelect,
 }: TimelinePostListProps) {
+  const { t } = useTranslation();
   return (
     <ol className="post-selector-list">
       {posts.map((post, index) => (
@@ -31,18 +33,18 @@ export function TimelinePostList({
           key={post.id}
         >
           <button
-            aria-label={`Beitrag ${index + 1} auswählen`}
+            aria-label={`${t("common.post")} ${index + 1} ${t("common.select")}`}
             className="post-selector__select"
             onClick={() => onSelect(post.id)}
             type="button"
           >
-            <strong>Beitrag {index + 1}</strong>
+            <strong>{t("common.post")} {index + 1}</strong>
             <span>{post.summary}</span>
             <small>{post.timestamp}</small>
           </button>
           <div className="post-selector__actions">
             <button
-              aria-label={`Beitrag ${index + 1} löschen`}
+              aria-label={`${t("common.post")} ${index + 1} ${t("common.delete")}`}
               className="compact-icon-button compact-icon-button--danger"
               disabled={posts.length === 1}
               onClick={() => onRemove(post.id)}

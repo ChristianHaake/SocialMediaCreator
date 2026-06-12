@@ -1,14 +1,22 @@
-import type { TimelineSortOrder } from "../types";
+import type { Locale, TimelineSortOrder } from "../types";
 
 type TimelinePost = {
   date: string;
   time: string;
 };
 
-export function formatTimelineDate(date: string, time: string) {
+export function formatTimelineDate(
+  date: string,
+  time: string,
+  locale: Locale = "de",
+) {
   const [year, month, day] = date.split("-");
   const formattedDate =
-    year && month && day ? `${day}.${month}.${year}` : date;
+    year && month && day
+      ? locale === "de"
+        ? `${day}.${month}.${year}`
+        : `${month}/${day}/${year}`
+      : date;
   return time ? `${formattedDate} · ${time}` : formattedDate;
 }
 

@@ -10,6 +10,7 @@ import { forwardRef } from "react";
 import type { PhotoPostImages, PhotoPostState } from "../types";
 import { formatTimelineDate, sortTimelinePosts } from "../utils/timeline";
 import { CommentThread } from "./CommentThread";
+import { useTranslation } from "../i18n";
 
 type PhotoPostPreviewProps = {
   value: PhotoPostState;
@@ -28,10 +29,11 @@ export const PhotoPostPreview = forwardRef<
   { value, images, onActiveMediaChange },
   ref,
 ) {
+  const { locale, numberLocale, t } = useTranslation();
   return (
     <div className={`photo-feed simulation-theme theme-${value.theme}`} ref={ref}>
       {sortTimelinePosts(value.posts, value.sortOrder).map((post) => {
-        const username = post.username.trim() || "benutzername";
+        const username = post.username.trim() || (locale === "de" ? "benutzername" : "username");
         const postImages = images[post.id];
         const visibleCommentCount = Math.max(
           post.commentCount,
@@ -89,7 +91,7 @@ export const PhotoPostPreview = forwardRef<
                   ) : (
                     <div className="photo-post__placeholder">
                       <Image aria-hidden="true" size={52} strokeWidth={1.4} />
-                      <span>Dein Bild erscheint hier</span>
+                      <span>{t("photo.placeholder")}</span>
                     </div>
                   )}
                   {media.mode === "video" && (
@@ -100,7 +102,7 @@ export const PhotoPostPreview = forwardRef<
                       {(media.videoViews || media.videoDuration) && (
                         <span className="video-meta">
                           {media.videoViews &&
-                            `${media.videoViews} Aufrufe`}
+                            t("photo.viewsLabel", { count: media.videoViews })}
                           {media.videoViews && media.videoDuration && " · "}
                           {media.videoDuration}
                         </span>
@@ -118,12 +120,12 @@ export const PhotoPostPreview = forwardRef<
 
             {post.media.length > 1 && (
               <div
-                aria-label="Karussellbild auswählen"
+                aria-label={t("photo.carouselSelect")}
                 className="carousel-dots"
               >
                 {post.media.map((media, index) => (
                   <button
-                    aria-label={`Bild ${index + 1} anzeigen`}
+                    aria-label={t("photo.showImage", { index: index + 1 })}
                     aria-pressed={media.id === post.activeMediaId}
                     key={media.id}
                     onClick={() => onActiveMediaChange(post.id, media.id)}
@@ -143,7 +145,9 @@ export const PhotoPostPreview = forwardRef<
                     <Bookmark className="photo-post__bookmark" />
                   </div>
                   <strong className="photo-post__likes">
-                    {post.likes.toLocaleString("de-DE")} Likes
+                    {t("photo.likes", {
+                      count: post.likes.toLocaleString(numberLocale),
+                    })}
                   </strong>
                   <p className="photo-post__caption">
                     <strong>{username}</strong> {post.caption}
@@ -162,11 +166,11 @@ export const PhotoPostPreview = forwardRef<
                 post.showComments &&
                 visibleCommentCount > 0 && (
                   <p className="photo-post__comments">
-                    {visibleCommentCount} Kommentare ansehen
+                    {t("photo.viewComments", { count: visibleCommentCount })}
                   </p>
                 )}
               <span className="photo-post__date">
-                {formatTimelineDate(post.date, post.time)}
+                {formatTimelineDate(post.date, post.time, locale)}
               </span>
             </div>
           </article>

@@ -1,4 +1,5 @@
 import type { Theme } from "../types";
+import { useTranslation } from "../i18n";
 
 type ThemeSelectorProps = {
   value: Theme;
@@ -6,14 +7,15 @@ type ThemeSelectorProps = {
 };
 
 export function ThemeSelector({ value, onChange }: ThemeSelectorProps) {
+  const { t } = useTranslation();
   return (
     <fieldset className="segmented-field">
-      <legend className="field-label">Farbschema</legend>
+      <legend className="field-label">{t("common.theme")}</legend>
       <div className="segmented-control segmented-control--three">
         {[
-          ["light", "Light"],
-          ["dim", "Dim"],
-          ["dark", "Dark"],
+          ["light", t("common.light")],
+          ["dim", t("common.dim")],
+          ["dark", t("common.dark")],
         ].map(([theme, label]) => (
           <label key={theme}>
             <input

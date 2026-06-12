@@ -9,6 +9,7 @@ import type {
   PhotoPostState,
 } from "../types";
 import { createId } from "../utils/ids";
+import { useTranslation } from "../i18n";
 import {
   formatTimelineDate,
   sortTimelinePosts,
@@ -50,14 +51,14 @@ function createMedia(): PhotoMedia {
   };
 }
 
-function createPhotoPost(): PhotoPost {
+function createPhotoPost(locale: "de" | "en"): PhotoPost {
   const id = createId("photo-post");
   const media = createMedia();
   return {
     id,
-    username: "neuer_account",
+    username: locale === "de" ? "neuer_account" : "new_account",
     location: "",
-    caption: "Neuer Beitrag",
+    caption: locale === "de" ? "Neuer Beitrag" : "New post",
     date: todayInputValue(),
     time: "",
     viewMode: "post",
@@ -82,6 +83,7 @@ export function PhotoPostEditor({
   onPostRemoved,
   onImageError,
 }: PhotoPostEditorProps) {
+  const { locale, t } = useTranslation();
   const activePost =
     value.posts.find((post) => post.id === value.activePostId) ?? value.posts[0];
   const activeMedia =
@@ -112,7 +114,7 @@ export function PhotoPostEditor({
   }
 
   function addPost() {
-    const post = createPhotoPost();
+    const post = createPhotoPost(locale);
     onChange((current) => ({
       ...current,
       activePostId: post.id,
@@ -171,16 +173,16 @@ export function PhotoPostEditor({
   return (
     <form className="editor-form" onSubmit={(event) => event.preventDefault()}>
       <EditorDisclosure
-        description="Farbschema und Reihenfolge der Timeline"
+        description={t("photo.appearanceDescription")}
         number="01"
-        title="Darstellung"
+        title={t("common.appearance")}
       >
         <ThemeSelector
           onChange={(theme) => onChange((current) => ({ ...current, theme }))}
           value={value.theme}
         />
         <label className="field">
-          <span className="field-label">Timeline-Reihenfolge</span>
+          <span className="field-label">{t("common.timelineOrder")}</span>
           <select
             onChange={(event) =>
               onChange((current) => ({
@@ -190,19 +192,22 @@ export function PhotoPostEditor({
             }
             value={value.sortOrder}
           >
-            <option value="newest">Neueste zuerst</option>
-            <option value="oldest">Älteste zuerst</option>
+            <option value="newest">{t("common.newest")}</option>
+            <option value="oldest">{t("common.oldest")}</option>
           </select>
         </label>
       </EditorDisclosure>
 
       <EditorDisclosure
         defaultOpen
-        description={`${value.posts.length} ${
-          value.posts.length === 1 ? "Beitrag" : "Beiträge"
-        }, automatisch chronologisch sortiert`}
+        description={t(
+          value.posts.length === 1
+            ? "photo.postsDescription.one"
+            : "photo.postsDescription.other",
+          { count: value.posts.length },
+        )}
         number="02"
-        title="Beiträge"
+        title={t("common.posts")}
       >
         <div className="editor-section-actions">
           <button
@@ -212,7 +217,7 @@ export function PhotoPostEditor({
             type="button"
           >
             <Plus aria-hidden="true" size={17} />
-            Beitrag
+            {t("common.post")}
           </button>
         </div>
         <TimelinePostList
@@ -223,28 +228,28 @@ export function PhotoPostEditor({
           }
           posts={sortedPosts.map((post) => ({
             id: post.id,
-            summary: post.caption || "Ohne Beschreibung",
-            timestamp: formatTimelineDate(post.date, post.time),
+            summary: post.caption || t("photo.noDescription"),
+            timestamp: formatTimelineDate(post.date, post.time, locale),
           }))}
         />
       </EditorDisclosure>
 
       <EditorDisclosure
         defaultOpen
-        description="Absender, Veröffentlichungszeitpunkt und Fokus"
+        description={t("photo.profileDescription")}
         number="03"
-        title="Profil und Ansicht"
+        title={t("photo.profileTitle")}
       >
         <ImageUploadField
           id="profile-image"
           image={activeImages.profileImage}
-          label="Profilbild"
+          label={t("common.profileImage")}
           onChange={(image) => onProfileImageChange(activePost.id, image)}
           onError={onImageError}
         />
         <div className="field-row">
           <label className="field">
-            <span className="field-label">Benutzername</span>
+            <span className="field-label">{t("photo.username")}</span>
             <input
               maxLength={fieldLimits.photoPost.username}
               onChange={(event) => updatePost({ username: event.target.value })}
@@ -252,7 +257,7 @@ export function PhotoPostEditor({
             />
           </label>
           <label className="field">
-            <span className="field-label">Ort</span>
+            <span className="field-label">{t("photo.location")}</span>
             <input
               maxLength={fieldLimits.photoPost.location}
               onChange={(event) => updatePost({ location: event.target.value })}
@@ -262,7 +267,7 @@ export function PhotoPostEditor({
         </div>
         <div className="field-row">
           <label className="field">
-            <span className="field-label">Datum</span>
+            <span className="field-label">{t("common.date")}</span>
             <input
               onChange={(event) => {
                 if (event.target.value) updatePost({ date: event.target.value });
@@ -273,7 +278,7 @@ export function PhotoPostEditor({
             />
           </label>
           <label className="field">
-            <span className="field-label">Uhrzeit (optional)</span>
+            <span className="field-label">{t("common.timeOptional")}</span>
             <input
               onChange={(event) => updatePost({ time: event.target.value })}
               type="time"
@@ -282,7 +287,7 @@ export function PhotoPostEditor({
           </label>
         </div>
         <label className="field">
-          <span className="field-label">Darstellungsmodus</span>
+          <span className="field-label">{t("common.viewMode")}</span>
           <select
             onChange={(event) =>
               updatePost({
@@ -291,8 +296,8 @@ export function PhotoPostEditor({
             }
             value={activePost.viewMode}
           >
-            <option value="post">Vollständiger Beitrag</option>
-            <option value="comments">Kommentaransicht</option>
+            <option value="post">{t("common.fullPost")}</option>
+            <option value="comments">{t("common.commentView")}</option>
           </select>
         </label>
         <label className="toggle-field">
@@ -303,14 +308,14 @@ export function PhotoPostEditor({
             }
             type="checkbox"
           />
-          <span>Ort in der Vorschau anzeigen</span>
+          <span>{t("photo.showLocation")}</span>
         </label>
       </EditorDisclosure>
 
       <EditorDisclosure
-        description="Bis zu zehn Bilder oder Video-Thumbnails"
+        description={t("photo.carouselDescription")}
         number="04"
-        title="Karussell"
+        title={t("photo.carousel")}
       >
         <div className="editor-section-actions">
           <button
@@ -320,7 +325,7 @@ export function PhotoPostEditor({
             type="button"
           >
             <Plus aria-hidden="true" size={17} />
-            Medium
+            {t("photo.medium")}
           </button>
         </div>
         <ol className="media-editor-list">
@@ -334,17 +339,17 @@ export function PhotoPostEditor({
               key={media.id}
             >
               <button
-                aria-label={`Medium ${index + 1} auswählen`}
+                aria-label={`${t("photo.medium")} ${index + 1} ${t("common.select")}`}
                 className="post-selector__select"
                 onClick={() => updatePost({ activeMediaId: media.id })}
                 type="button"
               >
-                <strong>Medium {index + 1}</strong>
-                <span>{media.mode === "video" ? "Video" : "Bild"}</span>
+                <strong>{t("photo.medium")} {index + 1}</strong>
+                <span>{media.mode === "video" ? t("photo.video") : t("photo.image")}</span>
               </button>
               <div className="message-editor-card__actions">
                 <button
-                  aria-label={`Medium ${index + 1} nach oben verschieben`}
+                  aria-label={`${t("photo.medium")} ${index + 1} ${t("common.moveUp")}`}
                   className="compact-icon-button"
                   disabled={index === 0}
                   onClick={() => moveMedia(index, -1)}
@@ -353,7 +358,7 @@ export function PhotoPostEditor({
                   <ArrowUp aria-hidden="true" size={15} />
                 </button>
                 <button
-                  aria-label={`Medium ${index + 1} nach unten verschieben`}
+                  aria-label={`${t("photo.medium")} ${index + 1} ${t("common.moveDown")}`}
                   className="compact-icon-button"
                   disabled={index === activePost.media.length - 1}
                   onClick={() => moveMedia(index, 1)}
@@ -362,7 +367,7 @@ export function PhotoPostEditor({
                   <ArrowDown aria-hidden="true" size={15} />
                 </button>
                 <button
-                  aria-label={`Medium ${index + 1} löschen`}
+                  aria-label={`${t("photo.medium")} ${index + 1} ${t("common.delete")}`}
                   className="compact-icon-button compact-icon-button--danger"
                   disabled={activePost.media.length === 1}
                   onClick={() => removeMedia(media.id)}
@@ -378,14 +383,16 @@ export function PhotoPostEditor({
         <ImageUploadField
           id="post-image"
           image={activeImages.media[activeMedia.id] ?? null}
-          label={`Datei für Medium ${activePost.media.indexOf(activeMedia) + 1}`}
+          label={t("photo.mediumFile", {
+            index: activePost.media.indexOf(activeMedia) + 1,
+          })}
           onChange={(image) =>
             onMediaImageChange(activePost.id, activeMedia.id, image)
           }
           onError={onImageError}
         />
         <label className="field">
-          <span className="field-label">Medientyp</span>
+          <span className="field-label">{t("photo.mediaType")}</span>
           <select
             onChange={(event) =>
               updateMedia(activeMedia.id, {
@@ -394,25 +401,25 @@ export function PhotoPostEditor({
             }
             value={activeMedia.mode}
           >
-            <option value="image">Bild</option>
-            <option value="video">Video-Simulation</option>
+            <option value="image">{t("photo.image")}</option>
+            <option value="video">{t("photo.videoSimulation")}</option>
           </select>
         </label>
         <label className="field">
-          <span className="field-label">Alternativtext</span>
+          <span className="field-label">{t("photo.altText")}</span>
           <input
             maxLength={fieldLimits.photoPost.imageAlt}
             onChange={(event) =>
               updateMedia(activeMedia.id, { imageAlt: event.target.value })
             }
-            placeholder="Was ist auf dem Bild zu sehen?"
+            placeholder={t("photo.altPlaceholder")}
             value={activeMedia.imageAlt}
           />
         </label>
         {activeMedia.mode === "video" && (
           <div className="field-row">
             <label className="field">
-              <span className="field-label">Videolänge</span>
+              <span className="field-label">{t("photo.duration")}</span>
               <input
                 maxLength={fieldLimits.photoPost.videoDuration}
                 onChange={(event) =>
@@ -420,12 +427,12 @@ export function PhotoPostEditor({
                     videoDuration: event.target.value,
                   })
                 }
-                placeholder="z. B. 0:42"
+                placeholder={t("photo.durationPlaceholder")}
                 value={activeMedia.videoDuration}
               />
             </label>
             <label className="field">
-              <span className="field-label">Aufrufe</span>
+              <span className="field-label">{t("photo.views")}</span>
               <input
                 maxLength={fieldLimits.photoPost.videoViews}
                 onChange={(event) =>
@@ -433,7 +440,7 @@ export function PhotoPostEditor({
                     videoViews: event.target.value,
                   })
                 }
-                placeholder="z. B. 1.240"
+                placeholder={t("photo.viewsPlaceholder")}
                 value={activeMedia.videoViews}
               />
             </label>
@@ -443,14 +450,14 @@ export function PhotoPostEditor({
 
       <EditorDisclosure
         defaultOpen
-        description="Beschreibung und fiktive Kennzahlen"
+        description={t("photo.contentDescription")}
         number="05"
-        title="Inhalt und Reaktionen"
+        title={t("photo.contentTitle")}
       >
         <label className="field">
-          <span className="field-label">Beschreibung</span>
+          <span className="field-label">{t("photo.caption")}</span>
           <textarea
-            aria-label="Beschreibung"
+            aria-label={t("photo.caption")}
             maxLength={fieldLimits.photoPost.caption}
             onChange={(event) => updatePost({ caption: event.target.value })}
             rows={4}
@@ -470,7 +477,7 @@ export function PhotoPostEditor({
             />
           </label>
           <label className="field">
-            <span className="field-label">Kommentaranzahl</span>
+            <span className="field-label">{t("photo.commentCount")}</span>
             <input
               min={0}
               onChange={(event) =>
@@ -491,14 +498,14 @@ export function PhotoPostEditor({
             }
             type="checkbox"
           />
-          <span>Kommentare anzeigen</span>
+          <span>{t("photo.showComments")}</span>
         </label>
       </EditorDisclosure>
 
       <EditorDisclosure
-        description="Zweistufige Diskussion zum ausgewählten Beitrag"
+        description={t("comment.discussion")}
         number="06"
-        title="Kommentare und Antworten"
+        title={`${t("common.comments")} ${locale === "de" ? "und" : "and"} ${t("common.replies")}`}
       >
         <CommentEditor
           comments={activePost.comments}

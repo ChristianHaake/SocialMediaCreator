@@ -1,4 +1,5 @@
 export type ModuleType = "photoPost" | "messenger" | "microblog";
+export type Locale = "de" | "en";
 export type Theme = "light" | "dim" | "dark";
 export type PostViewMode = "post" | "comments";
 export type MicroblogLayoutMode = "feed" | "thread";
@@ -242,3 +243,101 @@ export const defaultMicroblog: MicroblogState = {
   activePostId: defaultMicroblogItem.id,
   posts: [defaultMicroblogItem],
 };
+
+const englishPhotoPost: PhotoPostState = {
+  ...defaultPhotoPost,
+  posts: [
+    {
+      ...defaultPhotoPostItem,
+      username: "project_class",
+      location: "Learning Lab",
+      caption: "Today we are documenting our project idea.",
+      comments: [
+        {
+          id: "photo-comment-1",
+          author: "learning_team",
+          text: "Which source did you use for this statement?",
+          timestamp: "5 minutes ago",
+          replies: [
+            {
+              id: "photo-reply-1",
+              author: "project_class",
+              text: "We compared two independent sources.",
+              timestamp: "2 minutes ago",
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+const englishMessenger: MessengerState = {
+  ...defaultMessenger,
+  profiles: [
+    {
+      ...defaultMessenger.profiles[0],
+      name: "Project group",
+      status: "online",
+    },
+    {
+      ...defaultMessenger.profiles[1],
+      name: "Me",
+      status: "available",
+    },
+  ],
+  messages: [
+    {
+      ...defaultMessenger.messages[0],
+      text: "Did you verify the source for our statement?",
+    },
+    {
+      ...defaultMessenger.messages[1],
+      text: "Yes. I found a second source for comparison.",
+    },
+    {
+      ...defaultMessenger.messages[2],
+      text: "Good, then we can cite both in the post.",
+    },
+  ],
+};
+
+const englishMicroblog: MicroblogState = {
+  ...defaultMicroblog,
+  posts: [
+    {
+      ...defaultMicroblogItem,
+      displayName: "Media Project",
+      handle: "media_project",
+      text: "A claim does not become more credible just because it is shared often. Check the source, context, and date.",
+      comments: [
+        {
+          id: "microblog-comment-1",
+          author: "source_check",
+          text: "The original context is essential.",
+          timestamp: "8 minutes ago",
+          replies: [
+            {
+              id: "microblog-reply-1",
+              author: "media_project",
+              text: "Exactly. Without context, the statement can be misleading.",
+              timestamp: "3 minutes ago",
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+export function getDefaultPhotoPost(locale: Locale) {
+  return structuredClone(locale === "en" ? englishPhotoPost : defaultPhotoPost);
+}
+
+export function getDefaultMessenger(locale: Locale) {
+  return structuredClone(locale === "en" ? englishMessenger : defaultMessenger);
+}
+
+export function getDefaultMicroblog(locale: Locale) {
+  return structuredClone(locale === "en" ? englishMicroblog : defaultMicroblog);
+}

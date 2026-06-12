@@ -1,4 +1,5 @@
 import type { ImageState, PostComment } from "../types";
+import { useTranslation } from "../i18n";
 
 type CommentThreadProps = {
   comments: PostComment[];
@@ -15,6 +16,8 @@ export function CommentThread({
   images,
   variant,
 }: CommentThreadProps) {
+  const { locale } = useTranslation();
+  const fallback = locale === "de" ? "account" : "account";
   return (
     <div className={`comment-thread comment-thread--${variant}`}>
       {comments.map((comment) => (
@@ -29,7 +32,7 @@ export function CommentThread({
             )}
             <div>
               <p>
-                <strong>{comment.author || "account"}</strong> {comment.text}
+                <strong>{comment.author || fallback}</strong> {comment.text}
               </p>
               {comment.timestamp && <small>{comment.timestamp}</small>}
             </div>
@@ -48,7 +51,7 @@ export function CommentThread({
               )}
               <div>
                 <p>
-                  <strong>{reply.author || "account"}</strong> {reply.text}
+                  <strong>{reply.author || fallback}</strong> {reply.text}
                 </p>
                 {reply.timestamp && <small>{reply.timestamp}</small>}
               </div>

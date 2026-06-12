@@ -7,16 +7,76 @@ import {
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "./App";
+
+beforeEach(() => {
+  window.localStorage.setItem("social-media-creator-locale", "de");
+});
 
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
   window.history.replaceState({}, "", "/");
+  window.localStorage.clear();
 });
 
 describe("App", () => {
+  it("detects English from the browser when no preference is stored", () => {
+    window.localStorage.clear();
+    vi.spyOn(window.navigator, "language", "get").mockReturnValue("en-US");
+
+    render(<App />);
+
+    expect(
+      screen.getByRole("heading", {
+        level: 1,
+        name: "Create your photo posts.",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("06/11/2026").length).toBeGreaterThan(0);
+    expect(document.documentElement.lang).toBe("en");
+  });
+
+  it("switches language without changing user content and persists it", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const username = screen.getByLabelText("Benutzername");
+    await user.clear(username);
+    await user.type(username, "custom_account");
+    await user.click(screen.getByRole("button", { name: "EN" }));
+
+    expect(screen.getByLabelText("Username")).toHaveValue("custom_account");
+    expect(
+      screen.getByRole("heading", {
+        level: 1,
+        name: "Create your photo posts.",
+      }),
+    ).toBeInTheDocument();
+    expect(document.documentElement.lang).toBe("en");
+    expect(window.localStorage.getItem("social-media-creator-locale")).toBe(
+      "en",
+    );
+  });
+
+  it("uses localized defaults for reset and new elements", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "EN" }));
+    await user.click(screen.getByRole("button", { name: "Reset" }));
+    expect(screen.getByText("Learning Lab")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Post" }));
+    expect(screen.getByLabelText("Caption")).toHaveValue("New post");
+
+    await user.click(screen.getByRole("button", { name: "Comment" }));
+    expect(screen.getAllByLabelText("Comment text").at(-1)).toHaveValue(
+      "New comment",
+    );
+  });
+
   it("updates the photo-post preview from the editor", async () => {
     const user = userEvent.setup();
     render(<App />);

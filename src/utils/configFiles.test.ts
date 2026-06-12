@@ -12,22 +12,24 @@ import {
   parsePhotoPostConfig,
 } from "./configFiles";
 
-describe("configuration version 5", () => {
+describe("configuration version 6", () => {
   it("roundtrips photo timelines with structured dates", () => {
     const parsed = parsePhotoPostConfig(
       JSON.stringify(createPhotoPostConfig(defaultPhotoPost)),
     );
     expect(parsed.format).toBe("social-media-creator-config");
-    expect(parsed.version).toBe(5);
+    expect(parsed.version).toBe(6);
+    expect(parsed.locale).toBe("de");
     expect(parsed.data).toEqual(defaultPhotoPost);
     expect(parsed.data.sortOrder).toBe("newest");
   });
 
   it("roundtrips two-profile messenger data", () => {
     const parsed = parseConfig(
-      JSON.stringify(createMessengerConfig(defaultMessenger)),
+      JSON.stringify(createMessengerConfig(defaultMessenger, "en")),
     );
     expect(parsed.module).toBe("messenger");
+    expect(parsed.locale).toBe("en");
     if (parsed.module === "messenger") {
       expect(parsed.data).toEqual(defaultMessenger);
     }
@@ -47,15 +49,18 @@ describe("configuration version 5", () => {
     }
   });
 
-  it("rejects old configuration versions", () => {
-    expect(() =>
-      parseConfig(
-        JSON.stringify({
-          ...createPhotoPostConfig(defaultPhotoPost),
-          version: 4,
-        }),
-      ),
-    ).toThrow("Version 5");
+  it("migrates version 5 configurations as German", () => {
+    const current = createPhotoPostConfig(defaultPhotoPost, "en");
+    const parsed = parseConfig(
+      JSON.stringify({
+        format: current.format,
+        version: 5,
+        module: current.module,
+        data: current.data,
+      }),
+    );
+    expect(parsed.version).toBe(6);
+    expect(parsed.locale).toBe("de");
   });
 
   it("rejects missing, impossible and malformed dates", () => {
@@ -64,7 +69,9 @@ describe("configuration version 5", () => {
         ...defaultPhotoPost,
         posts: [{ ...defaultPhotoPost.posts[0], date }],
       });
-      expect(() => parseConfig(JSON.stringify(config))).toThrow("unvollständig");
+      expect(() => parseConfig(JSON.stringify(config))).toThrow(
+        "config.incomplete",
+      );
     }
   });
 
@@ -77,7 +84,9 @@ describe("configuration version 5", () => {
       ...defaultPhotoPost,
       posts: [{ ...defaultPhotoPost.posts[0], time: "24:15" }],
     });
-    expect(() => parseConfig(JSON.stringify(config))).toThrow("unvollständig");
+    expect(() => parseConfig(JSON.stringify(config))).toThrow(
+      "config.incomplete",
+    );
   });
 
   it("rejects invalid timeline sort orders", () => {
@@ -85,7 +94,19 @@ describe("configuration version 5", () => {
       ...createMicroblogConfig(defaultMicroblog),
       data: { ...defaultMicroblog, sortOrder: "manual" },
     };
-    expect(() => parseConfig(JSON.stringify(config))).toThrow("unvollständig");
+    expect(() => parseConfig(JSON.stringify(config))).toThrow(
+      "config.incomplete",
+    );
+  });
+
+  it("rejects invalid locale values", () => {
+    const config = {
+      ...createMicroblogConfig(defaultMicroblog),
+      locale: "fr",
+    };
+    expect(() => parseConfig(JSON.stringify(config))).toThrow(
+      "config.incomplete",
+    );
   });
 
   it("rejects invalid sender references", () => {
@@ -95,7 +116,9 @@ describe("configuration version 5", () => {
         { ...defaultMessenger.messages[0], senderId: "unknown-profile" },
       ],
     });
-    expect(() => parseConfig(JSON.stringify(config))).toThrow("unvollständig");
+    expect(() => parseConfig(JSON.stringify(config))).toThrow(
+      "config.incomplete",
+    );
   });
 
   it("rejects duplicate ids across comments and replies", () => {
@@ -114,7 +137,9 @@ describe("configuration version 5", () => {
         },
       ],
     });
-    expect(() => parseConfig(JSON.stringify(config))).toThrow("unvollständig");
+    expect(() => parseConfig(JSON.stringify(config))).toThrow(
+      "config.incomplete",
+    );
   });
 
   it("rejects invalid active media references and image fields", () => {
@@ -128,12 +153,14 @@ describe("configuration version 5", () => {
           }),
         ),
       ),
-    ).toThrow("unvollständig");
+    ).toThrow("config.incomplete");
 
     const invalid = {
       ...createPhotoPostConfig(defaultPhotoPost),
       data: { ...defaultPhotoPost, profileImageUrl: "blob:private" },
     };
-    expect(() => parseConfig(JSON.stringify(invalid))).toThrow("unvollständig");
+    expect(() => parseConfig(JSON.stringify(invalid))).toThrow(
+      "config.incomplete",
+    );
   });
 });

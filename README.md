@@ -40,7 +40,8 @@ Der aktuelle Stand enthält:
 - Themes und zweistufige Kommentare
 - Foto-Karussells und Video-Simulationen
 - lokale Profil- und Beitragsbilder
-- validierte Config-V5-Dateien ohne Bilder
+- deutsche und englische Oberfläche mit lokal gespeicherter Sprachwahl
+- validierte Config-V6-Dateien ohne Bilder; Config V5 bleibt importierbar
 - PNG-, JPG- und PDF-Export
 - lokale Herkunftsmarker und Bildverifikation
 - Zurücksetzen mit Schutz vor Datenverlust
