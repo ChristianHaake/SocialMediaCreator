@@ -71,6 +71,15 @@ Veröffentlichung in eine versionierte Sektion verschoben.
 
 ### Geändert
 
+- GitHub-README vollständig auf Englisch neu strukturiert und um
+  Produktübersicht, Datenschutzmodell, Config-Kompatibilität, Architektur,
+  Entwicklung, Deployment und Lizenz ergänzt.
+- Software-Stack-Audit auf den validierten Stand vom 12. Juni 2026 sowie eine
+  priorisierte Wartbarkeits-Roadmap aktualisiert.
+- Produktions-Smoke-Test auf alle öffentlichen Inhalts- und
+  Verifikationsrouten erweitert.
+- Paketmetadaten um Beschreibung, Lizenz, Repository, Homepage und
+  Fehlertracker ergänzt.
 - Neue Beiträge werden sofort aktiviert, in Sicht gescrollt und fokussieren
   das Autorenfeld.
 - Löschdialoge nennen Autor und Datum; nach dem Löschen wird ein sinnvoller

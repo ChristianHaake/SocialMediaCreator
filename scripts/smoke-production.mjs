@@ -53,7 +53,18 @@ check(
   "HTML verhindert nachträgliche CDN-Script-Injektion",
 );
 
-for (const pathname of ["/hilfe", "/ueber", "/datenschutz", "/impressum"]) {
+const publicRoutes = [
+  "/hilfe",
+  "/ueber",
+  "/lehrkraefte",
+  "/verantwortungsvoll",
+  "/nutzungsbedingungen",
+  "/verifizieren",
+  "/datenschutz",
+  "/impressum",
+];
+
+for (const pathname of publicRoutes) {
   const page = await request(pathname);
   check(page.response.status === 200, `${pathname} liefert HTTP 200`);
   check(page.body.includes('id="root"'), `${pathname} liefert den SPA-Einstiegspunkt`);
