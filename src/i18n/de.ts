@@ -18,15 +18,14 @@ export const de = {
   "app.load": "Laden",
   "app.save": "Speichern",
   "app.creating": "Erstelle...",
+  "app.saving": "Optimiere...",
+  "app.loading": "Lade...",
   "app.reset": "Zurücksetzen",
   "app.resetConfirm": "Aktuelle Eingaben wirklich zurücksetzen?",
-  "app.saveImagesConfirm":
-    "Bilder sind nicht Teil der Konfigurationsdatei und müssen nach dem Laden erneut ausgewählt werden. Trotzdem speichern?",
-  "app.saved": "Konfiguration ohne Bilder gespeichert.",
+  "app.saved": "Projekt mit Bildern gespeichert.",
   "app.loadConfirm":
-    "Beim Laden werden die Eingaben dieses Moduls ersetzt. Ausgewählte Bilder werden entfernt. Konfiguration laden?",
-  "app.loaded":
-    "Konfiguration geladen. Bilder müssen erneut ausgewählt werden.",
+    "Beim Laden werden die Eingaben und Bilder dieses Moduls ersetzt. Projekt laden?",
+  "app.loaded": "Projekt geladen.",
   "app.imageExportError":
     "Das Bild konnte nicht erstellt werden. Bitte versuche es erneut.",
   "app.pdfExportError":
@@ -102,9 +101,11 @@ export const de = {
   "image.choose": "Bild auswählen",
   "image.replace": "Bild ersetzen",
   "image.remove": "{label} entfernen",
-  "image.hint": "PNG, JPG oder WebP, maximal 10 MB",
+  "image.hint": "PNG, JPG oder WebP, maximal 5 MB und 4096 px",
   "image.invalidType": "Bitte wähle eine PNG-, JPG- oder WebP-Datei aus.",
-  "image.tooLarge": "Das Bild darf höchstens 10 MB groß sein.",
+  "image.tooLarge": "Das Bild darf höchstens 5 MB groß sein.",
+  "image.tooManyPixels":
+    "Breite und Höhe des Bildes dürfen jeweils höchstens 4096 Pixel betragen.",
   "image.invalidData":
     "Die Datei enthält kein gültiges PNG-, JPG- oder WebP-Bild.",
   "image.decodeFailed": "Das Bild ist beschädigt oder kann nicht gelesen werden.",
@@ -269,6 +270,12 @@ export const de = {
   "config.wrongModule": "Die Datei enthält keine Foto-Post-Konfiguration.",
   "config.tooLarge": "Die Konfigurationsdatei darf höchstens 1 MB groß sein.",
   "config.loadFailed": "Die Konfiguration konnte nicht geladen werden.",
+  "project.invalidArchive": "Die Projektdatei ist beschädigt oder kein gültiges SMC-Archiv.",
+  "project.unsupportedVersion": "Diese Projektversion wird nicht unterstützt.",
+  "project.tooLarge": "Das Projekt überschreitet die zulässige Größe von 25 MB.",
+  "project.invalidManifest": "Die Projektdatei enthält ungültige oder widersprüchliche Mediendaten.",
+  "project.invalidMedia": "Mindestens ein Bild im Projekt ist ungültig oder beschädigt.",
+  "project.saveFailed": "Das Projekt konnte nicht gespeichert werden.",
 } as const;
 
 export type TranslationKey = keyof typeof de;

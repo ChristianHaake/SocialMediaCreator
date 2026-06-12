@@ -93,6 +93,7 @@ export function getTranslation(
 export type ImageErrorCode =
   | "image.invalidType"
   | "image.tooLarge"
+  | "image.tooManyPixels"
   | "image.invalidData"
   | "image.decodeFailed";
 

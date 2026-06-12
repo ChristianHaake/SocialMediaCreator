@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
+import { strFromU8, unzipSync } from "fflate";
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -129,7 +130,9 @@ test("language switch preserves content and exports locale in config v6", async 
   const download = await downloadPromise;
   const path = await download.path();
   expect(path).not.toBeNull();
-  const config = JSON.parse(await readFile(path!, "utf8"));
+  const archive = unzipSync(new Uint8Array(await readFile(path!)));
+  const manifest = JSON.parse(strFromU8(archive["project.json"]));
+  const config = manifest.config;
   expect(config.version).toBe(6);
   expect(config.locale).toBe("en");
 
@@ -191,7 +194,7 @@ test("teacher dialog traps and restores focus", async ({ page }) => {
   await expect(trigger).toBeFocused();
 });
 
-test("all modules export images and configuration files", async ({ page }) => {
+test("all modules export images and project archives", async ({ page }) => {
   await page.goto("/");
 
   for (const moduleName of ["Foto-Post", "Messenger-Chat", "Mikroblog"]) {
@@ -200,7 +203,7 @@ test("all modules export images and configuration files", async ({ page }) => {
     const configDownload = page.waitForEvent("download");
     await page.getByRole("button", { name: "Speichern" }).click();
     expect((await configDownload).suggestedFilename()).toMatch(
-      /social-media-creator-.+\.json/,
+      /social-media-creator-.+\.smc/,
     );
 
     const imageDownload = page.waitForEvent("download");
@@ -317,8 +320,42 @@ test("configuration import validates before replacing editor state", async ({
   ).toBeVisible();
   await expect(page.getByLabel("Display name")).toHaveValue("Imported project");
   await expect(page.getByRole("status")).toContainText(
-    "Configuration loaded. Images must be selected again.",
+    "Project loaded.",
   );
+});
+
+test("project archives restore optimized images", async ({ page }) => {
+  await page.goto("/");
+  const onePixelPng = Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+    "base64",
+  );
+  await page.locator("#profile-image").setInputFiles({
+    name: "profil-ä.png",
+    mimeType: "image/png",
+    buffer: onePixelPng,
+  });
+  await expect(page.getByText("profil-ä.png")).toBeVisible();
+
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Speichern" }).click();
+  const download = await downloadPromise;
+  const archivePath = await download.path();
+  expect(download.suggestedFilename()).toMatch(/\.smc$/);
+  expect(archivePath).not.toBeNull();
+  const archiveBytes = unzipSync(new Uint8Array(await readFile(archivePath!)));
+  const archiveManifest = JSON.parse(
+    strFromU8(archiveBytes["project.json"]),
+  );
+  expect(archiveManifest.media).toHaveLength(1);
+
+  await page.reload();
+  await expect(page.locator("img.photo-post__avatar")).toHaveCount(0);
+  await page
+    .locator('input[type="file"][accept*=".smc"]')
+    .setInputFiles(archivePath!);
+  await expect(page.locator("img.photo-post__avatar")).toHaveCount(1);
+  await expect(page.getByText("profil-ä.png")).toBeVisible();
 });
 
 test("photo and microblog feeds support multiple posts with comments", async ({

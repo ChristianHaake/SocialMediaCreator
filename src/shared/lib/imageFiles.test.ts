@@ -30,8 +30,8 @@ describe("validateImageFile", () => {
     await expect(validateImageFile(file)).resolves.toBe("image.invalidType");
   });
 
-  it("rejects images larger than 10 MB", async () => {
-    const file = new File([new Uint8Array(10 * 1024 * 1024 + 1)], "large.jpg", {
+  it("rejects images larger than 5 MB", async () => {
+    const file = new File([new Uint8Array(5 * 1024 * 1024 + 1)], "large.jpg", {
       type: "image/jpeg",
     });
 
@@ -51,6 +51,19 @@ describe("validateImageFile", () => {
       "createImageBitmap",
       vi.fn().mockRejectedValue(new Error("decode failed")),
     );
+    vi.stubGlobal(
+      "Image",
+      class {
+        naturalWidth = 0;
+        naturalHeight = 0;
+        onload: (() => void) | null = null;
+        onerror: (() => void) | null = null;
+
+        set src(_value: string) {
+          queueMicrotask(() => this.onerror?.());
+        }
+      },
+    );
     const file = new File(
       [new Uint8Array([0xff, 0xd8, 0xff, 0x00])],
       "broken.jpg",
@@ -58,5 +71,23 @@ describe("validateImageFile", () => {
     );
 
     await expect(validateImageFile(file)).resolves.toBe("image.decodeFailed");
+  });
+
+  it("rejects images wider or taller than 4096 pixels", async () => {
+    vi.stubGlobal(
+      "createImageBitmap",
+      vi.fn().mockResolvedValue({
+        width: 4097,
+        height: 100,
+        close: vi.fn(),
+      }),
+    );
+    const file = new File(
+      [new Uint8Array([0xff, 0xd8, 0xff, 0x00])],
+      "wide.jpg",
+      { type: "image/jpeg" },
+    );
+
+    await expect(validateImageFile(file)).resolves.toBe("image.tooManyPixels");
   });
 });

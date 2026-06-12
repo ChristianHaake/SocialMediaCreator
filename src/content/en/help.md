@@ -17,17 +17,21 @@ date; time is optional. The timeline is sorted automatically. Under
 Microblog timelines can use separate feed entries or a connected thread.
 Editor sections can be expanded and collapsed through their headings.
 
-## Save configuration
+## Save project
 
-**Save** downloads a JSON configuration containing text, numbers, and display
-options, but no images. Images must be selected again after loading. The current
-configuration format is version 6; version 5 files remain importable as German
-projects.
+**Save** downloads an `.smc` project archive for the active module. It contains
+text, settings, and optimized copies of selected images. Loading restores the
+project and its images together.
+
+Legacy JSON configurations in versions 5 and 6 remain importable. Because they
+contain no images, importing one clears existing images for that module.
 
 ## Supported images
 
-PNG, JPG/JPEG, and WebP files up to 10 MB are accepted. Images are processed
-inside the browser and are not sent to the application.
+PNG, JPG/JPEG, and WebP files up to 5 MB and 4096 pixels per edge are accepted.
+Saving scales images to at most 2048 pixels per edge and normally stores them
+as WebP. Browsers without WebP encoding use PNG. Uncompressed project data is
+limited to 25 MB. Processing stays in the browser.
 
 ## Verify image
 
