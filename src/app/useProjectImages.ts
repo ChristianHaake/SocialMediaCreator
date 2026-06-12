@@ -6,6 +6,7 @@ import type {
   ModuleType,
   PhotoPostImages,
 } from "../domain/types";
+import type { ProjectImageMaps } from "../shared/lib/projectArchives";
 
 function revokeImage(image: ImageState | null | undefined) {
   if (image) URL.revokeObjectURL(image.url);
@@ -79,6 +80,19 @@ export function useProjectImages() {
     } else {
       revokeMicroblogImages(microblogImagesRef.current);
       setMicroblogImages({});
+    }
+  }
+
+  function replaceModuleImages(module: ModuleType, images: ProjectImageMaps) {
+    if (module === "photoPost") {
+      revokePhotoImages(photoImagesRef.current);
+      setPhotoImages(images.photoPost);
+    } else if (module === "messenger") {
+      revokeMessengerImages(messengerImagesRef.current);
+      setMessengerImages(images.messenger);
+    } else {
+      revokeMicroblogImages(microblogImagesRef.current);
+      setMicroblogImages(images.microblog);
     }
   }
 
@@ -270,6 +284,7 @@ export function useProjectImages() {
     microblogImages,
     hasModuleImages,
     clearModuleImages,
+    replaceModuleImages,
     setPhotoImage,
     setPhotoMapImage,
     removePhotoImages,

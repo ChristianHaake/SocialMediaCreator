@@ -97,6 +97,7 @@ export type MicroblogState = {
 
 export type ImageState = {
   fileName: string;
+  blob: Blob;
   url: string;
 };
 

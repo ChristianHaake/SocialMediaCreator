@@ -13,8 +13,9 @@ Texte, Kennzahlen, ausgewählte Bilder und importierte Konfigurationsdateien
 werden lokal im Browser verarbeitet. Die Anwendung besitzt keine Anmeldung,
 keine Datenbank und keine serverseitige Speicherung dieser Nutzinhalte.
 
-Bild-, PDF- und Konfigurationsexporte werden lokal erzeugt. Bilder sind nicht
-Bestandteil exportierter Konfigurationsdateien.
+Bild-, PDF- und Projektexporte werden lokal erzeugt. `.smc`-Projektarchive
+enthalten optimierte Kopien der ausgewählten Bilder. Die Archive werden nur auf
+dem Gerät erstellt oder gelesen und nicht an den Betreiber übertragen.
 
 ## 3. Lokale Speicherung
 

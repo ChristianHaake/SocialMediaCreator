@@ -13,8 +13,9 @@ Text, metrics, selected images, and imported configuration files are processed
 locally in the browser. The application has no account system, database, or
 server-side storage of this user content.
 
-Image, PDF, and configuration exports are generated locally. Images are not
-included in exported configuration files.
+Image, PDF, and project exports are generated locally. `.smc` project archives
+contain optimized copies of selected images. Archives are created and read only
+on the device and are not sent to the operator.
 
 ## 3. Local storage
 

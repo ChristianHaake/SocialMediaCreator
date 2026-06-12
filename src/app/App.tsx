@@ -28,6 +28,7 @@ import { TeacherInfoDialog } from "./components/TeacherInfoDialog";
 import { VerificationPage } from "../features/verification/VerificationPage";
 import { contentPages, isContentPath } from "../content";
 import { getTranslation, LocaleProvider, useTranslation } from "../i18n";
+import type { TranslationKey } from "../i18n/de";
 import type { ModuleType } from "../domain/types";
 import {
   getDefaultMessenger,
@@ -36,7 +37,6 @@ import {
 } from "../domain/types";
 import {
   ConfigFileError,
-  downloadModuleConfig,
   readConfigFile,
 } from "../shared/lib/configFiles";
 import {
@@ -50,8 +50,21 @@ import {
   type ImageExportFormat,
 } from "../shared/lib/exportImage";
 import { useProjectImages } from "./useProjectImages";
+import type { ProjectArchiveResult } from "../shared/lib/projectArchives";
 
 type MobileView = "editor" | "preview";
+
+function getProjectErrorCode(error: unknown): TranslationKey | null {
+  if (
+    error instanceof Error &&
+    "code" in error &&
+    typeof error.code === "string" &&
+    error.code.startsWith("project.")
+  ) {
+    return error.code as TranslationKey;
+  }
+  return null;
+}
 
 function AppContent() {
   const { locale, setLocale, t } = useTranslation();
@@ -66,8 +79,8 @@ function AppContent() {
     photoImages,
     messengerImages,
     microblogImages,
-    hasModuleImages,
     clearModuleImages,
+    replaceModuleImages,
     setPhotoImage,
     setPhotoMapImage,
     removePhotoImages,
@@ -86,6 +99,9 @@ function AppContent() {
     message: string;
   } | null>(null);
   const [exporting, setExporting] = useState<ExportFormat | null>(null);
+  const [projectOperation, setProjectOperation] = useState<
+    "saving" | "loading" | null
+  >(null);
   const [pendingExport, setPendingExport] = useState<ExportFormat | null>(null);
   const [exportConsentRequired, setExportConsentRequired] = useState(false);
   const [teacherInfoOpen, setTeacherInfoOpen] = useState(false);
@@ -130,8 +146,6 @@ function AppContent() {
   };
 
   const activeCopy = moduleCopy[activeModule];
-  const activeHasImages = hasModuleImages(activeModule);
-
   function selectModule(module: ModuleType) {
     setActiveModule(module);
     setMobileView("editor");
@@ -211,45 +225,79 @@ function AppContent() {
     setConfigStatus(null);
   }
 
-  function handleConfigDownload() {
-    if (
-      activeHasImages &&
-      !window.confirm(
-        t("app.saveImagesConfirm"),
-      )
-    ) {
-      return;
-    }
-
+  async function handleProjectDownload() {
+    if (projectOperation) return;
     const data =
       activeModule === "photoPost"
         ? photoPost
         : activeModule === "messenger"
           ? messenger
           : microblog;
-    downloadModuleConfig(activeModule, data, locale);
-
-    setConfigStatus({
-      type: "success",
-      message: t("app.saved"),
-    });
+    const images =
+      activeModule === "photoPost"
+        ? photoImages
+        : activeModule === "messenger"
+          ? messengerImages
+          : microblogImages;
+    setConfigStatus(null);
+    setProjectOperation("saving");
+    try {
+      const { createProjectArchive, downloadProjectArchive } = await import(
+        "../shared/lib/projectArchives"
+      );
+      const archive = await createProjectArchive(
+        activeModule,
+        data,
+        locale,
+        images,
+      );
+      downloadProjectArchive(archive, activeModule);
+      setConfigStatus({
+        type: "success",
+        message: t("app.saved"),
+      });
+    } catch (error) {
+      const projectErrorCode = getProjectErrorCode(error);
+      setConfigStatus({
+        type: "error",
+        message: projectErrorCode
+          ? t(projectErrorCode)
+          : t("project.saveFailed"),
+      });
+    } finally {
+      setProjectOperation(null);
+    }
   }
 
-  async function handleConfigUpload(event: ChangeEvent<HTMLInputElement>) {
+  async function handleProjectUpload(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
-    if (!file) return;
+    if (!file || projectOperation) return;
 
     setConfigStatus(null);
+    setProjectOperation("loading");
 
     try {
-      const config = await readConfigFile(file);
+      const legacyJson =
+        file.name.toLowerCase().endsWith(".json") ||
+        file.type === "application/json";
+      let archiveResult: ProjectArchiveResult | null = null;
+      let disposeImportedImages:
+        | ((images: ProjectArchiveResult["images"]) => void)
+        | null = null;
+      if (!legacyJson) {
+        const archiveTools = await import("../shared/lib/projectArchives");
+        archiveResult = await archiveTools.readProjectArchive(file);
+        disposeImportedImages = archiveTools.disposeProjectImages;
+      }
+      const config = archiveResult?.config ?? (await readConfigFile(file));
       if (
         isModuleChanged(config.module) &&
         !window.confirm(
           t("app.loadConfirm"),
         )
       ) {
+        if (archiveResult) disposeImportedImages?.(archiveResult.images);
         return;
       }
 
@@ -265,7 +313,11 @@ function AppContent() {
       }
 
       setLocale(config.locale);
-      clearModuleImages(config.module);
+      if (archiveResult) {
+        replaceModuleImages(config.module, archiveResult.images);
+      } else {
+        clearModuleImages(config.module);
+      }
       setActiveModule(config.module);
       setMobileView("editor");
       setImageError(null);
@@ -274,13 +326,18 @@ function AppContent() {
         message: getTranslation(config.locale, "app.loaded"),
       });
     } catch (error) {
+      const projectErrorCode = getProjectErrorCode(error);
       setConfigStatus({
         type: "error",
         message:
           error instanceof ConfigFileError
             ? t(error.code)
+            : projectErrorCode
+              ? t(projectErrorCode)
             : t("config.loadFailed"),
       });
+    } finally {
+      setProjectOperation(null);
     }
   }
 
@@ -583,26 +640,32 @@ function AppContent() {
                   <span>{t("app.project")}</span>
                   <button
                     className="button button--secondary"
+                    disabled={projectOperation !== null}
                     onClick={() => configInputRef.current?.click()}
                     type="button"
                   >
                     <FileUp aria-hidden="true" size={17} />
-                    {t("app.load")}
+                    {projectOperation === "loading"
+                      ? t("app.loading")
+                      : t("app.load")}
                   </button>
                   <input
-                    accept=".json,application/json"
+                    accept=".smc,.json,application/zip,application/json"
                     className="visually-hidden"
-                    onChange={handleConfigUpload}
+                    onChange={handleProjectUpload}
                     ref={configInputRef}
                     type="file"
                   />
                   <button
                     className="button button--secondary"
-                    onClick={handleConfigDownload}
+                    disabled={projectOperation !== null}
+                    onClick={() => void handleProjectDownload()}
                     type="button"
                   >
                     <FileDown aria-hidden="true" size={17} />
-                    {t("app.save")}
+                    {projectOperation === "saving"
+                      ? t("app.saving")
+                      : t("app.save")}
                   </button>
                 </div>
                 <div className="action-group">

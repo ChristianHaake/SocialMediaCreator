@@ -2,7 +2,10 @@ import type { ImageState } from "../../domain/types";
 import type { ImageErrorCode } from "../../i18n";
 
 const acceptedImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
-const maxImageSize = 10 * 1024 * 1024;
+export const maxImageSize = 5 * 1024 * 1024;
+export const maxImageDimension = 4096;
+export const optimizedImageDimension = 2048;
+export const optimizedImageQuality = 0.82;
 
 function hasImageSignature(type: string, bytes: Uint8Array) {
   if (type === "image/png") {
@@ -20,28 +23,33 @@ function hasImageSignature(type: string, bytes: Uint8Array) {
   );
 }
 
-async function canDecodeImage(file: File) {
+async function getImageDimensions(file: Blob) {
   if ("createImageBitmap" in globalThis) {
     try {
       const bitmap = await createImageBitmap(file);
-      const valid = bitmap.width > 0 && bitmap.height > 0;
+      const dimensions = { width: bitmap.width, height: bitmap.height };
       bitmap.close();
-      return valid;
+      return dimensions;
     } catch {
-      return false;
+      // Safari/WebKit can reject WebP here while normal image decoding works.
     }
   }
 
-  return new Promise<boolean>((resolve) => {
+  return new Promise<{ width: number; height: number } | null>((resolve) => {
     const url = URL.createObjectURL(file);
     const image = new Image();
-    const finish = (valid: boolean) => {
+    const finish = (dimensions: { width: number; height: number } | null) => {
       URL.revokeObjectURL(url);
-      resolve(valid);
+      resolve(dimensions);
     };
 
-    image.onload = () => finish(image.naturalWidth > 0 && image.naturalHeight > 0);
-    image.onerror = () => finish(false);
+    image.onload = () =>
+      finish(
+        image.naturalWidth > 0 && image.naturalHeight > 0
+          ? { width: image.naturalWidth, height: image.naturalHeight }
+          : null,
+      );
+    image.onerror = () => finish(null);
     image.src = url;
   });
 }
@@ -62,16 +70,55 @@ export async function validateImageFile(
     return "image.invalidData";
   }
 
-  if (!(await canDecodeImage(file))) {
+  const dimensions = await getImageDimensions(file);
+  if (!dimensions) {
     return "image.decodeFailed";
+  }
+  if (
+    dimensions.width > maxImageDimension ||
+    dimensions.height > maxImageDimension
+  ) {
+    return "image.tooManyPixels";
   }
 
   return null;
 }
 
-export function createImageState(file: File): ImageState {
+export function createImageState(blob: Blob, fileName?: string): ImageState {
   return {
-    fileName: file.name,
-    url: URL.createObjectURL(file),
+    blob,
+    fileName: fileName ?? (blob instanceof File ? blob.name : "image.webp"),
+    url: URL.createObjectURL(blob),
   };
+}
+
+export async function optimizeImage(blob: Blob): Promise<Blob> {
+  const bitmap = await createImageBitmap(blob);
+  try {
+    const scale = Math.min(
+      1,
+      optimizedImageDimension / Math.max(bitmap.width, bitmap.height),
+    );
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Canvas 2D context unavailable");
+    context.drawImage(bitmap, 0, 0, width, height);
+    const optimized = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob(
+        (result) =>
+          result ? resolve(result) : reject(new Error("WebP encoding failed")),
+        "image/webp",
+        optimizedImageQuality,
+      );
+    });
+    canvas.width = 0;
+    canvas.height = 0;
+    return optimized;
+  } finally {
+    bitmap.close();
+  }
 }

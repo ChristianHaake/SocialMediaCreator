@@ -35,7 +35,7 @@ Shared capabilities include:
 - dedicated comment views
 - PNG, JPG, and A4 PDF export
 - mandatory visible simulation labels on every exported result
-- local project configuration import and export
+- local project archive import and export, including optimized images
 - accessible keyboard navigation and mobile editor/preview switching
 
 ## Educational and safety model
@@ -58,9 +58,10 @@ Post content, uploaded images, and project configurations are processed in the
 browser. The application has no user accounts, content database, or server-side
 storage for created simulations.
 
-Images are represented by local object URLs and are deliberately excluded from
-configuration files. They must be selected again after loading a saved project.
-The selected language and export acknowledgement are stored in `localStorage`.
+Images are represented by local object URLs. Saved `.smc` project archives
+include WebP-optimized copies of the active module's images. Archive creation
+and loading happen locally. The selected language and export acknowledgement
+are stored in `localStorage`.
 
 The production site is served through Cloudflare Workers and uses Cloudflare
 Web Analytics. Cloudflare therefore processes technical connection and
@@ -69,15 +70,19 @@ statistical data as described in the
 
 ## Project files
 
-The current configuration format is **Config V6**:
+The primary project format is a ZIP-compatible **SMC archive version 1**:
 
-- stores the selected module, locale, theme, timeline data, comments, and
-  simulation settings
-- rejects unknown or invalid values before replacing editor state
-- excludes all uploaded images
+- stores the active module's Config V6 data and optimized images
+- limits source images to 5 MB and 4096 pixels per edge
+- stores images at a maximum edge of 2048 pixels, normally as WebP with PNG
+  fallback where browser WebP encoding is unavailable
+- limits total uncompressed project data to 25 MB
+- rejects unknown, unsafe, oversized, or invalid entries before replacing state
 - imports Config V5 projects and migrates them to German Config V6 projects
-- does not import Config V1 through V4 after the intentional structured-date
-  format break
+- continues to import image-free Config V6 JSON files
+
+The complete format and validation contract is documented in
+[Project archive format](docs/PROJECT-ARCHIVE.md).
 
 ## Local development
 
@@ -161,6 +166,7 @@ security and caching headers from `public/_headers`.
 - [Coding plan](docs/planning/Codingplan.md)
 - [UI and UX plan](docs/planning/UI-Design-Entwurf.md)
 - [Cloudflare deployment](docs/CLOUDFLARE.md)
+- [Project archive format](docs/PROJECT-ARCHIVE.md)
 - [Software stack audit](docs/STACK-AUDIT.md)
 - [Educational and transparency concept](docs/planning/BILDUNGS-UND-TRANSPARENZKONZEPT.md)
 

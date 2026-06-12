@@ -11,8 +11,19 @@ Das Projekt verwendet [Semantic Versioning](https://semver.org/lang/de/).
 Neue Änderungen werden zuerst in diesem Abschnitt eingetragen und bei einer
 Veröffentlichung in eine versionierte Sektion verschoben.
 
+### Hinzugefügt
+
+- ZIP-kompatible `.smc`-Projektarchive speichern die Konfiguration und
+  optimierte Bilder des aktiven Moduls gemeinsam.
+- Dokumentiertes, versioniertes Archivformat mit strikter Pfad-, Größen-,
+  Manifest- und Medienvalidierung.
+
 ### Geändert
 
+- Bilder sind auf 5 MB und 4096 Pixel pro Kante begrenzt und werden für
+  Projektarchive sequenziell auf maximal 2048 Pixel als WebP oder bei fehlender
+  Browser-Kodierung als PNG optimiert.
+- Bestehende Config-V5- und Config-V6-JSON-Dateien bleiben importierbar.
 - Planungs- und Konzeptdokumente unter `docs/planning/` gebündelt.
 - Lokale Playwright- und Wrangler-Artefakte explizit aus dem Repository
   ausgeschlossen.

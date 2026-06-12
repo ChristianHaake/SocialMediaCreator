@@ -20,18 +20,24 @@ Im Mikroblog-Modul kann die Timeline als Feed mit getrennten Beiträgen oder als
 zusammenhängender Thread mit Verbindungslinie dargestellt werden.
 Editorbereiche lassen sich über ihre Überschriften ein- und ausklappen.
 
-## Konfiguration speichern
+## Projekt speichern
 
-Mit **Speichern** wird eine JSON-Konfigurationsdatei heruntergeladen. Sie enthält
-Texte, Zahlen und Anzeigeoptionen, aber keine Bilder. Nach dem erneuten Laden
-einer Konfiguration müssen Bilder deshalb wieder ausgewählt werden. Unterstützt
-wird das aktuelle Config-Format Version 6. Dateien der Version 5 werden als
-deutsche Projekte importiert.
+Mit **Speichern** wird ein `.smc`-Projektarchiv für das aktive Modul
+heruntergeladen. Es enthält Texte, Einstellungen und optimierte Kopien der
+ausgewählten Bilder. Beim Laden werden Projekt und Bilder gemeinsam
+wiederhergestellt.
+
+Ältere JSON-Konfigurationen der Versionen 5 und 6 können weiterhin geladen
+werden. Da sie keine Bilder enthalten, werden vorhandene Bilder des importierten
+Moduls entfernt.
 
 ## Unterstützte Bilder
 
-Akzeptiert werden PNG, JPG/JPEG und WebP bis maximal 10 MB pro Datei. Die Bilder
-werden direkt im Browser verarbeitet und nicht an die Anwendung übertragen.
+Akzeptiert werden PNG, JPG/JPEG und WebP bis maximal 5 MB und 4096 Pixel pro
+Kante. Beim Speichern werden Bilder auf höchstens 2048 Pixel pro Kante
+verkleinert und normalerweise als WebP gespeichert. Browser ohne
+WebP-Kodierung verwenden PNG. Ein Projekt darf unkomprimiert höchstens 25 MB
+enthalten. Die Verarbeitung erfolgt direkt im Browser.
 
 ## Bild verifizieren
 
