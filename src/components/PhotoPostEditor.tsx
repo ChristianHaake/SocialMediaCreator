@@ -1,5 +1,10 @@
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
-import type { Dispatch, SetStateAction } from "react";
+import {
+  useEffect,
+  useRef,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import { fieldLimits } from "../constraints";
 import type {
   ImageState,
@@ -95,6 +100,22 @@ export function PhotoPostEditor({
     commentImages: {},
   };
   const sortedPosts = sortTimelinePosts(value.posts, value.sortOrder);
+  const detailRef = useRef<HTMLElement>(null);
+  const authorInputRef = useRef<HTMLInputElement>(null);
+  const previousActivePostId = useRef(activePost.id);
+  const focusNewPost = useRef(false);
+  const activePosition =
+    sortedPosts.findIndex((post) => post.id === activePost.id) + 1;
+
+  useEffect(() => {
+    if (previousActivePostId.current === activePost.id) return;
+    previousActivePostId.current = activePost.id;
+    detailRef.current?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+    if (focusNewPost.current) {
+      focusNewPost.current = false;
+      window.setTimeout(() => authorInputRef.current?.focus(), 0);
+    }
+  }, [activePost.id]);
 
   function updatePost(changes: Partial<Omit<PhotoPost, "id">>) {
     onChange((current) => ({
@@ -115,6 +136,7 @@ export function PhotoPostEditor({
 
   function addPost() {
     const post = createPhotoPost(locale);
+    focusNewPost.current = true;
     onChange((current) => ({
       ...current,
       activePostId: post.id,
@@ -124,6 +146,18 @@ export function PhotoPostEditor({
 
   function removePost(id: string) {
     if (value.posts.length === 1) return;
+    const post = value.posts.find((item) => item.id === id);
+    if (
+      !post ||
+      !window.confirm(
+        t("post.deleteConfirm", {
+          author: post.username || t("photo.username"),
+          date: formatTimelineDate(post.date, post.time, locale),
+        }),
+      )
+    ) {
+      return;
+    }
     onChange((current) => {
       const index = current.posts.findIndex((post) => post.id === id);
       const posts = current.posts.filter((post) => post.id !== id);
@@ -172,54 +206,60 @@ export function PhotoPostEditor({
 
   return (
     <form className="editor-form" onSubmit={(event) => event.preventDefault()}>
-      <EditorDisclosure
-        description={t("photo.appearanceDescription")}
-        number="01"
-        title={t("common.appearance")}
-      >
-        <ThemeSelector
-          onChange={(theme) => onChange((current) => ({ ...current, theme }))}
-          value={value.theme}
-        />
-        <label className="field">
-          <span className="field-label">{t("common.timelineOrder")}</span>
-          <select
-            onChange={(event) =>
-              onChange((current) => ({
-                ...current,
-                sortOrder: event.target.value as PhotoPostState["sortOrder"],
-              }))
-            }
-            value={value.sortOrder}
-          >
-            <option value="newest">{t("common.newest")}</option>
-            <option value="oldest">{t("common.oldest")}</option>
-          </select>
-        </label>
-      </EditorDisclosure>
+      <section className="editor-master-section">
+        <header className="editor-master-section__header">
+          <h3>{t("project.settings")}</h3>
+          <p>{t("project.settingsDescription")}</p>
+        </header>
+        <EditorDisclosure
+          description={t("photo.appearanceDescription")}
+          title={t("common.appearance")}
+        >
+          <ThemeSelector
+            onChange={(theme) => onChange((current) => ({ ...current, theme }))}
+            value={value.theme}
+          />
+          <label className="field">
+            <span className="field-label">{t("common.timelineOrder")}</span>
+            <select
+              onChange={(event) =>
+                onChange((current) => ({
+                  ...current,
+                  sortOrder: event.target.value as PhotoPostState["sortOrder"],
+                }))
+              }
+              value={value.sortOrder}
+            >
+              <option value="newest">{t("common.newest")}</option>
+              <option value="oldest">{t("common.oldest")}</option>
+            </select>
+          </label>
+        </EditorDisclosure>
+      </section>
 
-      <EditorDisclosure
-        defaultOpen
-        description={t(
-          value.posts.length === 1
-            ? "photo.postsDescription.one"
-            : "photo.postsDescription.other",
-          { count: value.posts.length },
-        )}
-        number="02"
-        title={t("common.posts")}
-      >
-        <div className="editor-section-actions">
+      <section className="post-management">
+        <header className="post-management__header">
+          <div>
+            <h3>{t("post.manage")}</h3>
+            <p>
+              {t(
+                value.posts.length === 1
+                  ? "photo.postsDescription.one"
+                  : "photo.postsDescription.other",
+                { count: value.posts.length },
+              )}
+            </p>
+          </div>
           <button
-            className="button button--secondary"
+            className="button button--primary"
             disabled={value.posts.length >= fieldLimits.common.posts}
             onClick={addPost}
             type="button"
           >
             <Plus aria-hidden="true" size={17} />
-            {t("common.post")}
+            {t("post.add")}
           </button>
-        </div>
+        </header>
         <TimelinePostList
           activeId={activePost.id}
           onRemove={removePost}
@@ -227,17 +267,37 @@ export function PhotoPostEditor({
             onChange((current) => ({ ...current, activePostId }))
           }
           posts={sortedPosts.map((post) => ({
+            author: post.username || t("photo.username"),
             id: post.id,
             summary: post.caption || t("photo.noDescription"),
             timestamp: formatTimelineDate(post.date, post.time, locale),
           }))}
         />
-      </EditorDisclosure>
+      </section>
+
+      <section className="active-post-editor" ref={detailRef}>
+        <header className="active-post-editor__header">
+          <div>
+            <span className="post-selector__badge">{t("post.active")}</span>
+            <h3>{t("post.editSelected")}</h3>
+            <p>{t("post.editDescription")}</p>
+          </div>
+          <div className="active-post-editor__context">
+            <strong>{activePost.username || t("photo.username")}</strong>
+            <span>{formatTimelineDate(activePost.date, activePost.time, locale)}</span>
+            <small>
+              {t("post.timelinePosition", {
+                position: activePosition,
+                count: sortedPosts.length,
+              })}
+            </small>
+          </div>
+        </header>
 
       <EditorDisclosure
         defaultOpen
         description={t("photo.profileDescription")}
-        number="03"
+        number="01"
         title={t("photo.profileTitle")}
       >
         <ImageUploadField
@@ -251,6 +311,7 @@ export function PhotoPostEditor({
           <label className="field">
             <span className="field-label">{t("photo.username")}</span>
             <input
+              ref={authorInputRef}
               maxLength={fieldLimits.photoPost.username}
               onChange={(event) => updatePost({ username: event.target.value })}
               value={activePost.username}
@@ -314,7 +375,7 @@ export function PhotoPostEditor({
 
       <EditorDisclosure
         description={t("photo.carouselDescription")}
-        number="04"
+        number="02"
         title={t("photo.carousel")}
       >
         <div className="editor-section-actions">
@@ -451,7 +512,7 @@ export function PhotoPostEditor({
       <EditorDisclosure
         defaultOpen
         description={t("photo.contentDescription")}
-        number="05"
+        number="03"
         title={t("photo.contentTitle")}
       >
         <label className="field">
@@ -504,7 +565,7 @@ export function PhotoPostEditor({
 
       <EditorDisclosure
         description={t("comment.discussion")}
-        number="06"
+        number="04"
         title={`${t("common.comments")} ${locale === "de" ? "und" : "and"} ${t("common.replies")}`}
       >
         <CommentEditor
@@ -519,6 +580,7 @@ export function PhotoPostEditor({
           onItemRemoved={(ids) => onImagesRemoved(activePost.id, ids)}
         />
       </EditorDisclosure>
+      </section>
     </form>
   );
 }

@@ -14,6 +14,7 @@ import { useTranslation } from "../i18n";
 type MicroblogPreviewProps = {
   value: MicroblogState;
   images: MicroblogImages;
+  onPostSelect: (postId: string) => void;
 };
 
 function initialFor(displayName: string) {
@@ -28,7 +29,7 @@ function formatHandle(handle: string) {
 export const MicroblogPreview = forwardRef<
   HTMLDivElement,
   MicroblogPreviewProps
->(function MicroblogPreview({ value, images }, ref) {
+>(function MicroblogPreview({ value, images, onPostSelect }, ref) {
   const { locale, numberLocale, t } = useTranslation();
   const sortedPosts = sortTimelinePosts(value.posts, value.sortOrder);
   return (
@@ -52,12 +53,23 @@ export const MicroblogPreview = forwardRef<
                 index === sortedPosts.length - 1
                   ? "microblog-preview--last"
                   : "",
+                post.id === value.activePostId
+                  ? "microblog-preview--selected"
+                  : "",
               ]
                 .filter(Boolean)
                 .join(" ")
             }
             key={post.id}
+            onClick={() => onPostSelect(post.id)}
           >
+            <button
+              className="preview-post-edit"
+              onClick={() => onPostSelect(post.id)}
+              type="button"
+            >
+              {t("post.edit")}
+            </button>
             <div className="microblog-preview__header">
               {postImages?.profileImage ? (
                 <img

@@ -323,6 +323,15 @@ Nicht enthalten:
   Thread-Modus mit vertikaler Verbindungslinie zwischen den Hauptbeiträgen.
 - Selten benötigte Editorbereiche sind einklappbar; zentrale Beitragsfelder
   bleiben standardmäßig sichtbar.
+- Projekteinstellungen, Beitragsnavigation und der aktive Beitrag bilden drei
+  deutlich getrennte Flächen.
+- Beitragskarten zeigen Autor, Datum, Textauszug, Timeline-Position und ein
+  sichtbares Aktiv-Badge. Auf Mobilgeräten scrollt die Liste horizontal, ohne
+  die gesamte Seite zu verbreitern.
+- Die Detailkarte „Ausgewählten Beitrag bearbeiten“ besitzt einen beim
+  Scrollen sichtbaren Kontextkopf mit Autor, Datum und Position.
+- Beiträge lassen sich zusätzlich in der Live-Vorschau auswählen. Die
+  Auswahlmarkierung und der Bearbeiten-Button gehören nicht zum Export.
 
 ## 17. Sprachumschaltung
 

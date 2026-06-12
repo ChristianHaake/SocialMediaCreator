@@ -326,7 +326,9 @@ test("photo and microblog feeds support multiple posts with comments", async ({
 }) => {
   await page.goto("/");
 
-  await page.getByRole("button", { name: "Beitrag", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Neuen Beitrag hinzufügen" })
+    .click();
   await page.getByLabel("Beschreibung").fill("Zweiter Foto-Beitrag");
   await openSection(page, "Kommentare und Antworten");
   await page.getByRole("button", { name: "Kommentar", exact: true }).click();
@@ -339,7 +341,9 @@ test("photo and microblog feeds support multiple posts with comments", async ({
   await expect(photoPost).toContainText("Foto-Kommentar");
 
   await page.getByRole("tab", { name: "Mikroblog" }).click();
-  await page.getByRole("button", { name: "Beitrag", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Neuen Beitrag hinzufügen" })
+    .click();
   await page.getByLabel("Beitragstext").fill("Zweiter Mikroblog-Beitrag");
   await openSection(page, "Kommentare und Antworten");
   await page.getByRole("button", { name: "Kommentar", exact: true }).click();
@@ -357,7 +361,9 @@ test("photo posts follow date, optional time and timeline order", async ({
 }) => {
   await page.goto("/");
 
-  await page.getByRole("button", { name: "Beitrag", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Neuen Beitrag hinzufügen" })
+    .click();
   await page.getByLabel("Beschreibung").fill("Chronologisch neuer");
   await page.getByLabel("Datum").fill("2026-06-12");
   await page.getByLabel("Uhrzeit (optional)").fill("08:30");
@@ -390,7 +396,9 @@ test("microblog feed and thread layouts follow the selected order", async ({
     /microblog-feed--thread/,
   );
 
-  await page.getByRole("button", { name: "Beitrag", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Neuen Beitrag hinzufügen" })
+    .click();
   await page.getByLabel("Beitragstext").fill("Zweiter Thread-Beitrag");
   await page.getByLabel("Datum").fill("2026-06-12");
   await expect(page.locator(".microblog-preview").nth(0)).toContainText(
@@ -467,7 +475,9 @@ test("PDF export and local image verification are available", async ({
   page,
 }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Beitrag", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Neuen Beitrag hinzufügen" })
+    .click();
   await openSection(page, "Karussell");
   await page.getByRole("button", { name: "Medium", exact: true }).click();
 

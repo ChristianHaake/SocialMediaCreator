@@ -2,6 +2,7 @@ import { Trash2 } from "lucide-react";
 import { useTranslation } from "../i18n";
 
 type TimelinePost = {
+  author: string;
   id: string;
   summary: string;
   timestamp: string;
@@ -33,18 +34,34 @@ export function TimelinePostList({
           key={post.id}
         >
           <button
-            aria-label={`${t("common.post")} ${index + 1} ${t("common.select")}`}
+            aria-label={t("post.select", {
+              author: post.author,
+              date: post.timestamp,
+            })}
             className="post-selector__select"
             onClick={() => onSelect(post.id)}
             type="button"
           >
-            <strong>{t("common.post")} {index + 1}</strong>
+            <span className="post-selector__heading">
+              <strong>{post.author}</strong>
+              {post.id === activeId && (
+                <span className="post-selector__badge">{t("post.active")}</span>
+              )}
+            </span>
             <span>{post.summary}</span>
-            <small>{post.timestamp}</small>
+            <small>
+              {post.timestamp} · {t("post.timelinePosition", {
+                position: index + 1,
+                count: posts.length,
+              })}
+            </small>
           </button>
           <div className="post-selector__actions">
             <button
-              aria-label={`${t("common.post")} ${index + 1} ${t("common.delete")}`}
+              aria-label={t("post.delete", {
+                author: post.author,
+                date: post.timestamp,
+              })}
               className="compact-icon-button compact-icon-button--danger"
               disabled={posts.length === 1}
               onClick={() => onRemove(post.id)}

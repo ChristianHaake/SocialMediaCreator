@@ -16,6 +16,7 @@ type PhotoPostPreviewProps = {
   value: PhotoPostState;
   images: PhotoPostImages;
   onActiveMediaChange: (postId: string, mediaId: string) => void;
+  onPostSelect: (postId: string) => void;
 };
 
 function initialFor(username: string) {
@@ -26,7 +27,7 @@ export const PhotoPostPreview = forwardRef<
   HTMLDivElement,
   PhotoPostPreviewProps
 >(function PhotoPostPreview(
-  { value, images, onActiveMediaChange },
+  { value, images, onActiveMediaChange, onPostSelect },
   ref,
 ) {
   const { locale, numberLocale, t } = useTranslation();
@@ -42,13 +43,23 @@ export const PhotoPostPreview = forwardRef<
 
         return (
           <article
-            className={
-              post.viewMode === "comments"
-                ? "photo-post photo-post--comments"
-                : "photo-post"
-            }
+            className={[
+              "photo-post",
+              post.viewMode === "comments" ? "photo-post--comments" : "",
+              post.id === value.activePostId ? "photo-post--selected" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
             key={post.id}
+            onClick={() => onPostSelect(post.id)}
           >
+            <button
+              className="preview-post-edit"
+              onClick={() => onPostSelect(post.id)}
+              type="button"
+            >
+              {t("post.edit")}
+            </button>
             <div className="photo-post__header">
               {postImages?.profileImage ? (
                 <img

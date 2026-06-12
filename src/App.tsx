@@ -656,6 +656,10 @@ function AppContent() {
               ),
             }))
           }
+          onPostSelect={(activePostId) => {
+            setPhotoPost((current) => ({ ...current, activePostId }));
+            setMobileView("editor");
+          }}
           ref={previewRef}
           value={photoPost}
         />
@@ -675,6 +679,10 @@ function AppContent() {
     return (
       <MicroblogPreview
         images={microblogImages}
+        onPostSelect={(activePostId) => {
+          setMicroblog((current) => ({ ...current, activePostId }));
+          setMobileView("editor");
+        }}
         ref={previewRef}
         value={microblog}
       />
