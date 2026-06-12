@@ -1,0 +1,278 @@
+@media (max-width: 960px) {
+  .workspace {
+    grid-template-columns: minmax(350px, 420px) minmax(0, 1fr);
+    gap: 18px;
+  }
+
+  .preview-stage {
+    padding-inline: 18px;
+  }
+
+  .action-bar,
+  .action-group {
+    align-items: stretch;
+  }
+
+  .action-bar {
+    flex-direction: column;
+  }
+
+  .action-group {
+    width: 100%;
+  }
+
+  .action-group .button {
+    flex: 1;
+  }
+}
+
+@media (max-width: 760px) {
+  .app-header {
+    min-height: 68px;
+    padding: 10px 18px;
+  }
+
+  .brand small,
+  .privacy-badge {
+    display: none;
+  }
+
+  .header-meta {
+    gap: 10px;
+  }
+
+  main {
+    padding-inline: 14px;
+  }
+
+  .education-notice {
+    width: calc(100% - 28px);
+    margin-top: 10px;
+  }
+
+  .intro {
+    padding: 38px 4px 26px;
+  }
+
+  .intro h1 {
+    font-size: clamp(2.3rem, 13vw, 3.5rem);
+  }
+
+  .module-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    padding: 4px;
+  }
+
+  .module-tab {
+    min-width: 0;
+    min-height: 52px;
+    gap: 5px;
+    padding: 7px 4px;
+    font-size: 0.7rem;
+    line-height: 1.15;
+  }
+
+  .module-tab span {
+    overflow-wrap: anywhere;
+  }
+
+  .mobile-view-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    margin: 16px 0 0;
+    padding: 4px;
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    background: #e4e8ed;
+  }
+
+  .mobile-view-toggle button {
+    min-height: 44px;
+    border: 0;
+    border-radius: 9px;
+    color: var(--text-muted);
+    background: transparent;
+    font-size: 0.84rem;
+    font-weight: 800;
+  }
+
+  .mobile-view-toggle button[aria-pressed="true"] {
+    color: var(--accent);
+    background: white;
+    box-shadow: 0 2px 8px rgb(15 23 42 / 8%);
+  }
+
+  .workspace {
+    display: block;
+    margin-top: 12px;
+  }
+
+  .editor-panel,
+  .preview-panel {
+    display: none;
+  }
+
+  .mobile-panel--active {
+    display: block;
+  }
+
+  .preview-panel {
+    position: static;
+  }
+
+  .preview-stage {
+    min-height: 520px;
+    padding: 28px 12px;
+  }
+
+  .photo-post {
+    max-width: 420px;
+  }
+
+  .app-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .app-footer nav {
+    justify-content: flex-start;
+  }
+
+  .content-shell {
+    width: calc(100% - 28px);
+    padding-top: 28px;
+  }
+
+  .markdown-page {
+    border-radius: 16px;
+  }
+}
+
+@media (max-width: 420px) {
+  .brand > span:last-child {
+    display: none;
+  }
+
+  .text-button {
+    width: 44px;
+    height: 44px;
+    justify-content: center;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid var(--border-soft);
+    border-radius: 11px;
+    font-size: 0;
+  }
+
+  .text-button svg {
+    width: 19px;
+    height: 19px;
+  }
+
+  .education-notice {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 5px 9px;
+    padding: 9px 11px;
+    font-size: 0.76rem;
+    line-height: 1.35;
+  }
+
+  .education-notice a {
+    grid-column: 2;
+  }
+
+  .dialog-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .editor-form {
+    gap: 14px;
+    padding: 16px 12px 22px;
+  }
+
+  .post-management {
+    padding: 14px;
+  }
+
+  .post-management__header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .post-management__header .button {
+    width: 100%;
+  }
+
+  .post-management .post-selector-list {
+    display: flex;
+    padding-bottom: 6px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+  }
+
+  .post-management .post-selector {
+    min-width: min(250px, calc(100vw - 72px));
+    scroll-snap-align: start;
+  }
+
+  .active-post-editor__header {
+    align-items: flex-start;
+    padding: 14px;
+  }
+
+  .active-post-editor__context {
+    min-width: 92px;
+  }
+
+  .active-post-editor__context strong {
+    max-width: 100px;
+  }
+
+  .editor-disclosure__content {
+    padding-left: 0;
+  }
+
+  .panel-heading,
+  .preview-panel__header {
+    padding-inline: 18px;
+  }
+
+  .field-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .message-add-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .field--compact {
+    flex-basis: auto;
+  }
+
+  .action-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .action-group > span {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
