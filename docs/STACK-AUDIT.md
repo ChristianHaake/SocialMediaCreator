@@ -1,8 +1,8 @@
-# Software-Stack-Audit
+# Software Stack Audit
 
-Stand: 11. Juni 2026
+Status: June 12, 2026
 
-## Validierter Stack
+## Validated stack
 
 - Node.js 22
 - npm 10
@@ -15,39 +15,59 @@ Stand: 11. Juni 2026
 - Wrangler 4
 - Cloudflare Workers Static Assets
 
-## Durchgeführte Prüfungen
+## Validation results
 
-- reproduzierbare Installation mit `npm ci`
-- Abhängigkeitsprüfung mit `npm audit`
-- TypeScript- und Produktions-Build
-- ESLint ohne erlaubte Warnungen
-- Unit- und Komponententests
-- E2E-Tests in Chromium, Firefox und WebKit
-- Bild- und Konfigurationsexporte aller Module
-- Konfigurationsimport mit Positiv- und Negativfällen
-- Bildvalidierung mit beschädigten und gültigen Dateien
-- Prüfung der Netzwerkfreiheit nach dem initialen Laden
-- responsive Bedienung bei 320 CSS-Pixeln
-- Produktions-Smoke-Test gegen den Cloudflare-Stage-Build
+The current codebase passes:
 
-## Ergebnis
+- reproducible dependency installation with `npm ci`
+- full dependency audit with no known vulnerabilities
+- TypeScript and Vite production build
+- ESLint with zero permitted warnings
+- 60 unit and component tests
+- 48 E2E tests across Chromium, Firefox, and WebKit
+- responsive browser coverage at 320 CSS pixels
+- module image and configuration exports
+- valid and invalid configuration imports
+- valid, damaged, and incorrectly typed image uploads
+- verification that core workflows make no network requests after initial load
+- production smoke testing against `https://smc.haak3.de`
+- public route, SPA fallback, security header, and immutable asset checks
 
-Der Audit meldet keine bekannten Paket-Schwachstellen. Alle automatisierten
-Prüfungen bestehen.
+Config V6, exports, imports, runtime behavior, and deployment configuration were
+not changed by this audit.
 
-Folgende Fehler wurden während des Audits behoben:
+## Current strengths
 
-- Konfigurationsdateien konnten Werte enthalten, die von den Editorfeldern
-  nicht korrekt dargestellt werden konnten.
-- Ungültige Datums- und Zeitwerte wurden beim Import akzeptiert.
-- Dateien mit gefälschtem Bild-MIME-Typ oder beschädigten Bilddaten konnten bis
-  zur Vorschau gelangen.
-- Die Projektseite beschrieb das Mikroblog-Modul noch als nicht umgesetzt.
-- Playwright-Konfiguration und E2E-Tests wurden vom TypeScript-Build nicht
-  geprüft.
+- Broad automated coverage across three browser engines
+- Strict TypeScript configuration
+- Local processing of simulation content and images
+- Defensive configuration and image validation
+- Accessible module navigation, dialogs, and responsive views
+- Hardened Cloudflare delivery with explicit security and caching headers
+- Visible export labeling and local image-origin verification
 
-## Bewusst nicht aktualisiert
+## Improvement backlog
 
-Mehrere Werkzeuge bieten neue Major-Versionen an. Diese wurden nicht pauschal
-aktualisiert, da Major-Upgrades eigene Migrations- und Regressionstests
-benötigen. Der aktuell installierte Stack ist sicher und vollständig geprüft.
+These changes should be handled as separate maintenance work:
+
+1. Split the 919-line `App.tsx` into application shell, project-state,
+   image-lifecycle, configuration, and export controllers.
+2. Extract timeline-editor behavior shared by Photo Post and Microblog.
+3. Split the 2,380-line stylesheet into base, layout, editor, preview, content,
+   and export layers.
+4. Split the 627-line translation module by locale and functional area while
+   retaining typed translation keys.
+5. Divide the main component and browser test suites into feature-focused
+   files.
+6. Add GitHub Actions for clean installation, lint, unit tests, build, and
+   browser tests.
+7. Evaluate route and content code splitting. The current main production
+   JavaScript bundle is approximately 497 KB before compression.
+8. Handle major ESLint, TypeScript, Lucide, and related upgrades in a dedicated
+   dependency sprint with migration and regression testing.
+
+## Dependency policy
+
+Available major-version upgrades were intentionally not applied. The installed
+stack is currently secure and fully validated; major upgrades require their own
+migration and browser-regression pass.

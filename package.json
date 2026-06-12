@@ -2,6 +2,16 @@
   "name": "social-media-creator",
   "private": true,
   "version": "0.2.0",
+  "description": "Educational browser workshop for creating fictional social-media simulations.",
+  "license": "GPL-3.0-only",
+  "homepage": "https://smc.haak3.de",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ChristianHaake/SocialMediaCreator.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ChristianHaake/SocialMediaCreator/issues"
+  },
   "type": "module",
   "engines": {
     "node": ">=22.12.0 <23",
