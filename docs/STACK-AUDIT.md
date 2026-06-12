@@ -50,21 +50,27 @@ not changed by this audit.
 
 These changes should be handled as separate maintenance work:
 
-1. Split the 919-line `App.tsx` into application shell, project-state,
-   image-lifecycle, configuration, and export controllers.
+1. Continue splitting the application shell by extracting configuration and
+   export controllers from `src/app/App.tsx`. Image lifecycle management is
+   already isolated in `useProjectImages`.
 2. Extract timeline-editor behavior shared by Photo Post and Microblog.
-3. Split the 2,380-line stylesheet into base, layout, editor, preview, content,
-   and export layers.
-4. Split the 627-line translation module by locale and functional area while
-   retaining typed translation keys.
-5. Divide the main component and browser test suites into feature-focused
+3. Divide the main component and browser test suites into feature-focused
    files.
-6. Add GitHub Actions for clean installation, lint, unit tests, build, and
+4. Add GitHub Actions for clean installation, lint, unit tests, build, and
    browser tests.
-7. Evaluate route and content code splitting. The current main production
+5. Evaluate route and content code splitting. The current main production
    JavaScript bundle is approximately 497 KB before compression.
-8. Handle major ESLint, TypeScript, Lucide, and related upgrades in a dedicated
+6. Handle major ESLint, TypeScript, Lucide, and related upgrades in a dedicated
    dependency sprint with migration and regression testing.
+
+Completed during repository cleanup:
+
+- application, feature, shared, domain, content, i18n, and style boundaries
+  introduced
+- image and Object URL lifecycle extracted from the application shell
+- single stylesheet split into four ordered layers
+- German and English dictionaries split from the locale provider
+- planning documents consolidated under `docs/planning`
 
 ## Dependency policy
 

@@ -11,6 +11,18 @@ Das Projekt verwendet [Semantic Versioning](https://semver.org/lang/de/).
 Neue Änderungen werden zuerst in diesem Abschnitt eingetragen und bei einer
 Veröffentlichung in eine versionierte Sektion verschoben.
 
+### Geändert
+
+- Planungs- und Konzeptdokumente unter `docs/planning/` gebündelt.
+- Lokale Playwright- und Wrangler-Artefakte explizit aus dem Repository
+  ausgeschlossen.
+- Quellcode nach App-Shell, Features, gemeinsam genutzten Komponenten,
+  Domain-Typen, Inhalten, Übersetzungen und Styles strukturiert.
+- Bildzustand und Object-URL-Lebenszyklus aus der zentralen App-Komponente in
+  einen dedizierten Hook ausgelagert.
+- Monolithische Style- und Übersetzungsdateien in geordnete Layer und
+  sprachspezifische Wörterbücher aufgeteilt.
+
 ## [1.0.0] - 2026-06-12
 
 ### Hinzugefügt

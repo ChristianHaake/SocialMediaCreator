@@ -129,6 +129,19 @@ uploaded image references remain in browser memory. Markdown content pages are
 bundled at build time, and exports are rendered from the same preview
 components used by the editor.
 
+The source tree is organized by responsibility:
+
+```text
+src/
+  app/          application shell, routing, dialogs, project image lifecycle
+  features/     Photo Post, Messenger, Microblog, and verification modules
+  shared/       reusable editor components and browser-side utilities
+  domain/       serialized state types, defaults, and field constraints
+  i18n/         typed German and English dictionaries and locale provider
+  content/      bundled Markdown pages
+  styles/       ordered base, preview, content, and responsive layers
+```
+
 Core technologies:
 
 - React 19 and TypeScript
@@ -145,11 +158,11 @@ security and caching headers from `public/_headers`.
 ## Documentation
 
 - [Changelog](CHANGELOG.md)
-- [Coding plan](Codingplan.md)
-- [UI and UX plan](UI-Design-Entwurf.md)
+- [Coding plan](docs/planning/Codingplan.md)
+- [UI and UX plan](docs/planning/UI-Design-Entwurf.md)
 - [Cloudflare deployment](docs/CLOUDFLARE.md)
 - [Software stack audit](docs/STACK-AUDIT.md)
-- [Educational and transparency concept](docs/BILDUNGS-UND-TRANSPARENZKONZEPT.md)
+- [Educational and transparency concept](docs/planning/BILDUNGS-UND-TRANSPARENZKONZEPT.md)
 
 ## License
 
