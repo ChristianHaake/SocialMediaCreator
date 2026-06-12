@@ -17,6 +17,8 @@ import {
 import { AppFooter } from "./components/AppFooter";
 import { AppHeader } from "./components/AppHeader";
 import { ContentPage } from "./components/ContentPage";
+import { EducationNotice } from "./components/EducationNotice";
+import { ExportNoticeDialog } from "./components/ExportNoticeDialog";
 import { MessengerEditor } from "./components/MessengerEditor";
 import { MessengerPreview } from "./components/MessengerPreview";
 import { MicroblogEditor } from "./components/MicroblogEditor";
@@ -44,6 +46,10 @@ import {
   downloadModuleConfig,
   readConfigFile,
 } from "./utils/configFiles";
+import {
+  hasExportConsent,
+  storeExportConsent,
+} from "./utils/exportConsent";
 import {
   exportElementAsImage,
   exportElementAsPdf,
@@ -97,6 +103,8 @@ function AppContent() {
     message: string;
   } | null>(null);
   const [exporting, setExporting] = useState<ExportFormat | null>(null);
+  const [pendingExport, setPendingExport] = useState<ExportFormat | null>(null);
+  const [exportConsentRequired, setExportConsentRequired] = useState(false);
   const [teacherInfoOpen, setTeacherInfoOpen] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
   const configInputRef = useRef<HTMLInputElement>(null);
@@ -517,7 +525,26 @@ function AppContent() {
     }
   }
 
-  async function handleImageExport(format: ImageExportFormat) {
+  function requestExport(format: ExportFormat) {
+    if (exporting) return;
+    setExportConsentRequired(!hasExportConsent());
+    setPendingExport(format);
+  }
+
+  function confirmExport() {
+    if (!pendingExport) return;
+    if (exportConsentRequired) storeExportConsent();
+
+    const format = pendingExport;
+    setPendingExport(null);
+    if (format === "pdf") {
+      void performPdfExport();
+    } else {
+      void performImageExport(format);
+    }
+  }
+
+  async function performImageExport(format: ImageExportFormat) {
     if (!previewRef.current || exporting) return;
 
     setExportError(null);
@@ -542,7 +569,7 @@ function AppContent() {
     }
   }
 
-  async function handlePdfExport() {
+  async function performPdfExport() {
     if (!previewRef.current || exporting) return;
     setExportError(null);
     setExporting("pdf");
@@ -657,6 +684,7 @@ function AppContent() {
   return (
     <div className="app">
       <AppHeader onOpenTeacherInfo={() => setTeacherInfoOpen(true)} />
+      {pathname === "/" && <EducationNotice />}
 
       {pathname === "/verifizieren" ? (
         <VerificationPage />
@@ -815,7 +843,7 @@ function AppContent() {
                   <button
                     className="button button--secondary"
                     disabled={exporting !== null}
-                    onClick={() => handleImageExport("jpg")}
+                    onClick={() => requestExport("jpg")}
                     type="button"
                   >
                     <Download aria-hidden="true" size={17} />
@@ -824,7 +852,7 @@ function AppContent() {
                   <button
                     className="button button--primary"
                     disabled={exporting !== null}
-                    onClick={() => handleImageExport("png")}
+                    onClick={() => requestExport("png")}
                     type="button"
                   >
                     <Download aria-hidden="true" size={17} />
@@ -833,7 +861,7 @@ function AppContent() {
                   <button
                     className="button button--secondary"
                     disabled={exporting !== null}
-                    onClick={handlePdfExport}
+                    onClick={() => requestExport("pdf")}
                     type="button"
                   >
                     <FileDown aria-hidden="true" size={17} />
@@ -863,6 +891,12 @@ function AppContent() {
       <TeacherInfoDialog
         onClose={() => setTeacherInfoOpen(false)}
         open={teacherInfoOpen}
+      />
+      <ExportNoticeDialog
+        onCancel={() => setPendingExport(null)}
+        onConfirm={confirmExport}
+        open={pendingExport !== null}
+        requiresConsent={exportConsentRequired}
       />
     </div>
   );

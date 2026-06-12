@@ -6,6 +6,15 @@ test.beforeEach(async ({ page }) => {
     if (!window.localStorage.getItem("social-media-creator-locale")) {
       window.localStorage.setItem("social-media-creator-locale", "de");
     }
+    if (!window.localStorage.getItem("social-media-creator-export-consent")) {
+      window.localStorage.setItem(
+        "social-media-creator-export-consent",
+        JSON.stringify({
+          version: 1,
+          acceptedAt: "2026-06-12T00:00:00.000Z",
+        }),
+      );
+    }
   });
 });
 
@@ -17,6 +26,89 @@ async function openSection(page: Page, title: string) {
     await details.locator("summary").click();
   }
 }
+
+async function continueExport(page: Page) {
+  await expect(
+    page.getByRole("dialog", { name: "Hinweis vor dem Export" }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Export fortsetzen", exact: true })
+    .click();
+}
+
+test("education notice and public guidance pages are visible and bilingual", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 720 });
+  await page.goto("/");
+
+  const notice = page.getByText(
+    "Diese Simulation dient ausschließlich dem Bildungszweck.",
+  );
+  await expect(notice).toBeVisible();
+  const noticeBox = await notice.boundingBox();
+  expect(noticeBox).not.toBeNull();
+  expect(noticeBox!.y + noticeBox!.height).toBeLessThanOrEqual(720);
+  await expect(
+    page
+      .getByRole("complementary")
+      .getByRole("link", { name: "Verantwortungsvoller Einsatz" }),
+  ).toBeVisible();
+
+  await page.goto("/lehrkraefte");
+  await expect(
+    page.getByRole("heading", { name: "Hinweise für Lehrkräfte" }),
+  ).toBeVisible();
+  await expect(page.getByText("Unterrichtsszenario 5: Plattformmechaniken")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "FAQ" })).toBeVisible();
+
+  await page.getByRole("button", { name: "EN", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Information for educators" }),
+  ).toBeVisible();
+  await expect(page.getByText("Scenario 5: Platform mechanics")).toBeVisible();
+});
+
+test("first export requires consent and every export shows the notice", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.evaluate(() =>
+    window.localStorage.removeItem("social-media-creator-export-consent"),
+  );
+
+  await page.getByRole("button", { name: "PNG" }).click();
+  const continueButton = page.getByRole("button", {
+    name: "Export fortsetzen",
+    exact: true,
+  });
+  await expect(continueButton).toBeDisabled();
+  await page
+    .getByLabel(
+      "Ich habe die Nutzungsbedingungen gelesen und verwende den Export verantwortungsvoll.",
+    )
+    .check();
+
+  const firstDownload = page.waitForEvent("download");
+  await continueButton.click();
+  await firstDownload;
+
+  await page.reload();
+  await page.getByRole("button", { name: "PNG" }).click();
+  await expect(
+    page.getByRole("dialog", { name: "Hinweis vor dem Export" }),
+  ).toBeVisible();
+  await expect(
+    page.getByLabel(
+      "Ich habe die Nutzungsbedingungen gelesen und verwende den Export verantwortungsvoll.",
+    ),
+  ).toHaveCount(0);
+  const secondDownload = page.waitForEvent("download");
+  await page
+    .getByRole("button", { name: "Export fortsetzen", exact: true })
+    .click();
+  await secondDownload;
+});
 
 test("language switch preserves content and exports locale in config v6", async ({
   page,
@@ -86,7 +178,11 @@ test("teacher dialog traps and restores focus", async ({ page }) => {
   const close = page.getByRole("button", { name: "Dialog schließen" });
   await expect(close).toBeFocused();
   await page.keyboard.press("Tab");
-  await expect(close).toBeFocused();
+  expect(
+    await page.locator(".info-dialog").evaluate((dialog) =>
+      dialog.contains(document.activeElement),
+    ),
+  ).toBe(true);
 
   await page.keyboard.press("Escape");
   await expect(
@@ -109,6 +205,7 @@ test("all modules export images and configuration files", async ({ page }) => {
 
     const imageDownload = page.waitForEvent("download");
     await page.getByRole("button", { name: "PNG" }).click();
+    await continueExport(page);
     expect((await imageDownload).suggestedFilename()).toMatch(
       /social-media-creator-.+\.png/,
     );
@@ -236,12 +333,10 @@ test("photo and microblog feeds support multiple posts with comments", async ({
   await page.getByLabel("Kommentartext").last().fill("Foto-Kommentar");
 
   await expect(page.locator(".photo-post")).toHaveCount(2);
-  await expect(page.locator(".photo-post").nth(1)).toContainText(
-    "Zweiter Foto-Beitrag",
-  );
-  await expect(page.locator(".photo-post").nth(1)).toContainText(
-    "Foto-Kommentar",
-  );
+  const photoPost = page
+    .locator(".photo-post")
+    .filter({ hasText: "Zweiter Foto-Beitrag" });
+  await expect(photoPost).toContainText("Foto-Kommentar");
 
   await page.getByRole("tab", { name: "Mikroblog" }).click();
   await page.getByRole("button", { name: "Beitrag", exact: true }).click();
@@ -251,12 +346,10 @@ test("photo and microblog feeds support multiple posts with comments", async ({
   await page.getByLabel("Kommentartext").last().fill("Mikroblog-Kommentar");
 
   await expect(page.locator(".microblog-preview")).toHaveCount(2);
-  await expect(page.locator(".microblog-preview").nth(1)).toContainText(
-    "Zweiter Mikroblog-Beitrag",
-  );
-  await expect(page.locator(".microblog-preview").nth(1)).toContainText(
-    "Mikroblog-Kommentar",
-  );
+  const microblogPost = page
+    .locator(".microblog-preview")
+    .filter({ hasText: "Zweiter Mikroblog-Beitrag" });
+  await expect(microblogPost).toContainText("Mikroblog-Kommentar");
 });
 
 test("photo posts follow date, optional time and timeline order", async ({
@@ -380,15 +473,18 @@ test("PDF export and local image verification are available", async ({
 
   const pdfDownload = page.waitForEvent("download");
   await page.getByRole("button", { name: "PDF" }).click();
+  await continueExport(page);
   const pdf = await pdfDownload;
   expect(pdf.suggestedFilename()).toMatch(/\.pdf$/);
   const pdfPath = await pdf.path();
   expect(pdfPath).not.toBeNull();
   const pdfText = await readFile(pdfPath!, "latin1");
   expect(pdfText.match(/\/Type \/Page\b/g)).toHaveLength(3);
+  expect(pdfText).toContain("SocialMediaCreator");
 
   const imageDownload = page.waitForEvent("download");
   await page.getByRole("button", { name: "PNG" }).click();
+  await continueExport(page);
   const image = await imageDownload;
   const imagePath = await image.path();
   expect(imagePath).not.toBeNull();
@@ -448,6 +544,7 @@ test("core workflows do not request network resources after loading", async ({
 
   const download = page.waitForEvent("download");
   await page.getByRole("button", { name: "PNG" }).click();
+  await continueExport(page);
   await download;
 
   expect(requests).toEqual([]);

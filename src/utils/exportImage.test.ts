@@ -13,6 +13,7 @@ vi.mock("jspdf", () => ({
 import {
   addImageMarker,
   calculatePageSlices,
+  exportBadgeText,
   exportElementAsImage,
   verifyImageMarker,
 } from "./exportImage";
@@ -61,6 +62,26 @@ describe("image export", () => {
       element,
       expect.objectContaining({ quality: 0.92 }),
     );
+  });
+
+  it("renders the visible simulation badge before adding the marker", async () => {
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(
+      () => undefined,
+    );
+    const element = document.createElement("div");
+    document.body.append(element);
+    Object.defineProperty(element, "offsetWidth", { value: 540 });
+    toPng.mockImplementationOnce(async (renderedElement: HTMLElement) => {
+      expect(
+        renderedElement.querySelector("[data-export-badge]")?.textContent,
+      ).toBe(exportBadgeText);
+      return "data:image/png;base64,aGVsbG8=";
+    });
+
+    await exportElementAsImage(element, "png", "test", "photoPost");
+
+    expect(element.querySelector("[data-export-badge]")).toBeNull();
+    element.remove();
   });
 });
 

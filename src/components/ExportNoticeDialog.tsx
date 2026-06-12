@@ -1,24 +1,35 @@
 import { X } from "lucide-react";
-import { useEffect, useRef, type KeyboardEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from "react";
 import { useTranslation } from "../i18n";
 
-type TeacherInfoDialogProps = {
+type ExportNoticeDialogProps = {
   open: boolean;
-  onClose: () => void;
+  requiresConsent: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
 };
 
-export function TeacherInfoDialog({
+export function ExportNoticeDialog({
   open,
-  onClose,
-}: TeacherInfoDialogProps) {
+  requiresConsent,
+  onCancel,
+  onConfirm,
+}: ExportNoticeDialogProps) {
   const { t } = useTranslation();
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const [accepted, setAccepted] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (!open) return;
 
+    setAccepted(false);
     previousFocusRef.current =
       document.activeElement instanceof HTMLElement
         ? document.activeElement
@@ -36,15 +47,14 @@ export function TeacherInfoDialog({
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key === "Escape") {
       event.preventDefault();
-      onClose();
+      onCancel();
       return;
     }
 
     if (event.key !== "Tab" || !dialogRef.current) return;
-
     const focusable = Array.from(
       dialogRef.current.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])',
       ),
     );
     if (focusable.length === 0) return;
@@ -61,10 +71,10 @@ export function TeacherInfoDialog({
 
   return (
     <div
-      aria-labelledby="teacher-dialog-title"
+      aria-labelledby="export-dialog-title"
       aria-modal="true"
       className="dialog-backdrop"
-      onClick={onClose}
+      onClick={onCancel}
       onKeyDown={handleKeyDown}
       role="dialog"
     >
@@ -75,32 +85,49 @@ export function TeacherInfoDialog({
       >
         <div className="info-dialog__header">
           <div>
-            <span className="panel-kicker">{t("teacher.kicker")}</span>
-            <h2 id="teacher-dialog-title">{t("teacher.title")}</h2>
+            <span className="panel-kicker">{t("export.kicker")}</span>
+            <h2 id="export-dialog-title">{t("export.title")}</h2>
           </div>
           <button
-            aria-label={t("teacher.close")}
+            aria-label={t("export.close")}
             className="icon-button"
-            onClick={onClose}
+            onClick={onCancel}
             ref={closeButtonRef}
             type="button"
           >
             <X aria-hidden="true" size={19} />
           </button>
         </div>
-        <div className="info-dialog__content">
-          <ul>
-            <li>{t("teacher.item1")}</li>
-            <li>{t("teacher.item2")}</li>
-            <li>{t("teacher.item3")}</li>
-            <li>{t("teacher.item4")}</li>
-          </ul>
-          <p>
-            {t("teacher.note")}
-          </p>
-          <a className="button button--primary dialog-primary-link" href="/lehrkraefte">
-            {t("teacher.more")}
-          </a>
+        <div className="info-dialog__content export-dialog__content">
+          <p className="export-dialog__message">{t("export.message")}</p>
+          <a href="/nutzungsbedingungen">{t("export.termsLink")}</a>
+          {requiresConsent && (
+            <label className="export-consent">
+              <input
+                checked={accepted}
+                onChange={(event) => setAccepted(event.target.checked)}
+                type="checkbox"
+              />
+              <span>{t("export.consent")}</span>
+            </label>
+          )}
+          <div className="dialog-actions">
+            <button
+              className="button button--secondary"
+              onClick={onCancel}
+              type="button"
+            >
+              {t("export.cancel")}
+            </button>
+            <button
+              className="button button--primary"
+              disabled={requiresConsent && !accepted}
+              onClick={onConfirm}
+              type="button"
+            >
+              {t("export.continue")}
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -179,6 +179,38 @@ a {
   font-weight: 700;
 }
 
+.education-notice {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  width: min(1312px, calc(100% - 32px));
+  min-height: 48px;
+  padding: 10px 14px;
+  margin: 14px auto 0;
+  border: 1px solid #f2d08d;
+  border-radius: 12px;
+  color: #5f4700;
+  background: #fff8e8;
+  font-size: 0.86rem;
+}
+
+.education-notice svg {
+  flex: 0 0 auto;
+}
+
+.education-notice p {
+  flex: 1;
+  margin: 0;
+  font-weight: 700;
+}
+
+.education-notice a {
+  flex: 0 0 auto;
+  color: #664d00;
+  font-weight: 800;
+  text-underline-offset: 3px;
+}
+
 main {
   flex: 1;
   width: min(1440px, 100%);
@@ -1848,6 +1880,48 @@ main {
   border: 0;
 }
 
+.dialog-primary-link {
+  width: 100%;
+  margin-top: 18px;
+}
+
+.export-dialog__content > a {
+  display: inline-block;
+  margin-top: 16px;
+  color: var(--accent);
+  font-weight: 750;
+  text-underline-offset: 3px;
+}
+
+.export-consent {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 14px;
+  margin-top: 20px;
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  color: #344054;
+  background: #f8fafc;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.export-consent input {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: var(--accent);
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
 @media (max-width: 960px) {
   .workspace {
     grid-template-columns: minmax(350px, 420px) minmax(0, 1fr);
@@ -1893,6 +1967,11 @@ main {
 
   main {
     padding-inline: 14px;
+  }
+
+  .education-notice {
+    width: calc(100% - 28px);
+    margin-top: 10px;
   }
 
   .intro {
@@ -2015,6 +2094,24 @@ main {
   .text-button svg {
     width: 19px;
     height: 19px;
+  }
+
+  .education-notice {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 5px 9px;
+    padding: 9px 11px;
+    font-size: 0.76rem;
+    line-height: 1.35;
+  }
+
+  .education-notice a {
+    grid-column: 2;
+  }
+
+  .dialog-actions {
+    display: grid;
+    grid-template-columns: 1fr;
   }
 
   .editor-form {

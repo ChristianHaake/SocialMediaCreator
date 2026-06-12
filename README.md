@@ -43,13 +43,15 @@ Der aktuelle Stand enthält:
 - deutsche und englische Oberfläche mit lokal gespeicherter Sprachwahl
 - validierte Config-V6-Dateien ohne Bilder; Config V5 bleibt importierbar
 - PNG-, JPG- und PDF-Export
+- verpflichtende sichtbare Simulationskennzeichnung und Exporthinweis
 - lokale Herkunftsmarker und Bildverifikation
 - Zurücksetzen mit Schutz vor Datenverlust
 - semantische Modul-Tabs mit vollständiger Pfeiltastensteuerung
 - Fokusführung und Fokus-Rückgabe im Lehrkräfte-Dialog
 - Browser-E2E-Tests in Chromium, Firefox und WebKit
 - automatisierte Prüfung der Netzwerkfreiheit nach dem initialen Laden
-- Hilfe, Projektinformationen, Datenschutz und Impressum
+- Hilfe, Lehrkräftematerial, verantwortungsvoller Einsatz,
+  Nutzungsbedingungen, Projektinformationen, Datenschutz und Impressum
 - gehärtete Cloudflare-Workers-Auslieferung mit SPA-Fallback
 
 Die Cloudflare-Einstellungen sind unter
@@ -60,3 +62,6 @@ Alle wesentlichen Änderungen werden fortlaufend im
 
 Der validierte Software-Stack und die Ergebnisse des Stabilitätsaudits stehen
 unter [`docs/STACK-AUDIT.md`](docs/STACK-AUDIT.md).
+
+Das Bildungs- und Export-Schutzkonzept steht unter
+[`docs/BILDUNGS-UND-TRANSPARENZKONZEPT.md`](docs/BILDUNGS-UND-TRANSPARENZKONZEPT.md).

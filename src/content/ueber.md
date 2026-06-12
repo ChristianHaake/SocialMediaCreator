@@ -1,23 +1,39 @@
 ## Zweck
 
-SocialMediaCreator ist eine browserbasierte Werkstatt für fiktive digitale
-Kommunikationsformate. Lernende können Beiträge gestalten, ohne ein Konto bei
-einem sozialen Netzwerk zu benötigen oder Inhalte auf eine Plattform
-hochzuladen.
+SocialMediaCreator ist eine browserbasierte Simulationsumgebung für fiktive
+digitale Kommunikation. Lernende gestalten Beiträge, Chats und Diskussionen,
+ohne ein Konto bei einem sozialen Netzwerk zu benötigen oder Nutzinhalte auf
+eine Plattform hochzuladen.
+
+## Pädagogische Ziele
+
+- digitale Kommunikationsformen analysieren
+- Quellen, Kontext und Glaubwürdigkeit reflektieren
+- Auswirkungen von Kennzahlen und Plattformgestaltung untersuchen
+- Konflikte, Privatsphäre und Persönlichkeitsrechte thematisieren
+- verantwortungsvolle Veröffentlichung und Mediengestaltung einüben
+
+## Zielgruppen
+
+Das Projekt richtet sich an Lehrkräfte, Lernende, Medienpädagoginnen und
+Medienpädagogen sowie weitere Personen in schulischen und außerschulischen
+Bildungskontexten.
 
 ## Grundsätze
 
-- Nutzdaten werden lokal im Browser verarbeitet.
-- Es gibt keine Anmeldung, Datenbank oder Nutzungsanalyse.
+- Nutzinhalte werden lokal im Browser verarbeitet.
+- Es gibt keine Anmeldung, Datenbank oder serverseitige Speicherung von
+  Nutzinhalten.
+- Cloudflare verarbeitet technische Verbindungs- und statistische
+  Web-Analytics-Daten.
 - Die Oberfläche verwendet neutrale Bezeichnungen und generische Icons.
 - Bestehende Plattformen werden nicht pixelgenau kopiert.
-- Ergebnisse können als Bild oder bearbeitbare Konfiguration gespeichert werden.
+- Exporte werden sichtbar als Simulation gekennzeichnet.
 
 ## Entwicklungsstand
 
-Der aktuelle Stand enthält Foto-Post, Messenger-Chat und Mikroblog. Alle drei
-Module unterstützen Live-Vorschau, lokale Bilder, Konfigurationsdateien sowie
-PNG- und JPG-Export.
+Foto-Post, Messenger-Chat und Mikroblog unterstützen Live-Vorschau, lokale
+Bilder, Konfigurationsdateien sowie PNG-, JPG- und PDF-Export.
 
 ## Quellcode
 

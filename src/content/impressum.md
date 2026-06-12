@@ -1,23 +1,21 @@
 ## Angaben gemäß § 5 DDG
 
-Christian Haake
+Christian Haake  
+Alte Ziegelei 7  
+26197 Großenkneten  
+Deutschland
 
-**Vor einer öffentlichen Freigabe noch zu ergänzen:**
+E-Mail: [christianhaake@gmail.com](mailto:christianhaake@gmail.com)
 
-- vollständige ladungsfähige Anschrift
-- E-Mail-Adresse
-- gegebenenfalls weitere berufs- oder organisationsbezogene Pflichtangaben
+## Inhaltlich verantwortlich gemäß § 18 Abs. 2 MStV
 
-## Inhaltlich verantwortlich
-
-Christian Haake
-
-Die erforderliche Anschrift gemäß § 18 Abs. 2 MStV muss noch ergänzt werden,
-sofern die Vorschrift auf dieses Angebot anwendbar ist.
+Christian Haake  
+Alte Ziegelei 7  
+26197 Großenkneten  
+Deutschland
 
 ## Quellcode
 
 [github.com/ChristianHaake/SocialMediaCreator](https://github.com/ChristianHaake/SocialMediaCreator)
 
-Diese Impressumsseite ist technisch eingebunden, aber wegen der fehlenden
-Kontakt- und Adressangaben noch nicht vollständig.
+Stand: 12. Juni 2026
