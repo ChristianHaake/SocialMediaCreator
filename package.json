@@ -1,7 +1,7 @@
 {
   "name": "social-media-creator",
   "private": true,
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "Educational browser workshop for creating fictional social-media simulations.",
   "license": "GPL-3.0-only",
   "homepage": "https://smc.haak3.de",

@@ -11,6 +11,8 @@ Das Projekt verwendet [Semantic Versioning](https://semver.org/lang/de/).
 Neue Änderungen werden zuerst in diesem Abschnitt eingetragen und bei einer
 Veröffentlichung in eine versionierte Sektion verschoben.
 
+## [1.0.0] - 2026-06-12
+
 ### Hinzugefügt
 
 - Klare Master-Detail-Eingabe für Foto-Post und Mikroblog mit getrennten
@@ -191,6 +193,7 @@ Veröffentlichung in eine versionierte Sektion verschoben.
 - Keine Anmeldung, Datenbank, Analyse oder Upload-Endpunkte.
 - Ablehnung unbekannter und fehlerhafter Konfigurationsdateien.
 
-[Unveröffentlicht]: https://github.com/ChristianHaake/SocialMediaCreator/compare/v0.2.0...HEAD
+[Unveröffentlicht]: https://github.com/ChristianHaake/SocialMediaCreator/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/ChristianHaake/SocialMediaCreator/compare/v0.2.0...v1.0.0
 [0.2.0]: https://github.com/ChristianHaake/SocialMediaCreator/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/ChristianHaake/SocialMediaCreator/releases/tag/v0.1.0
