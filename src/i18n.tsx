@@ -45,6 +45,9 @@ const de = {
   "app.notFound": "Seite nicht gefunden",
   "app.notFoundText":
     "Die angeforderte Seite existiert nicht. Kehre zur App zurück oder verwende einen Link aus der Fußnavigation.",
+  "education.notice":
+    "Diese Simulation dient ausschließlich dem Bildungszweck.",
+  "education.learnMore": "Verantwortungsvoller Einsatz",
   "module.photo": "Foto-Post",
   "module.messenger": "Messenger-Chat",
   "module.microblog": "Mikroblog",
@@ -205,6 +208,9 @@ const de = {
   "footer.help": "Hilfe",
   "footer.about": "Über das Projekt",
   "footer.verify": "Bild verifizieren",
+  "footer.educators": "Hinweise für Lehrkräfte",
+  "footer.responsible": "Verantwortungsvoller Einsatz",
+  "footer.terms": "Nutzungsbedingungen",
   "footer.privacy": "Datenschutz",
   "footer.legal": "Impressum",
   "content.back": "Zurück zur App",
@@ -216,13 +222,25 @@ const de = {
   "teacher.title": "Hinweise für Lehrkräfte",
   "teacher.close": "Dialog schließen",
   "teacher.item1": "Texte und ausgewählte Bilder werden nicht hochgeladen.",
-  "teacher.item2": "Es gibt keine Anmeldung, Datenbank oder Nutzungsanalyse.",
+  "teacher.item2":
+    "Es gibt keine Anmeldung, Datenbank oder serverseitige Speicherung von Nutzinhalten.",
   "teacher.item3":
     "Konfigurationen und Bilder werden ausschließlich lokal erzeugt.",
   "teacher.item4":
     "Das Werkzeug eignet sich für fiktive Beiträge, Rollenarbeit, Medienanalyse und Quellenkritik.",
   "teacher.note":
-    "Verwende keine echten personenbezogenen Daten oder privaten Chatverläufe. Technische Verbindungsdaten entstehen beim Abruf der Website über den Hosting-Anbieter.",
+    "Verwende keine echten personenbezogenen Daten oder privaten Chatverläufe. Technische Verbindungs- und Analysedaten entstehen beim Abruf über Cloudflare.",
+  "teacher.more": "Vollständige Hinweise für Lehrkräfte",
+  "export.kicker": "Verantwortungsvoll exportieren",
+  "export.title": "Hinweis vor dem Export",
+  "export.close": "Exportdialog schließen",
+  "export.message":
+    "Der Export ist eine Simulation für den Bildungszweck. Verwende ihn nicht zur Täuschung, Herabwürdigung oder Darstellung realer Personen ohne deren Zustimmung.",
+  "export.termsLink": "Nutzungsbedingungen lesen",
+  "export.consent":
+    "Ich habe die Nutzungsbedingungen gelesen und verwende den Export verantwortungsvoll.",
+  "export.cancel": "Abbrechen",
+  "export.continue": "Export fortsetzen",
   "verify.title": "Bild verifizieren",
   "verify.description":
     "Prüfe lokal, ob eine PNG- oder JPG-Datei einen intakten SocialMediaCreator-Herkunftsmarker enthält. Die Datei wird nicht hochgeladen.",
@@ -284,6 +302,9 @@ const en: Record<TranslationKey, string> = {
   "app.notFound": "Page not found",
   "app.notFoundText":
     "The requested page does not exist. Return to the app or use a footer link.",
+  "education.notice":
+    "This simulation is intended exclusively for educational purposes.",
+  "education.learnMore": "Responsible use",
   "module.photo": "Photo post",
   "module.messenger": "Messenger chat",
   "module.microblog": "Microblog",
@@ -431,6 +452,9 @@ const en: Record<TranslationKey, string> = {
   "footer.help": "Help",
   "footer.about": "About the project",
   "footer.verify": "Verify image",
+  "footer.educators": "Information for educators",
+  "footer.responsible": "Responsible use",
+  "footer.terms": "Terms of use",
   "footer.privacy": "Privacy",
   "footer.legal": "Legal notice",
   "content.back": "Back to the app",
@@ -442,12 +466,24 @@ const en: Record<TranslationKey, string> = {
   "teacher.title": "Information for educators",
   "teacher.close": "Close dialog",
   "teacher.item1": "Text and selected images are not uploaded.",
-  "teacher.item2": "There is no account, database, or usage analytics.",
+  "teacher.item2":
+    "There is no account, database, or server-side storage of user content.",
   "teacher.item3": "Configurations and images are created locally.",
   "teacher.item4":
     "The tool supports fictional posts, role play, media analysis, and source criticism.",
   "teacher.note":
-    "Do not use real personal data or private conversations. Technical connection data is generated when the hosting provider serves the website.",
+    "Do not use real personal data or private conversations. Technical connection and analytics data is generated when Cloudflare serves the website.",
+  "teacher.more": "Full information for educators",
+  "export.kicker": "Export responsibly",
+  "export.title": "Notice before export",
+  "export.close": "Close export dialog",
+  "export.message":
+    "The export is a simulation for educational purposes. Do not use it to deceive, demean, or depict real people without their consent.",
+  "export.termsLink": "Read the terms of use",
+  "export.consent":
+    "I have read the terms of use and will use the export responsibly.",
+  "export.cancel": "Cancel",
+  "export.continue": "Continue export",
   "verify.title": "Verify image",
   "verify.description":
     "Check locally whether a PNG or JPG file contains an intact SocialMediaCreator origin marker. The file is not uploaded.",

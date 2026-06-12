@@ -13,6 +13,13 @@ Veröffentlichung in eine versionierte Sektion verschoben.
 
 ### Hinzugefügt
 
+- Sichtbarer Bildungs-Disclaimer auf allen Generatoransichten.
+- Zweisprachige Seiten für Lehrkräfte, verantwortungsvollen Einsatz und
+  Nutzungsbedingungen mit fünf Unterrichtsszenarien und FAQ.
+- Verpflichtender Exporthinweis mit erstmaliger, lokal gespeicherter
+  Zustimmung.
+- Nicht deaktivierbare sichtbare Simulationskennzeichnung in PNG, JPG und auf
+  jeder PDF-Seite.
 - Vollständige deutsche und englische Oberfläche inklusive Vorschauen,
   Dialogen, Verifikation und Inhaltsseiten.
 - Sprachwahl über Browserpräferenz und Header-Umschalter mit lokaler
@@ -59,6 +66,9 @@ Veröffentlichung in eine versionierte Sektion verschoben.
 
 ### Geändert
 
+- Impressum, Datenschutz und Projektbeschreibung enthalten vollständige
+  Betreiber-, Cloudflare-Workers- und Web-Analytics-Angaben.
+- Der Lehrkräfte-Kurzdialog verlinkt auf die vollständige Informationsseite.
 - Config V5 wird beim Import als deutsches Config-V6-Projekt übernommen.
 - Datums- und Zahlenformatierung folgt der gewählten Sprache.
 - Neue Elemente und Zurücksetzen verwenden lokalisierte Standardinhalte,

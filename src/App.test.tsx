@@ -12,6 +12,13 @@ import { App } from "./App";
 
 beforeEach(() => {
   window.localStorage.setItem("social-media-creator-locale", "de");
+  window.localStorage.setItem(
+    "social-media-creator-export-consent",
+    JSON.stringify({
+      version: 1,
+      acceptedAt: "2026-06-12T00:00:00.000Z",
+    }),
+  );
 });
 
 afterEach(() => {
@@ -22,6 +29,43 @@ afterEach(() => {
 });
 
 describe("App", () => {
+  it("shows the educational simulation notice on the generator", () => {
+    render(<App />);
+
+    expect(
+      screen.getByText(
+        "Diese Simulation dient ausschließlich dem Bildungszweck.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(
+        document.querySelector(".education-notice") as HTMLElement,
+      ).getByRole("link", { name: "Verantwortungsvoller Einsatz" }),
+    ).toHaveAttribute("href", "/verantwortungsvoll");
+  });
+
+  it("requires active consent before the first export", async () => {
+    window.localStorage.removeItem("social-media-creator-export-consent");
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "PNG" }));
+    const continueButton = screen.getByRole("button", {
+      name: "Export fortsetzen",
+    });
+    expect(continueButton).toBeDisabled();
+    expect(
+      screen.getByRole("link", { name: "Nutzungsbedingungen lesen" }),
+    ).toHaveAttribute("href", "/nutzungsbedingungen");
+
+    await user.click(
+      screen.getByLabelText(
+        "Ich habe die Nutzungsbedingungen gelesen und verwende den Export verantwortungsvoll.",
+      ),
+    );
+    expect(continueButton).toBeEnabled();
+  });
+
   it("detects English from the browser when no preference is stored", () => {
     window.localStorage.clear();
     vi.spyOn(window.navigator, "language", "get").mockReturnValue("en-US");
@@ -119,12 +163,16 @@ describe("App", () => {
     );
 
     expect(document.querySelectorAll(".photo-post")).toHaveLength(2);
-    const previews = document.querySelectorAll(".photo-post");
+    const previews = Array.from(document.querySelectorAll(".photo-post"));
+    const newPreview = previews.find((preview) =>
+      preview.textContent?.includes("Zweiter Foto-Beitrag"),
+    );
+    expect(newPreview).toBeDefined();
     expect(
-      within(previews[1] as HTMLElement).getByText("Zweiter Foto-Beitrag"),
+      within(newPreview as HTMLElement).getByText("Zweiter Foto-Beitrag"),
     ).toBeInTheDocument();
     expect(
-      within(previews[1] as HTMLElement).getByText(
+      within(newPreview as HTMLElement).getByText(
         "Kommentar am zweiten Beitrag",
       ),
     ).toBeInTheDocument();
@@ -231,7 +279,22 @@ describe("App", () => {
     expect(
       screen.getByRole("heading", { level: 1, name: "Datenschutz" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Hosting und technische Verbindungsdaten")).toBeInTheDocument();
+    expect(screen.getByText("4. Bereitstellung über Cloudflare")).toBeInTheDocument();
+  });
+
+  it("renders educator, responsible-use and terms content", () => {
+    window.history.replaceState({}, "", "/lehrkraefte");
+    const { unmount } = render(<App />);
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Hinweise für Lehrkräfte" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Unterrichtsszenario 5: Plattformmechaniken")).toBeInTheDocument();
+    unmount();
+
+    window.history.replaceState({}, "", "/nutzungsbedingungen");
+    render(<App />);
+    expect(screen.getByText("Identitätsmissbrauch oder Nachahmung realer Personen ohne Erlaubnis")).toBeInTheDocument();
+    expect(screen.getByText("Cybermobbing, Belästigung, Einschüchterung oder Diskriminierung")).toBeInTheDocument();
   });
 
   it("renders an application-level not-found page", () => {
@@ -428,14 +491,20 @@ describe("App", () => {
     );
 
     expect(document.querySelectorAll(".microblog-preview")).toHaveLength(2);
-    const previews = document.querySelectorAll(".microblog-preview");
+    const previews = Array.from(
+      document.querySelectorAll(".microblog-preview"),
+    );
+    const newPreview = previews.find((preview) =>
+      preview.textContent?.includes("Zweiter Mikroblog-Beitrag"),
+    );
+    expect(newPreview).toBeDefined();
     expect(
-      within(previews[1] as HTMLElement).getByText(
+      within(newPreview as HTMLElement).getByText(
         "Zweiter Mikroblog-Beitrag",
       ),
     ).toBeInTheDocument();
     expect(
-      within(previews[1] as HTMLElement).getByText(
+      within(newPreview as HTMLElement).getByText(
         "Antwort am zweiten Beitrag",
       ),
     ).toBeInTheDocument();

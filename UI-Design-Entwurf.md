@@ -200,12 +200,14 @@ Ein beschrifteter Button **Für Lehrkräfte** öffnet ein Dialogfenster mit:
 
 - Alle Daten bleiben lokal im Browser.
 - Bilder werden nicht hochgeladen.
-- Es gibt keine Anmeldung, Datenbank oder Analyse.
+- Es gibt keine Anmeldung, Datenbank oder serverseitige Speicherung von
+  Nutzinhalten.
 - Das Werkzeug eignet sich für fiktive Beiträge, Rollenarbeit, Medienanalyse
   und Quellenkritik.
 - Es sollen keine echten personenbezogenen Daten verwendet werden.
 
-Ein eigenes Lehrkräfte-Dashboard ist nicht vorgesehen.
+Der Kurzdialog verlinkt auf eine vollständige Lehrkräfteseite mit Szenarien,
+Risiken, Rechten und FAQ.
 
 ## 10. Visuelles System
 
@@ -261,8 +263,9 @@ bekannter Plattformen werden nicht exakt übernommen.
 
 ## 13. Inhaltsseiten
 
-Footerlinks führen zu gemeinsamen Markdown-Seiten für Hilfe, Über das Projekt,
-Impressum und Datenschutz. Jede Seite enthält:
+Footerlinks führen zu gemeinsamen Markdown-Seiten für Hilfe, Lehrkräfte,
+verantwortungsvollen Einsatz, Nutzungsbedingungen, Über das Projekt, Impressum
+und Datenschutz. Jede Seite enthält:
 
 - Seitentitel
 - gut sichtbaren Link zurück zur App

@@ -7,8 +7,9 @@ Mockups digitaler Kommunikationsformate. Sie richtet sich an Lernende und
 Lehrkräfte.
 
 Alle Inhalte werden ausschließlich im Browser verarbeitet. Es gibt kein
-Backend, keine Datenbank, keine Anmeldung, kein Tracking und keinen Upload.
+Backend, keine Datenbank, keine Anmeldung und keinen Upload von Nutzinhalten.
 Die Anwendung wird als statische Website über Cloudflare Workers ausgeliefert.
+Cloudflare Web Analytics erfasst statistische Nutzungsdaten.
 
 Die App-Oberfläche und die Mockups verwenden neutrale Bezeichnungen, eigene
 Farbvarianten und generische Icons. Sie orientieren sich an bekannten
@@ -121,6 +122,10 @@ Die aktuelle Vorschau kann als PNG oder JPG heruntergeladen werden.
 - PNG verwendet einen undurchsichtigen Hintergrund.
 - JPG verwendet einen weißen Hintergrund und eine festgelegte hohe Qualität.
 - Der Export enthält nur das Mockup, nicht Editor, Navigation oder Footer.
+- Jeder Export enthält die nicht deaktivierbare sichtbare Kennzeichnung
+  `SocialMediaCreator · Simulation`.
+- Vor jedem Export erscheint ein Hinweisdialog; vor dem ersten Export ist eine
+  lokal gespeicherte aktive Zustimmung erforderlich.
 - Dateiname, Ausgabegröße und Skalierungsfaktor sind für jedes Modul
   deterministisch.
 - Lange Messenger-Verläufe werden vollständig exportiert und nicht an der
@@ -141,8 +146,9 @@ den Beispieldaten verändert wurde.
   gestapelten Seite.
 - Exportaktionen bleiben auf kleinen Bildschirmen gut erreichbar.
 - Die Modulnavigation ist als tastaturbedienbare Tab-Leiste umgesetzt.
-- Statische Inhaltsseiten für Hilfe, Projektinformationen, Impressum und
-  Datenschutz sind über einen Footer erreichbar.
+- Statische Inhaltsseiten für Hilfe, Lehrkräfte, verantwortungsvollen Einsatz,
+  Nutzungsbedingungen, Projektinformationen, Impressum und Datenschutz sind
+  über den Footer erreichbar.
 - Die Inhaltsseiten werden aus Markdown-Dateien unter `src/content/` gebaut.
 - Cloudflare Workers liefert für SPA-Routen den Einstiegspunkt aus; ein
   `HashRouter` ist nicht erforderlich.
@@ -183,7 +189,9 @@ die serialisierbaren Konfigurationstypen.
 
 - Die App funktioniert nach dem initialen Laden ohne Netzwerkzugriff.
 - Eingaben, Bilder, Konfigurationen und Exporte verlassen das Gerät nicht.
-- Es existieren keine Tracking-, Analyse- oder Upload-Endpunkte.
+- Es existieren keine Upload-Endpunkte für Nutzinhalte.
+- Cloudflare Workers und Cloudflare Web Analytics sind in der
+  Datenschutzerklärung dokumentiert.
 
 ### Konfigurationsdateien
 

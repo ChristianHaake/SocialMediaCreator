@@ -6,6 +6,7 @@ export type ExportFormat = ImageExportFormat | "pdf";
 
 const exportWidth = 1080;
 const markerMagic = new TextEncoder().encode("SMC-MARKER-V1");
+export const exportBadgeText = "SocialMediaCreator · Simulation";
 
 export type ImageMarker = {
   appId: "SocialMediaCreator";
@@ -91,6 +92,31 @@ async function renderElementBlob(
     cacheBust: true,
     pixelRatio: scale,
   };
+  const badge = document.createElement("div");
+  badge.dataset.exportBadge = "true";
+  badge.textContent = exportBadgeText;
+  Object.assign(badge.style, {
+    position: "absolute",
+    right: "12px",
+    bottom: "12px",
+    zIndex: "2147483647",
+    padding: "7px 10px",
+    border: "1px solid rgba(255, 255, 255, 0.45)",
+    borderRadius: "7px",
+    color: "#ffffff",
+    background: "rgba(17, 24, 39, 0.88)",
+    fontFamily: "Arial, sans-serif",
+    fontSize: "12px",
+    fontWeight: "700",
+    lineHeight: "1",
+    letterSpacing: "0.01em",
+    pointerEvents: "none",
+  });
+  const previousPosition = element.style.position;
+  if (getComputedStyle(element).position === "static") {
+    element.style.position = "relative";
+  }
+  element.append(badge);
   element.dataset.exporting = "true";
   try {
     const dataUrl =
@@ -99,6 +125,8 @@ async function renderElementBlob(
         : await toJpeg(element, { ...commonOptions, quality: 0.92 });
     return dataUrlToBlob(dataUrl);
   } finally {
+    badge.remove();
+    element.style.position = previousPosition;
     delete element.dataset.exporting;
   }
 }
@@ -205,8 +233,16 @@ export async function exportElementAsPdf(
   const pageHeight = 297;
   const margin = 10;
   const contentWidth = pageWidth - margin * 2;
-  const contentHeight = pageHeight - margin * 2;
+  const contentHeight = pageHeight - margin * 2 - 7;
   let pageCount = 0;
+
+  function addExportFooter() {
+    pdf.setFontSize(8);
+    pdf.setTextColor(90, 96, 106);
+    pdf.text(exportBadgeText, pageWidth - margin, pageHeight - 5, {
+      align: "right",
+    });
+  }
 
   async function addRenderedPage(
     dataUrl: string,
@@ -228,6 +264,7 @@ export async function exportElementAsPdf(
         image.width * scale,
         image.height * scale,
       );
+      addExportFooter();
       return;
     }
 
@@ -271,6 +308,7 @@ export async function exportElementAsPdf(
         contentWidth,
         contentWidth * (slice.height / image.width),
       );
+      addExportFooter();
     }
   }
 
