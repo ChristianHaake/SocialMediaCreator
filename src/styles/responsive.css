@@ -137,6 +137,11 @@
     flex-direction: column;
   }
 
+  .app-footer__right {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .app-footer nav {
     justify-content: flex-start;
   }
