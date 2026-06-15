@@ -8,7 +8,6 @@ import {
   RotateCcw,
 } from "lucide-react";
 import {
-  type ChangeEvent,
   type KeyboardEvent,
   useRef,
   useState,
@@ -27,44 +26,19 @@ import { PhotoPostPreview } from "../features/photo-post/PhotoPostPreview";
 import { TeacherInfoDialog } from "./components/TeacherInfoDialog";
 import { VerificationPage } from "../features/verification/VerificationPage";
 import { contentPages, isContentPath } from "../content";
-import { getTranslation, LocaleProvider, useTranslation } from "../i18n";
-import type { TranslationKey } from "../i18n/de";
+import { LocaleProvider, useTranslation } from "../i18n";
 import type { ModuleType } from "../domain/types";
 import {
   getDefaultMessenger,
   getDefaultMicroblog,
   getDefaultPhotoPost,
 } from "../domain/types";
-import {
-  ConfigFileError,
-  readConfigFile,
-} from "../shared/lib/configFiles";
-import {
-  hasExportConsent,
-  storeExportConsent,
-} from "../shared/lib/exportConsent";
-import {
-  exportElementAsImage,
-  exportElementAsPdf,
-  type ExportFormat,
-  type ImageExportFormat,
-} from "../shared/lib/exportImage";
 import { useProjectImages } from "./useProjectImages";
-import type { ProjectArchiveResult } from "../shared/lib/projectArchives";
+import { useProjectStorage } from "./useProjectStorage";
+import { useExportController } from "./useExportController";
 
 type MobileView = "editor" | "preview";
 
-function getProjectErrorCode(error: unknown): TranslationKey | null {
-  if (
-    error instanceof Error &&
-    "code" in error &&
-    typeof error.code === "string" &&
-    error.code.startsWith("project.")
-  ) {
-    return error.code as TranslationKey;
-  }
-  return null;
-}
 
 function AppContent() {
   const { locale, setLocale, t } = useTranslation();
@@ -93,20 +67,56 @@ function AppContent() {
   } = useProjectImages();
   const [mobileView, setMobileView] = useState<MobileView>("editor");
   const [imageError, setImageError] = useState<string | null>(null);
-  const [exportError, setExportError] = useState<string | null>(null);
-  const [configStatus, setConfigStatus] = useState<{
-    type: "success" | "error";
-    message: string;
-  } | null>(null);
-  const [exporting, setExporting] = useState<ExportFormat | null>(null);
-  const [projectOperation, setProjectOperation] = useState<
-    "saving" | "loading" | null
-  >(null);
-  const [pendingExport, setPendingExport] = useState<ExportFormat | null>(null);
-  const [exportConsentRequired, setExportConsentRequired] = useState(false);
   const [teacherInfoOpen, setTeacherInfoOpen] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
   const configInputRef = useRef<HTMLInputElement>(null);
+
+  const {
+    projectOperation,
+    configStatus,
+    setConfigStatus,
+    handleProjectDownload,
+    handleProjectUpload,
+  } = useProjectStorage({
+    locale,
+    setLocale,
+    t,
+    activeModule,
+    setActiveModule,
+    setMobileView,
+    setImageError,
+    isModuleChanged,
+    photoPost,
+    messenger,
+    microblog,
+    setPhotoPost,
+    setMessenger,
+    setMicroblog,
+    initialPhotoPost,
+    initialMessenger,
+    initialMicroblog,
+    photoImages,
+    messengerImages,
+    microblogImages,
+    replaceModuleImages,
+    clearModuleImages,
+  });
+
+  const {
+    exporting,
+    exportError,
+    setExportError,
+    pendingExport,
+    exportConsentRequired,
+    requestExport,
+    confirmExport,
+    cancelExport,
+  } = useExportController({
+    previewRef,
+    activeModule,
+    locale,
+    t,
+  });
   const moduleTabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const pathname =
     window.location.pathname.length > 1
@@ -225,188 +235,6 @@ function AppContent() {
     setConfigStatus(null);
   }
 
-  async function handleProjectDownload() {
-    if (projectOperation) return;
-    const data =
-      activeModule === "photoPost"
-        ? photoPost
-        : activeModule === "messenger"
-          ? messenger
-          : microblog;
-    const images =
-      activeModule === "photoPost"
-        ? photoImages
-        : activeModule === "messenger"
-          ? messengerImages
-          : microblogImages;
-    setConfigStatus(null);
-    setProjectOperation("saving");
-    try {
-      const { createProjectArchive, downloadProjectArchive } = await import(
-        "../shared/lib/projectArchives"
-      );
-      const archive = await createProjectArchive(
-        activeModule,
-        data,
-        locale,
-        images,
-      );
-      downloadProjectArchive(archive, activeModule);
-      setConfigStatus({
-        type: "success",
-        message: t("app.saved"),
-      });
-    } catch (error) {
-      const projectErrorCode = getProjectErrorCode(error);
-      setConfigStatus({
-        type: "error",
-        message: projectErrorCode
-          ? t(projectErrorCode)
-          : t("project.saveFailed"),
-      });
-    } finally {
-      setProjectOperation(null);
-    }
-  }
-
-  async function handleProjectUpload(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-    if (!file || projectOperation) return;
-
-    setConfigStatus(null);
-    setProjectOperation("loading");
-
-    try {
-      const legacyJson =
-        file.name.toLowerCase().endsWith(".json") ||
-        file.type === "application/json";
-      let archiveResult: ProjectArchiveResult | null = null;
-      let disposeImportedImages:
-        | ((images: ProjectArchiveResult["images"]) => void)
-        | null = null;
-      if (!legacyJson) {
-        const archiveTools = await import("../shared/lib/projectArchives");
-        archiveResult = await archiveTools.readProjectArchive(file);
-        disposeImportedImages = archiveTools.disposeProjectImages;
-      }
-      const config = archiveResult?.config ?? (await readConfigFile(file));
-      if (
-        isModuleChanged(config.module) &&
-        !window.confirm(
-          t("app.loadConfirm"),
-        )
-      ) {
-        if (archiveResult) disposeImportedImages?.(archiveResult.images);
-        return;
-      }
-
-      if (config.module === "photoPost") {
-        initialPhotoPost.current = config.data;
-        setPhotoPost(config.data);
-      } else if (config.module === "messenger") {
-        initialMessenger.current = config.data;
-        setMessenger(config.data);
-      } else {
-        initialMicroblog.current = config.data;
-        setMicroblog(config.data);
-      }
-
-      setLocale(config.locale);
-      if (archiveResult) {
-        replaceModuleImages(config.module, archiveResult.images);
-      } else {
-        clearModuleImages(config.module);
-      }
-      setActiveModule(config.module);
-      setMobileView("editor");
-      setImageError(null);
-      setConfigStatus({
-        type: "success",
-        message: getTranslation(config.locale, "app.loaded"),
-      });
-    } catch (error) {
-      const projectErrorCode = getProjectErrorCode(error);
-      setConfigStatus({
-        type: "error",
-        message:
-          error instanceof ConfigFileError
-            ? t(error.code)
-            : projectErrorCode
-              ? t(projectErrorCode)
-            : t("config.loadFailed"),
-      });
-    } finally {
-      setProjectOperation(null);
-    }
-  }
-
-  function requestExport(format: ExportFormat) {
-    if (exporting) return;
-    setExportConsentRequired(!hasExportConsent());
-    setPendingExport(format);
-  }
-
-  function confirmExport() {
-    if (!pendingExport) return;
-    if (exportConsentRequired) storeExportConsent();
-
-    const format = pendingExport;
-    setPendingExport(null);
-    if (format === "pdf") {
-      void performPdfExport();
-    } else {
-      void performImageExport(format);
-    }
-  }
-
-  async function performImageExport(format: ImageExportFormat) {
-    if (!previewRef.current || exporting) return;
-
-    setExportError(null);
-    setExporting(format);
-    try {
-      await exportElementAsImage(
-        previewRef.current,
-        format,
-        activeModule === "photoPost"
-          ? "social-media-creator-foto-post"
-          : activeModule === "messenger"
-            ? "social-media-creator-messenger-chat"
-            : "social-media-creator-mikroblog",
-        activeModule,
-      );
-    } catch {
-      setExportError(
-        t("app.imageExportError"),
-      );
-    } finally {
-      setExporting(null);
-    }
-  }
-
-  async function performPdfExport() {
-    if (!previewRef.current || exporting) return;
-    setExportError(null);
-    setExporting("pdf");
-    try {
-      await exportElementAsPdf(
-        previewRef.current,
-        activeModule === "photoPost"
-          ? "social-media-creator-foto-post"
-          : activeModule === "messenger"
-            ? "social-media-creator-messenger-chat"
-            : "social-media-creator-mikroblog",
-        locale,
-      );
-    } catch {
-      setExportError(
-        t("app.pdfExportError"),
-      );
-    } finally {
-      setExporting(null);
-    }
-  }
 
   function renderEditor() {
     if (activeModule === "photoPost") {
@@ -723,7 +551,7 @@ function AppContent() {
         open={teacherInfoOpen}
       />
       <ExportNoticeDialog
-        onCancel={() => setPendingExport(null)}
+        onCancel={cancelExport}
         onConfirm={confirmExport}
         open={pendingExport !== null}
         requiresConsent={exportConsentRequired}
