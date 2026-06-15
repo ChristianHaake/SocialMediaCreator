@@ -1,3 +1,4 @@
+import { Coffee } from "lucide-react";
 import { useTranslation } from "../../i18n";
 
 export function AppFooter() {
@@ -20,6 +21,15 @@ export function AppFooter() {
           target="_blank"
         >
           GitHub
+        </a>
+        <a
+          className="app-footer__coffee"
+          href="https://buymeacoffee.com/Haake"
+          rel="noreferrer"
+          target="_blank"
+        >
+          <Coffee aria-hidden="true" size={16} />
+          {t("footer.coffee")}
         </a>
       </nav>
     </footer>

@@ -99,6 +99,9 @@ export type ImageState = {
   fileName: string;
   blob: Blob;
   url: string;
+  /** True when `blob` is already downscaled/encoded for archiving (e.g. loaded
+   * from a project archive), so saving must not re-run lossy optimization. */
+  optimized?: boolean;
 };
 
 export type PhotoPostImages = Record<

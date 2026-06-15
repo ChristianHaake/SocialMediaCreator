@@ -218,6 +218,7 @@ export const de = {
   "footer.terms": "Nutzungsbedingungen",
   "footer.privacy": "Datenschutz",
   "footer.legal": "Impressum",
+  "footer.coffee": "Spendier mir einen Kaffee",
   "content.back": "Zurück zur App",
   "content.help": "Hilfe",
   "content.about": "Über das Projekt",
