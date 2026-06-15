@@ -216,7 +216,9 @@ export async function createProjectArchive(
   let totalSize = 0;
 
   for (const [index, item] of media.entries()) {
-    const optimized = await optimizeImage(item.image.blob);
+    const optimized = item.image.optimized
+      ? item.image.blob
+      : await optimizeImage(item.image.blob);
     if (optimized.size > maxImageSize) {
       throw new ProjectArchiveError("project.tooLarge");
     }
@@ -521,10 +523,12 @@ export async function readProjectArchive(file: File): Promise<ProjectArchiveResu
   }
   const bytes = new Uint8Array(await file.arrayBuffer());
   const centralEntries = readCentralDirectory(bytes);
+  if (centralEntries.length === 0) {
+    throw new ProjectArchiveError("project.invalidArchive");
+  }
   if (
-    centralEntries.length === 0 ||
     centralEntries.reduce((sum, entry) => sum + entry.uncompressedSize, 0) >
-      maxProjectSize
+    maxProjectSize
   ) {
     throw new ProjectArchiveError("project.tooLarge");
   }
@@ -580,12 +584,13 @@ export async function readProjectArchive(file: File): Promise<ProjectArchiveResu
       if (await validateImageFile(mediaFile)) {
         throw new ProjectArchiveError("project.invalidMedia");
       }
-      installImage(
-        images,
-        manifest.config,
-        entry.reference,
-        createImageState(mediaFile),
-      );
+      const image = createImageState(mediaFile, undefined, true);
+      try {
+        installImage(images, manifest.config, entry.reference, image);
+      } catch (installError) {
+        URL.revokeObjectURL(image.url);
+        throw installError;
+      }
     }
   } catch (error) {
     disposeProjectImages(images);
