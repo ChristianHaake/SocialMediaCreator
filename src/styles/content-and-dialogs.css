@@ -76,6 +76,23 @@
   text-underline-offset: 3px;
 }
 
+.app-footer__coffee {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 12px;
+  border: 1px solid #000;
+  border-radius: 999px;
+  background: #ffdd00;
+  color: #000;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.app-footer__coffee:hover {
+  background: #ffe838;
+}
+
 .content-shell {
   width: min(880px, calc(100% - 32px));
   padding: 48px 0 72px;

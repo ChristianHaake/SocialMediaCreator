@@ -84,11 +84,16 @@ export async function validateImageFile(
   return null;
 }
 
-export function createImageState(blob: Blob, fileName?: string): ImageState {
+export function createImageState(
+  blob: Blob,
+  fileName?: string,
+  optimized = false,
+): ImageState {
   return {
     blob,
     fileName: fileName ?? (blob instanceof File ? blob.name : "image.webp"),
     url: URL.createObjectURL(blob),
+    optimized,
   };
 }
 

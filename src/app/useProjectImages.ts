@@ -52,24 +52,6 @@ export function useProjectImages() {
     [],
   );
 
-  function hasModuleImages(module: ModuleType) {
-    if (module === "photoPost") {
-      return Object.values(photoImages).some(
-        ({ profileImage, media, commentImages }) =>
-          profileImage ||
-          Object.keys(media).length > 0 ||
-          Object.keys(commentImages).length > 0,
-      );
-    }
-    if (module === "messenger") {
-      return Object.keys(messengerImages).length > 0;
-    }
-    return Object.values(microblogImages).some(
-      ({ profileImage, commentImages }) =>
-        profileImage || Object.keys(commentImages).length > 0,
-    );
-  }
-
   function clearModuleImages(module: ModuleType) {
     if (module === "photoPost") {
       revokePhotoImages(photoImagesRef.current);
@@ -282,7 +264,6 @@ export function useProjectImages() {
     photoImages,
     messengerImages,
     microblogImages,
-    hasModuleImages,
     clearModuleImages,
     replaceModuleImages,
     setPhotoImage,

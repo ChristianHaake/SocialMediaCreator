@@ -202,6 +202,7 @@ export const en: Record<TranslationKey, string> = {
   "footer.terms": "Terms of use",
   "footer.privacy": "Privacy",
   "footer.legal": "Legal notice",
+  "footer.coffee": "Buy me a coffee",
   "content.back": "Back to the app",
   "content.help": "Help",
   "content.about": "About the project",
