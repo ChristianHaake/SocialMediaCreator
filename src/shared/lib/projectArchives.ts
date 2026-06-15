@@ -389,7 +389,7 @@ function parseManifest(bytes: Uint8Array): ProjectArchiveManifest {
   if (value.version !== 1) {
     throw new ProjectArchiveError("project.unsupportedVersion");
   }
-  if (!Array.isArray(value.media)) {
+  if (!Array.isArray(value.media) || !isRecord(value.config)) {
     throw new ProjectArchiveError("project.invalidManifest");
   }
   const config = parseConfig(JSON.stringify(value.config));
