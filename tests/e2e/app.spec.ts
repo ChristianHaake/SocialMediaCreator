@@ -256,19 +256,20 @@ test("teacher dialog traps and restores focus", async ({ page }) => {
   const trigger = page.getByRole("button", { name: "Für Lehrkräfte" });
   await trigger.click();
 
+  const teacherDialog = page.getByRole("dialog", {
+    name: "Hinweise für Lehrkräfte",
+  });
   const close = page.getByRole("button", { name: "Dialog schließen" });
   await expect(close).toBeFocused();
   await page.keyboard.press("Tab");
   expect(
-    await page.locator(".info-dialog").evaluate((dialog) =>
+    await teacherDialog.locator(".info-dialog").evaluate((dialog) =>
       dialog.contains(document.activeElement),
     ),
   ).toBe(true);
 
   await page.keyboard.press("Escape");
-  await expect(
-    page.getByRole("dialog", { name: "Hinweise für Lehrkräfte" }),
-  ).toBeHidden();
+  await expect(teacherDialog).toBeHidden();
   await expect(trigger).toBeFocused();
 });
 
@@ -600,7 +601,7 @@ test("photo image exports include uploaded media pixels", async ({
   }
 });
 
-test("carousel image export keeps the grid and media pixels", async ({
+test("carousel image export uses the selected medium", async ({
   browserName,
   page,
 }) => {
@@ -615,6 +616,11 @@ test("carousel image export keeps the grid and media pixels", async ({
     { red: 255, green: 0, blue: 0 },
     128,
   );
+  const greenPng = await createSolidColorPng(
+    page,
+    { red: 0, green: 255, blue: 0 },
+    128,
+  );
   await openSection(page, "Karussell");
   await page.locator("#post-image").setInputFiles({
     name: "red-1.png",
@@ -623,25 +629,11 @@ test("carousel image export keeps the grid and media pixels", async ({
   });
   await page.getByRole("button", { name: "Medium", exact: true }).click();
   await page.locator("#post-image").setInputFiles({
-    name: "red-2.png",
+    name: "green-2.png",
     mimeType: "image/png",
-    buffer: redPng,
+    buffer: greenPng,
   });
   await expect(page.locator(".photo-post__media img")).toHaveCount(2);
-
-  const grid = await page.locator(".photo-feed").evaluate((feed) => {
-    feed.setAttribute("data-exporting", "true");
-    const media = Array.from(
-      feed.querySelectorAll<HTMLElement>(".photo-post__media"),
-    );
-    const widths = media.map((item) =>
-      Math.round(item.getBoundingClientRect().width),
-    );
-    feed.removeAttribute("data-exporting");
-    return widths;
-  });
-  expect(grid).toHaveLength(2);
-  expect(grid[0]).toBe(grid[1]);
 
   const imageDownload = page.waitForEvent("download");
   await page.getByRole("button", { name: "PNG" }).click();
@@ -652,13 +644,13 @@ test("carousel image export keeps the grid and media pixels", async ({
   const bytes = new Uint8Array(await readFile(path!));
 
   const pixelResult = await imageHasPixelNearColor(page, bytes, {
-    red: 255,
-    green: 0,
+    red: 0,
+    green: 255,
     blue: 0,
   });
   expect(
     pixelResult.matchedPixels,
-    `Carousel PNG export did not contain uploaded red media pixels. Result: ${JSON.stringify(pixelResult)}`,
+    `Carousel PNG export did not contain the selected green media pixels. Result: ${JSON.stringify(pixelResult)}`,
   ).toBeGreaterThan(0);
 });
 

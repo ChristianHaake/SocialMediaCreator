@@ -304,7 +304,6 @@ function AppContent() {
             setPhotoPost((current) => ({ ...current, activePostId }));
             setMobileView("editor");
           }}
-          ref={previewRef}
           value={photoPost}
         />
       );
@@ -314,7 +313,6 @@ function AppContent() {
       return (
         <MessengerPreview
           images={messengerImages}
-          ref={previewRef}
           value={messenger}
         />
       );
@@ -327,7 +325,6 @@ function AppContent() {
           setMicroblog((current) => ({ ...current, activePostId }));
           setMobileView("editor");
         }}
-        ref={previewRef}
         value={microblog}
       />
     );
@@ -460,7 +457,9 @@ function AppContent() {
               <div
                 className={`preview-stage preview-stage--${activeModule}`}
               >
-                {renderPreview()}
+                <div className="export-wrapper" ref={previewRef}>
+                  {renderPreview()}
+                </div>
               </div>
 
               <div className="action-bar">
@@ -551,6 +550,7 @@ function AppContent() {
         open={teacherInfoOpen}
       />
       <ExportNoticeDialog
+        format={pendingExport}
         onCancel={cancelExport}
         onConfirm={confirmExport}
         open={pendingExport !== null}

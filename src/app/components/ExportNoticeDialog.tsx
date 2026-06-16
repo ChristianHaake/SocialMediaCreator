@@ -9,6 +9,7 @@ import { useTranslation } from "../../i18n";
 
 type ExportNoticeDialogProps = {
   open: boolean;
+  format: "png" | "jpg" | "pdf" | null;
   requiresConsent: boolean;
   onCancel: () => void;
   onConfirm: () => void;
@@ -16,6 +17,7 @@ type ExportNoticeDialogProps = {
 
 export function ExportNoticeDialog({
   open,
+  format,
   requiresConsent,
   onCancel,
   onConfirm,
@@ -100,6 +102,9 @@ export function ExportNoticeDialog({
         </div>
         <div className="info-dialog__content export-dialog__content">
           <p className="export-dialog__message">{t("export.message")}</p>
+          {format === "pdf" && (
+            <p className="export-dialog__message">{t("export.pdfScope")}</p>
+          )}
           <a href="/nutzungsbedingungen">{t("export.termsLink")}</a>
           {requiresConsent && (
             <label className="export-consent">

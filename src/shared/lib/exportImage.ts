@@ -214,10 +214,26 @@ async function inlineBlobImages(element: HTMLElement) {
 
     const previousSrc = image.getAttribute("src");
     const previousSrcset = image.getAttribute("srcset");
+    const previousWidth = image.getAttribute("width");
+    const previousHeight = image.getAttribute("height");
+    
     image.removeAttribute("srcset");
-    await setImageSourceAndWait(image, canvas.toDataURL("image/png"));
+    image.setAttribute("width", String(image.naturalWidth));
+    image.setAttribute("height", String(image.naturalHeight));
+    
+    // We convert the scaled canvas to a JPEG data URL to save memory,
+    // but we MUST convert it back to a blob URL. If we leave it as a data URL,
+    // html-to-image will skip `embedImages` for it and will NOT wait for it to
+    // decode in the cloned DOM, causing Safari to render it as completely blank.
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+    const blob = dataUrlToBlob(dataUrl);
+    const optimizedBlobUrl = URL.createObjectURL(blob);
+    
+    await setImageSourceAndWait(image, optimizedBlobUrl);
     await waitForRenderFrame();
+    
     restore.push(() => {
+      URL.revokeObjectURL(optimizedBlobUrl);
       if (previousSrc === null) {
         image.removeAttribute("src");
       } else {
@@ -227,6 +243,16 @@ async function inlineBlobImages(element: HTMLElement) {
         image.removeAttribute("srcset");
       } else {
         image.setAttribute("srcset", previousSrcset);
+      }
+      if (previousWidth === null) {
+        image.removeAttribute("width");
+      } else {
+        image.setAttribute("width", previousWidth);
+      }
+      if (previousHeight === null) {
+        image.removeAttribute("height");
+      } else {
+        image.setAttribute("height", previousHeight);
       }
     });
   }
@@ -239,7 +265,7 @@ async function inlineBlobImages(element: HTMLElement) {
 function getRenderOptions(element: HTMLElement) {
   return {
     backgroundColor: getExportBackground(element),
-    cacheBust: true,
+    cacheBust: false, // Must be false so html-to-image can fetch blob: URLs
     pixelRatio: exportWidth / Math.max(element.offsetWidth, 1),
   };
 }
@@ -278,7 +304,7 @@ async function renderElementBlob(
     element.style.position = "relative";
   }
   element.append(badge);
-  element.dataset.exporting = "true";
+  element.dataset.imageExporting = "true";
   const restoreBlobImages = await inlineBlobImages(element);
   try {
     const canvas = await renderElementCanvas(element);
@@ -291,7 +317,7 @@ async function renderElementBlob(
     restoreBlobImages();
     badge.remove();
     element.style.position = previousPosition;
-    delete element.dataset.exporting;
+    delete element.dataset.imageExporting;
   }
 }
 
@@ -480,12 +506,11 @@ export async function exportElementAsPdf(
   }
 
   const articles = Array.from(
-    element.querySelectorAll<HTMLElement>(
-      ":scope > .photo-post, :scope > .microblog-preview",
-    ),
+    element.querySelectorAll<HTMLElement>(".photo-post, .microblog-preview"),
   );
 
   const restoreBlobImages = await inlineBlobImages(element);
+  element.dataset.exporting = "true";
   try {
     if (articles.length === 0) {
       await addRenderedPage(await renderCurrentState(), {
@@ -538,6 +563,7 @@ export async function exportElementAsPdf(
       }
     }
   } finally {
+    delete element.dataset.exporting;
     restoreBlobImages();
   }
 

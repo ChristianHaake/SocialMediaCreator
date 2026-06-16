@@ -240,6 +240,8 @@ export const en: Record<TranslationKey, string> = {
   "export.close": "Close export dialog",
   "export.message":
     "The export is a simulation for educational purposes. Do not use it to deceive, demean, or depict real people without their consent.",
+  "export.pdfScope":
+    "PDF exports include all posts and media for the selected format.",
   "export.termsLink": "Read the terms of use",
   "export.consent":
     "I have read the terms of use and will use the export responsibly.",

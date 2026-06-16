@@ -116,6 +116,7 @@ npx playwright install chromium firefox webkit
 | `npm run preview` | Serve the production bundle locally |
 | `npm test` | Run unit and component tests with Vitest |
 | `npm run lint` | Run ESLint |
+| `npm run test:e2e:chromium` | Run the fast Chromium-only Playwright suite used by CI |
 | `npm run test:e2e` | Run Playwright tests in Chromium, Firefox, and WebKit |
 | `npm run verify` | Run tests, lint, build, and the complete E2E suite |
 | `npm run deploy` | Deploy the static application with Wrangler |
