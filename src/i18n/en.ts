@@ -194,6 +194,7 @@ export const en: Record<TranslationKey, string> = {
   "messenger.markSeen": "Mark as read or seen",
   "messenger.messages": "Messages",
   "messenger.messagesDescription": "Edit and arrange {count} messages",
+  "messenger.limitReached": "Maximum of 200 messages reached.",
   "messenger.empty": "No messages yet.",
   "messenger.message": "Message",
   "messenger.text": "Text",

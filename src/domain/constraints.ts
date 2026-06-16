@@ -29,5 +29,6 @@ export const fieldLimits = {
   microblog: {
     displayName: 50,
     handle: 30,
+    text: 1000,
   },
 } as const;

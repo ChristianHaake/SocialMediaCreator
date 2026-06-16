@@ -202,6 +202,7 @@ export const de = {
   "messenger.messages": "Nachrichten",
   "messenger.messagesDescription":
     "{count} Nachrichten bearbeiten und sortieren",
+  "messenger.limitReached": "Maximal 200 Nachrichten erreicht.",
   "messenger.empty": "Noch keine Nachrichten.",
   "messenger.message": "Nachricht",
   "messenger.text": "Text",
