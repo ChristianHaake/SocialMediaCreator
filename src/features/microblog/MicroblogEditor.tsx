@@ -194,8 +194,8 @@ export function MicroblogEditor({
             <p>
               {t(
                 value.posts.length === 1
-                  ? "photo.postsDescription.one"
-                  : "photo.postsDescription.other",
+                  ? "microblog.postsDescription.one"
+                  : "microblog.postsDescription.other",
                 { count: value.posts.length },
               )}
             </p>

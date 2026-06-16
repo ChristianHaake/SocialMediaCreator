@@ -160,6 +160,10 @@ export const de = {
   "microblog.timelineLayout": "Timeline-Darstellung",
   "microblog.feed": "Feed mit getrennten Beiträgen",
   "microblog.thread": "Verbundener Thread",
+  "microblog.postsDescription.one":
+    "{count} Beitrag, automatisch chronologisch sortiert",
+  "microblog.postsDescription.other":
+    "{count} Beiträge, automatisch chronologisch sortiert",
   "microblog.profile": "Profil",
   "microblog.profileDescription": "Absender des ausgewählten Beitrags",
   "microblog.displayName": "Anzeigename",
