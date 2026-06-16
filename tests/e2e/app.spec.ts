@@ -455,6 +455,30 @@ test("photo posts follow date, optional time and timeline order", async ({
   );
 });
 
+test("single-media photo exports keep the media area full width", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  const sizes = await page.locator(".photo-feed").evaluate((feed) => {
+    const mediaList = feed.querySelector(".photo-post__media-list");
+    const media = feed.querySelector(".photo-post__media");
+    if (!(mediaList instanceof HTMLElement) || !(media instanceof HTMLElement)) {
+      throw new Error("Photo media markup missing.");
+    }
+    feed.setAttribute("data-exporting", "true");
+    const listBox = mediaList.getBoundingClientRect();
+    const mediaBox = media.getBoundingClientRect();
+    feed.removeAttribute("data-exporting");
+    return {
+      listWidth: Math.round(listBox.width),
+      mediaWidth: Math.round(mediaBox.width),
+    };
+  });
+
+  expect(sizes.mediaWidth).toBe(sizes.listWidth);
+});
+
 test("microblog feed and thread layouts follow the selected order", async ({
   page,
 }) => {

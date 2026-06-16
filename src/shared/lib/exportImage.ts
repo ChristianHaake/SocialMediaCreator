@@ -413,9 +413,14 @@ export async function exportElementAsPdf(
               media.forEach((item) => {
                 item.style.display = item === activeMedium ? "block" : "none";
               });
-              await addRenderedPage(await renderCurrentState(), {
-                fitSinglePage: true,
-              });
+              try {
+                element.dataset.exportingSingleMedia = "true";
+                await addRenderedPage(await renderCurrentState(), {
+                  fitSinglePage: true,
+                });
+              } finally {
+                delete element.dataset.exportingSingleMedia;
+              }
             }
           } finally {
             media.forEach((item, index) => {

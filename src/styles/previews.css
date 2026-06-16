@@ -292,11 +292,16 @@
   background: #2f6bd2;
 }
 
-.photo-feed[data-exporting="true"] .photo-post__media-list {
+.photo-feed[data-exporting="true"] .photo-post__media-list--carousel {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   padding: 8px;
+}
+
+.photo-feed[data-exporting-single-media="true"] .photo-post__media-list--carousel {
+  display: block;
+  padding: 0;
 }
 
 .photo-feed[data-exporting="true"] .photo-post__media {
