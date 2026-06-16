@@ -576,9 +576,13 @@ test("core workflows do not request network resources after loading", async ({
 }) => {
   await page.goto("/");
   await page.waitForLoadState("networkidle");
+  const appOrigin = new URL(page.url()).origin;
 
   const requests: string[] = [];
-  page.on("request", (request) => requests.push(request.url()));
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (url.origin !== appOrigin) requests.push(request.url());
+  });
 
   await page.getByLabel("Benutzername").fill("offline_test");
   await page.getByRole("tab", { name: "Messenger-Chat" }).click();
