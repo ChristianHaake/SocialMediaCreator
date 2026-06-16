@@ -33,7 +33,29 @@ describe("downloadBlob", () => {
     expect(document.body.contains(link)).toBe(false);
     expect(URL.revokeObjectURL).not.toHaveBeenCalled();
 
-    vi.advanceTimersByTime(30_000);
+    vi.advanceTimersByTime(60_000);
     expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:download");
   });
+
+  it("sets target and rel for standalone PWA mode", () => {
+    Object.defineProperty(window, "matchMedia", {
+      configurable: true,
+      value: vi.fn(() => ({ matches: true })),
+    });
+
+    const click = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(() => undefined);
+
+    downloadBlob(new Blob(["data"], { type: "text/plain" }), "test.txt");
+    const link = click.mock.instances[0] as unknown as HTMLAnchorElement;
+
+    expect(link.target).toBe("_blank");
+    expect(link.rel).toBe("noopener");
+    expect(link.download).toBe("test.txt");
+
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+    delete (window as unknown as Record<string, unknown>)["matchMedia"];
+  });
 });
+

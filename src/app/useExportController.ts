@@ -1,4 +1,5 @@
 import { useState, type RefObject } from "react";
+import { isStandaloneMode } from "../shared/lib/downloads";
 import { hasExportConsent, storeExportConsent } from "../shared/lib/exportConsent";
 import {
   exportElementAsImage,
@@ -66,7 +67,14 @@ export function useExportController({
             : "social-media-creator-mikroblog",
         activeModule,
       );
-    } catch {
+    } catch (error) {
+      console.error("[Export] Image export failed", {
+        format,
+        module: activeModule,
+        standalone: isStandaloneMode(),
+        swController: !!navigator.serviceWorker?.controller,
+        error,
+      });
       setExportError(t("app.imageExportError"));
     } finally {
       setExporting(null);
@@ -88,7 +96,13 @@ export function useExportController({
         activeModule,
         locale,
       );
-    } catch {
+    } catch (error) {
+      console.error("[Export] PDF export failed", {
+        module: activeModule,
+        standalone: isStandaloneMode(),
+        swController: !!navigator.serviceWorker?.controller,
+        error,
+      });
       setExportError(t("app.pdfExportError"));
     } finally {
       setExporting(null);
