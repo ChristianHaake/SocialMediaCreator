@@ -63,7 +63,13 @@ async function imageHasPixelNearColor(
         const context = canvas.getContext("2d", { willReadFrequently: true });
         if (!context) throw new Error("Canvas context unavailable.");
         context.drawImage(image, 0, 0);
-        const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+        const pixels = context.getImageData(
+          0,
+          0,
+          canvas.width,
+          canvas.height,
+        ).data;
+        let matchedPixels = 0;
         for (let index = 0; index < pixels.length; index += 4) {
           if (
             Math.abs(pixels[index] - expectedColor.red) < 48 &&
@@ -71,10 +77,15 @@ async function imageHasPixelNearColor(
             Math.abs(pixels[index + 2] - expectedColor.blue) < 48 &&
             pixels[index + 3] > 240
           ) {
-            return true;
+            matchedPixels += 1;
           }
         }
-        return false;
+        return {
+          found: matchedPixels > 0,
+          height: canvas.height,
+          matchedPixels,
+          width: canvas.width,
+        };
       } finally {
         URL.revokeObjectURL(url);
       }
@@ -83,10 +94,26 @@ async function imageHasPixelNearColor(
   );
 }
 
-const redPng = Buffer.from(
-  "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFElEQVR42mP8z8DwnwEJMDGgAcQBANyuBAVgrqXwAAAAAElFTkSuQmCC",
-  "base64",
-);
+async function createSolidColorPng(
+  page: Page,
+  color: { red: number; green: number; blue: number },
+  size = 128,
+) {
+  const base64 = await page.evaluate(
+    ({ colorValue, imageSize }) => {
+      const canvas = document.createElement("canvas");
+      canvas.width = imageSize;
+      canvas.height = imageSize;
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("Canvas context unavailable.");
+      context.fillStyle = `rgb(${colorValue.red}, ${colorValue.green}, ${colorValue.blue})`;
+      context.fillRect(0, 0, imageSize, imageSize);
+      return canvas.toDataURL("image/png").split(",")[1];
+    },
+    { colorValue: color, imageSize: size },
+  );
+  return Buffer.from(base64, "base64");
+}
 
 test("education notice and public guidance pages are visible and bilingual", async ({
   page,
@@ -538,6 +565,11 @@ test("photo image exports include uploaded media pixels", async ({
   );
 
   await page.goto("/");
+  const redPng = await createSolidColorPng(
+    page,
+    { red: 255, green: 0, blue: 0 },
+    128,
+  );
 
   await page.locator("#post-image").setInputFiles({
     name: "red.png",
@@ -555,14 +587,16 @@ test("photo image exports include uploaded media pixels", async ({
     expect(path).not.toBeNull();
     const bytes = new Uint8Array(await readFile(path!));
 
-    await expect(
-      imageHasPixelNearColor(
-        page,
-        bytes,
-        { red: 255, green: 0, blue: 0 },
-        format === "PNG" ? "image/png" : "image/jpeg",
-      ),
-    ).resolves.toBe(true);
+    const pixelResult = await imageHasPixelNearColor(
+      page,
+      bytes,
+      { red: 255, green: 0, blue: 0 },
+      format === "PNG" ? "image/png" : "image/jpeg",
+    );
+    expect(
+      pixelResult.matchedPixels,
+      `${format} export did not contain uploaded red media pixels. Result: ${JSON.stringify(pixelResult)}`,
+    ).toBeGreaterThan(0);
   }
 });
 
@@ -576,6 +610,11 @@ test("carousel image export keeps the grid and media pixels", async ({
   );
 
   await page.goto("/");
+  const redPng = await createSolidColorPng(
+    page,
+    { red: 255, green: 0, blue: 0 },
+    128,
+  );
   await openSection(page, "Karussell");
   await page.locator("#post-image").setInputFiles({
     name: "red-1.png",
@@ -612,9 +651,15 @@ test("carousel image export keeps the grid and media pixels", async ({
   expect(path).not.toBeNull();
   const bytes = new Uint8Array(await readFile(path!));
 
-  await expect(
-    imageHasPixelNearColor(page, bytes, { red: 255, green: 0, blue: 0 }),
-  ).resolves.toBe(true);
+  const pixelResult = await imageHasPixelNearColor(page, bytes, {
+    red: 255,
+    green: 0,
+    blue: 0,
+  });
+  expect(
+    pixelResult.matchedPixels,
+    `Carousel PNG export did not contain uploaded red media pixels. Result: ${JSON.stringify(pixelResult)}`,
+  ).toBeGreaterThan(0);
 });
 
 test("microblog feed and thread layouts follow the selected order", async ({
