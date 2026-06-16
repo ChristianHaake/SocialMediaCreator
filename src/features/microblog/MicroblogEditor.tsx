@@ -292,6 +292,7 @@ export function MicroblogEditor({
           <span className="field-label">{t("microblog.postText")}</span>
           <textarea
             aria-label={t("microblog.postText")}
+            maxLength={fieldLimits.microblog.text}
             onChange={(event) => updatePost({ text: event.target.value })}
             rows={6}
             value={activePost.text}

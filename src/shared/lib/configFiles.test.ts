@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { fieldLimits } from "../../domain/constraints";
 import {
   defaultMessenger,
   defaultMicroblog,
@@ -94,6 +95,21 @@ describe("configuration version 6", () => {
       ...createMicroblogConfig(defaultMicroblog),
       data: { ...defaultMicroblog, sortOrder: "manual" },
     };
+    expect(() => parseConfig(JSON.stringify(config))).toThrow(
+      "config.incomplete",
+    );
+  });
+
+  it("rejects microblog text beyond the hard domain limit", () => {
+    const config = createMicroblogConfig({
+      ...defaultMicroblog,
+      posts: [
+        {
+          ...defaultMicroblog.posts[0],
+          text: "x".repeat(fieldLimits.microblog.text + 1),
+        },
+      ],
+    });
     expect(() => parseConfig(JSON.stringify(config))).toThrow(
       "config.incomplete",
     );

@@ -5,7 +5,7 @@ import {
   Repeat2,
   Share,
 } from "lucide-react";
-import { forwardRef } from "react";
+import { forwardRef, type KeyboardEvent } from "react";
 import type { MicroblogImages, MicroblogState } from "../../domain/types";
 import { formatTimelineDate, sortTimelinePosts } from "../../shared/lib/timeline";
 import { CommentThread } from "../../shared/components/CommentThread";
@@ -26,6 +26,16 @@ function formatHandle(handle: string) {
   return `@${normalized || "handle"}`;
 }
 
+function handlePostKeyDown(
+  event: KeyboardEvent<HTMLElement>,
+  onSelect: () => void,
+) {
+  if (event.target !== event.currentTarget) return;
+  if (event.key !== "Enter" && event.key !== " ") return;
+  event.preventDefault();
+  onSelect();
+}
+
 export const MicroblogPreview = forwardRef<
   HTMLDivElement,
   MicroblogPreviewProps
@@ -41,6 +51,7 @@ export const MicroblogPreview = forwardRef<
         const displayName =
           post.displayName.trim() || t("microblog.displayName");
         const postImages = images[post.id];
+        const selected = post.id === value.activePostId;
         return (
           <article
             className={
@@ -53,15 +64,23 @@ export const MicroblogPreview = forwardRef<
                 index === sortedPosts.length - 1
                   ? "microblog-preview--last"
                   : "",
-                post.id === value.activePostId
-                  ? "microblog-preview--selected"
-                  : "",
+                selected ? "microblog-preview--selected" : "",
               ]
                 .filter(Boolean)
                 .join(" ")
             }
+            aria-label={t("post.select", {
+              author: displayName,
+              date: formatTimelineDate(post.date, post.time, locale),
+            })}
+            aria-pressed={selected}
             key={post.id}
             onClick={() => onPostSelect(post.id)}
+            onKeyDown={(event) =>
+              handlePostKeyDown(event, () => onPostSelect(post.id))
+            }
+            role="button"
+            tabIndex={0}
           >
             <div className="microblog-preview__header">
               {postImages?.profileImage ? (

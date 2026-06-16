@@ -63,7 +63,12 @@ export function MessengerEditor({
   }
 
   function addMessage() {
-    if (!draft.text.trim()) return;
+    if (
+      !draft.text.trim() ||
+      value.messages.length >= fieldLimits.messenger.messages
+    ) {
+      return;
+    }
     onChange((current) => ({
       ...current,
       messages: [
@@ -223,13 +228,21 @@ export function MessengerEditor({
         </label>
         <button
           className="button button--primary full-width-button"
-          disabled={!draft.text.trim()}
+          disabled={
+            !draft.text.trim() ||
+            value.messages.length >= fieldLimits.messenger.messages
+          }
           onClick={addMessage}
           type="button"
         >
           <Plus aria-hidden="true" size={18} />
           {t("common.add")}
         </button>
+        {value.messages.length >= fieldLimits.messenger.messages && (
+          <span className="field-hint field-hint--warning">
+            {t("messenger.limitReached")}
+          </span>
+        )}
       </section>
 
       <section className="editor-section">

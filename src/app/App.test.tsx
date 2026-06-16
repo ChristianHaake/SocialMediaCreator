@@ -187,6 +187,34 @@ describe("App", () => {
     expect(document.querySelectorAll(".photo-post--selected")).toHaveLength(1);
   });
 
+  it("selects preview posts with keyboard activation", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(
+      screen.getByRole("button", { name: "Neuen Beitrag hinzufügen" }),
+    );
+    const photoPosts = document.querySelectorAll(".photo-post");
+    const originalPhotoPost = photoPosts[photoPosts.length - 1] as HTMLElement;
+    originalPhotoPost.focus();
+    fireEvent.keyDown(originalPhotoPost, { key: "Enter" });
+    expect(screen.getByLabelText("Benutzername")).toHaveValue("projekt_kurs");
+    expect(originalPhotoPost).toHaveAttribute("aria-pressed", "true");
+
+    await user.click(screen.getByRole("tab", { name: "Mikroblog" }));
+    await user.click(
+      screen.getByRole("button", { name: "Neuen Beitrag hinzufügen" }),
+    );
+    const microblogPosts = document.querySelectorAll(".microblog-preview");
+    const originalMicroblogPost = microblogPosts[
+      microblogPosts.length - 1
+    ] as HTMLElement;
+    originalMicroblogPost.focus();
+    fireEvent.keyDown(originalMicroblogPost, { key: " " });
+    expect(screen.getByLabelText("Anzeigename")).toHaveValue("Medienprojekt");
+    expect(originalMicroblogPost).toHaveAttribute("aria-pressed", "true");
+  });
+
   it("keeps a post when its localized deletion is cancelled", async () => {
     const user = userEvent.setup();
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
@@ -586,6 +614,18 @@ describe("App", () => {
         "Antwort am zweiten Beitrag",
       ),
     ).toBeInTheDocument();
+  });
+
+  it("applies the hard microblog text limit in the editor", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("tab", { name: "Mikroblog" }));
+
+    expect(screen.getByLabelText("Beitragstext")).toHaveAttribute(
+      "maxlength",
+      "1000",
+    );
   });
 
   it("switches microblog layouts and sorts posts chronologically", async () => {

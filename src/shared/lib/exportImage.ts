@@ -1,5 +1,6 @@
 import { toJpeg, toPng } from "html-to-image";
 import type { Locale, ModuleType } from "../../domain/types";
+import { downloadBlob } from "./downloads";
 
 export type ImageExportFormat = "png" | "jpg";
 export type ExportFormat = ImageExportFormat | "pdf";
@@ -49,15 +50,6 @@ export function calculatePageSlices(
   return slices;
 }
 
-function downloadBlob(blob: Blob, fileName: string) {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.download = fileName;
-  link.href = url;
-  link.click();
-  window.setTimeout(() => URL.revokeObjectURL(url), 0);
-}
-
 function dataUrlToBlob(dataUrl: string) {
   const [header, encoded] = dataUrl.split(",");
   const mimeType = /data:([^;]+)/.exec(header)?.[1] ?? "application/octet-stream";
@@ -102,12 +94,16 @@ async function inlineBlobImages(element: HTMLElement) {
 
   for (const image of images) {
     await waitForImage(image);
+    const scale = Math.min(
+      1,
+      exportWidth / Math.max(image.naturalWidth, image.naturalHeight),
+    );
     const canvas = document.createElement("canvas");
-    canvas.width = image.naturalWidth;
-    canvas.height = image.naturalHeight;
+    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
     const context = canvas.getContext("2d");
     if (!context) throw new Error("Canvas 2D context unavailable");
-    context.drawImage(image, 0, 0);
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
 
     const previousSrc = image.getAttribute("src");
     const previousSrcset = image.getAttribute("srcset");

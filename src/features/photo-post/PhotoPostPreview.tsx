@@ -6,7 +6,7 @@ import {
   Play,
   Send,
 } from "lucide-react";
-import { forwardRef } from "react";
+import { forwardRef, type KeyboardEvent } from "react";
 import type { PhotoPostImages, PhotoPostState } from "../../domain/types";
 import { formatTimelineDate, sortTimelinePosts } from "../../shared/lib/timeline";
 import { CommentThread } from "../../shared/components/CommentThread";
@@ -23,6 +23,16 @@ function initialFor(username: string) {
   return username.trim().charAt(0).toUpperCase() || "M";
 }
 
+function handlePostKeyDown(
+  event: KeyboardEvent<HTMLElement>,
+  onSelect: () => void,
+) {
+  if (event.target !== event.currentTarget) return;
+  if (event.key !== "Enter" && event.key !== " ") return;
+  event.preventDefault();
+  onSelect();
+}
+
 export const PhotoPostPreview = forwardRef<
   HTMLDivElement,
   PhotoPostPreviewProps
@@ -36,6 +46,7 @@ export const PhotoPostPreview = forwardRef<
       {sortTimelinePosts(value.posts, value.sortOrder).map((post) => {
         const username = post.username.trim() || (locale === "de" ? "benutzername" : "username");
         const postImages = images[post.id];
+        const selected = post.id === value.activePostId;
         const visibleCommentCount = Math.max(
           post.commentCount,
           post.comments.length,
@@ -46,12 +57,22 @@ export const PhotoPostPreview = forwardRef<
             className={[
               "photo-post",
               post.viewMode === "comments" ? "photo-post--comments" : "",
-              post.id === value.activePostId ? "photo-post--selected" : "",
+              selected ? "photo-post--selected" : "",
             ]
               .filter(Boolean)
               .join(" ")}
+            aria-label={t("post.select", {
+              author: username,
+              date: formatTimelineDate(post.date, post.time, locale),
+            })}
+            aria-pressed={selected}
             key={post.id}
             onClick={() => onPostSelect(post.id)}
+            onKeyDown={(event) =>
+              handlePostKeyDown(event, () => onPostSelect(post.id))
+            }
+            role="button"
+            tabIndex={0}
           >
             <div className="photo-post__header">
               {postImages?.profileImage ? (

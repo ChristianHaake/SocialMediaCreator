@@ -1,4 +1,5 @@
 import { fieldLimits } from "../../domain/constraints";
+import { downloadBlob } from "./downloads";
 import type {
   CommentReply,
   MessengerMessage,
@@ -297,7 +298,7 @@ function isMicroblogPost(value: unknown): value is MicroblogPost {
     value.id.length > 0 &&
     isStringWithin(value.displayName, fieldLimits.microblog.displayName) &&
     isStringWithin(value.handle, fieldLimits.microblog.handle) &&
-    typeof value.text === "string" &&
+    isStringWithin(value.text, fieldLimits.microblog.text) &&
     isDate(value.date) &&
     isOptionalTime(value.time) &&
     isViewMode(value.viewMode) &&
@@ -430,14 +431,10 @@ export async function readConfigFile(file: File) {
 }
 
 function downloadConfig(config: ConfigFile, fileName: string) {
-  const url = URL.createObjectURL(
+  downloadBlob(
     new Blob([JSON.stringify(config, null, 2)], { type: "application/json" }),
+    fileName,
   );
-  const link = document.createElement("a");
-  link.download = fileName;
-  link.href = url;
-  link.click();
-  window.setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
 export function downloadModuleConfig(

@@ -1,6 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { strFromU8, unzipSync } from "fflate";
+import { fieldLimits } from "../../src/domain/constraints";
+import { defaultMessenger } from "../../src/domain/types";
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -393,6 +395,35 @@ test("photo and microblog feeds support multiple posts with comments", async ({
   await expect(microblogPost).toContainText("Mikroblog-Kommentar");
 });
 
+test("preview posts can be selected with keyboard activation", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  await page
+    .getByRole("button", { name: "Neuen Beitrag hinzufügen" })
+    .click();
+  await expect(page.getByLabel("Benutzername")).toHaveValue("neuer_account");
+
+  const originalPhotoPost = page.locator(".photo-post").last();
+  await originalPhotoPost.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByLabel("Benutzername")).toHaveValue("projekt_kurs");
+  await expect(originalPhotoPost).toHaveAttribute("aria-pressed", "true");
+
+  await page.getByRole("tab", { name: "Mikroblog" }).click();
+  await page
+    .getByRole("button", { name: "Neuen Beitrag hinzufügen" })
+    .click();
+  await expect(page.getByLabel("Anzeigename")).toHaveValue("Neues Profil");
+
+  const originalMicroblogPost = page.locator(".microblog-preview").last();
+  await originalMicroblogPost.focus();
+  await page.keyboard.press("Space");
+  await expect(page.getByLabel("Anzeigename")).toHaveValue("Medienprojekt");
+  await expect(originalMicroblogPost).toHaveAttribute("aria-pressed", "true");
+});
+
 test("photo posts follow date, optional time and timeline order", async ({
   page,
 }) => {
@@ -477,6 +508,59 @@ test("two-profile messenger supports sender, timestamp, seen status and themes",
   await expect(lastMessage).toContainText("Nachricht von rechts");
   await expect(lastMessage).toContainText("vor 1 Minute");
   await expect(lastMessage.getByText("Gesehen")).toBeAttached();
+});
+
+test("messenger editor blocks messages beyond the domain limit", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const config = {
+    format: "social-media-creator-config",
+    version: 6,
+    locale: "de",
+    module: "messenger",
+    data: {
+      ...defaultMessenger,
+      messages: Array.from(
+        { length: fieldLimits.messenger.messages },
+        (_, index) => ({
+          ...defaultMessenger.messages[0],
+          id: `message-${index}`,
+        }),
+      ),
+    },
+  };
+
+  await page
+    .locator('input[type="file"][accept*=".smc"]')
+    .setInputFiles({
+      name: "messenger-limit.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify(config)),
+    });
+
+  await expect(page.getByRole("tab", { name: "Messenger-Chat" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await page
+    .getByPlaceholder("Was soll in der Nachricht stehen?")
+    .fill("Nachricht Nummer 201");
+  await expect(page.getByRole("button", { name: "Hinzufügen" })).toBeDisabled();
+  await expect(page.getByText("Maximal 200 Nachrichten erreicht.")).toBeVisible();
+});
+
+test("microblog post text enforces the hard input limit", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("tab", { name: "Mikroblog" }).click();
+
+  const postText = page.getByLabel("Beitragstext");
+  await expect(postText).toHaveAttribute("maxlength", String(fieldLimits.microblog.text));
+  await postText.fill("");
+  await postText.pressSequentially("x".repeat(fieldLimits.microblog.text + 5));
+
+  await expect(postText).toHaveValue("x".repeat(fieldLimits.microblog.text));
+  await expect(page.getByText("1000 Zeichen · länger als 280 Zeichen")).toBeVisible();
 });
 
 test("carousel, video simulation, reply chains and comment view work together", async ({
@@ -629,6 +713,6 @@ test("mobile editor and preview work at 320 CSS pixels", async ({ page }) => {
   expect(dimensions.scrollWidth).toBe(dimensions.innerWidth);
 
   await page.getByRole("button", { name: "Vorschau" }).click();
-  await expect(page.getByRole("article")).toContainText("Mobile Vorschau");
+  await expect(page.locator(".microblog-preview")).toContainText("Mobile Vorschau");
   await expect(page.getByRole("button", { name: "PNG" })).toBeVisible();
 });

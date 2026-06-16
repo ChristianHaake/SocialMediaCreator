@@ -32,6 +32,7 @@ import {
   optimizeImage,
   validateImageFile,
 } from "./imageFiles";
+import { downloadBlob } from "./downloads";
 
 export const maxProjectSize = 25 * 1024 * 1024;
 const maxProjectJsonSize = 1024 * 1024;
@@ -269,12 +270,7 @@ export function downloadProjectArchive(blob: Blob, module: ModuleType) {
       : module === "messenger"
         ? "social-media-creator-messenger-chat"
         : "social-media-creator-mikroblog";
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.download = `${baseName}.smc`;
-  link.href = url;
-  link.click();
-  window.setTimeout(() => URL.revokeObjectURL(url), 0);
+  downloadBlob(blob, `${baseName}.smc`);
 }
 
 type CentralEntry = {
