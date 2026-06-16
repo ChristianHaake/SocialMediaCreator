@@ -6,7 +6,7 @@ import {
   Play,
   Send,
 } from "lucide-react";
-import { forwardRef, type KeyboardEvent } from "react";
+import { type KeyboardEvent } from "react";
 import type { PhotoPostImages, PhotoPostState } from "../../domain/types";
 import { formatTimelineDate, sortTimelinePosts } from "../../shared/lib/timeline";
 import { CommentThread } from "../../shared/components/CommentThread";
@@ -33,16 +33,15 @@ function handlePostKeyDown(
   onSelect();
 }
 
-export const PhotoPostPreview = forwardRef<
-  HTMLDivElement,
-  PhotoPostPreviewProps
->(function PhotoPostPreview(
-  { value, images, onActiveMediaChange, onPostSelect },
-  ref,
-) {
+export function PhotoPostPreview({
+  value,
+  images,
+  onActiveMediaChange,
+  onPostSelect,
+}: PhotoPostPreviewProps) {
   const { locale, numberLocale, t } = useTranslation();
   return (
-    <div className={`photo-feed simulation-theme theme-${value.theme}`} ref={ref}>
+    <div className={`photo-feed simulation-theme theme-${value.theme}`}>
       {sortTimelinePosts(value.posts, value.sortOrder).map((post) => {
         const username = post.username.trim() || (locale === "de" ? "benutzername" : "username");
         const postImages = images[post.id];
@@ -209,4 +208,4 @@ export const PhotoPostPreview = forwardRef<
       })}
     </div>
   );
-});
+}

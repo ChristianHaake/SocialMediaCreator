@@ -221,13 +221,19 @@ async function inlineBlobImages(element: HTMLElement) {
     image.setAttribute("width", String(image.naturalWidth));
     image.setAttribute("height", String(image.naturalHeight));
     
-    // Using JPEG significantly reduces the data URL size compared to PNG,
-    // which prevents Safari from hitting SVG size limits and silently
-    // dropping images inside the <foreignObject> during rendering.
-    await setImageSourceAndWait(image, canvas.toDataURL("image/jpeg", 0.8));
+    // We convert the scaled canvas to a JPEG data URL to save memory,
+    // but we MUST convert it back to a blob URL. If we leave it as a data URL,
+    // html-to-image will skip `embedImages` for it and will NOT wait for it to
+    // decode in the cloned DOM, causing Safari to render it as completely blank.
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+    const blob = dataUrlToBlob(dataUrl);
+    const optimizedBlobUrl = URL.createObjectURL(blob);
+    
+    await setImageSourceAndWait(image, optimizedBlobUrl);
     await waitForRenderFrame();
     
     restore.push(() => {
+      URL.revokeObjectURL(optimizedBlobUrl);
       if (previousSrc === null) {
         image.removeAttribute("src");
       } else {
@@ -259,7 +265,7 @@ async function inlineBlobImages(element: HTMLElement) {
 function getRenderOptions(element: HTMLElement) {
   return {
     backgroundColor: getExportBackground(element),
-    cacheBust: true,
+    cacheBust: false, // Must be false so html-to-image can fetch blob: URLs
     pixelRatio: exportWidth / Math.max(element.offsetWidth, 1),
   };
 }
