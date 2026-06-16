@@ -1,5 +1,4 @@
 import type { ImageState, PostComment } from "../../domain/types";
-import { useTranslation } from "../../i18n";
 
 type CommentThreadProps = {
   comments: PostComment[];
@@ -16,8 +15,7 @@ export function CommentThread({
   images,
   variant,
 }: CommentThreadProps) {
-  const { locale } = useTranslation();
-  const fallback = locale === "de" ? "account" : "account";
+  const fallback = "account";
   return (
     <div className={`comment-thread comment-thread--${variant}`}>
       {comments.map((comment) => (
