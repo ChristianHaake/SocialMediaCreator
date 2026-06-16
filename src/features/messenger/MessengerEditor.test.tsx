@@ -1,5 +1,4 @@
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { fieldLimits } from "../../domain/constraints";
 import { defaultMessenger, type MessengerState } from "../../domain/types";
@@ -23,8 +22,7 @@ function renderEditor(value: MessengerState) {
 }
 
 describe("MessengerEditor", () => {
-  it("does not allow adding messages beyond the domain limit", async () => {
-    const user = userEvent.setup();
+  it("does not allow adding messages beyond the domain limit", () => {
     const value: MessengerState = {
       ...defaultMessenger,
       messages: Array.from(
@@ -37,10 +35,13 @@ describe("MessengerEditor", () => {
     };
     const onChange = renderEditor(value);
 
-    await user.type(
+    fireEvent.change(
       screen.getByPlaceholderText("What should the message say?"),
-      "Noch eine Nachricht",
+      {
+        target: { value: "Noch eine Nachricht" },
+      },
     );
+    fireEvent.click(screen.getByRole("button", { name: "Add" }));
 
     expect(screen.getByRole("button", { name: "Add" })).toBeDisabled();
     expect(screen.getByText("Maximum of 200 messages reached.")).toBeVisible();
