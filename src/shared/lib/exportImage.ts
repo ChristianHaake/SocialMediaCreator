@@ -304,7 +304,7 @@ async function renderElementBlob(
     element.style.position = "relative";
   }
   element.append(badge);
-  element.dataset.exporting = "true";
+  element.dataset.imageExporting = "true";
   const restoreBlobImages = await inlineBlobImages(element);
   try {
     const canvas = await renderElementCanvas(element);
@@ -317,7 +317,7 @@ async function renderElementBlob(
     restoreBlobImages();
     badge.remove();
     element.style.position = previousPosition;
-    delete element.dataset.exporting;
+    delete element.dataset.imageExporting;
   }
 }
 
@@ -506,12 +506,11 @@ export async function exportElementAsPdf(
   }
 
   const articles = Array.from(
-    element.querySelectorAll<HTMLElement>(
-      ":scope > .photo-post, :scope > .microblog-preview",
-    ),
+    element.querySelectorAll<HTMLElement>(".photo-post, .microblog-preview"),
   );
 
   const restoreBlobImages = await inlineBlobImages(element);
+  element.dataset.exporting = "true";
   try {
     if (articles.length === 0) {
       await addRenderedPage(await renderCurrentState(), {
@@ -564,6 +563,7 @@ export async function exportElementAsPdf(
       }
     }
   } finally {
+    delete element.dataset.exporting;
     restoreBlobImages();
   }
 

@@ -249,6 +249,8 @@ export const de = {
   "export.close": "Exportdialog schließen",
   "export.message":
     "Der Export ist eine Simulation für den Bildungszweck. Verwende ihn nicht zur Täuschung, Herabwürdigung oder Darstellung realer Personen ohne deren Zustimmung.",
+  "export.pdfScope":
+    "PDF-Exporte enthalten alle Beiträge und Medien des ausgewählten Formats.",
   "export.termsLink": "Nutzungsbedingungen lesen",
   "export.consent":
     "Ich habe die Nutzungsbedingungen gelesen und verwende den Export verantwortungsvoll.",
