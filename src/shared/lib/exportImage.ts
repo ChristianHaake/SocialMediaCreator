@@ -214,9 +214,19 @@ async function inlineBlobImages(element: HTMLElement) {
 
     const previousSrc = image.getAttribute("src");
     const previousSrcset = image.getAttribute("srcset");
+    const previousWidth = image.getAttribute("width");
+    const previousHeight = image.getAttribute("height");
+    
     image.removeAttribute("srcset");
-    await setImageSourceAndWait(image, canvas.toDataURL("image/png"));
+    image.setAttribute("width", String(image.naturalWidth));
+    image.setAttribute("height", String(image.naturalHeight));
+    
+    // Using JPEG significantly reduces the data URL size compared to PNG,
+    // which prevents Safari from hitting SVG size limits and silently
+    // dropping images inside the <foreignObject> during rendering.
+    await setImageSourceAndWait(image, canvas.toDataURL("image/jpeg", 0.8));
     await waitForRenderFrame();
+    
     restore.push(() => {
       if (previousSrc === null) {
         image.removeAttribute("src");
@@ -227,6 +237,16 @@ async function inlineBlobImages(element: HTMLElement) {
         image.removeAttribute("srcset");
       } else {
         image.setAttribute("srcset", previousSrcset);
+      }
+      if (previousWidth === null) {
+        image.removeAttribute("width");
+      } else {
+        image.setAttribute("width", previousWidth);
+      }
+      if (previousHeight === null) {
+        image.removeAttribute("height");
+      } else {
+        image.setAttribute("height", previousHeight);
       }
     });
   }
