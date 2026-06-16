@@ -41,6 +41,10 @@
     #efedf3;
 }
 
+.export-frame {
+  box-sizing: border-box;
+}
+
 .photo-feed {
   display: grid;
   width: min(100%, 430px);

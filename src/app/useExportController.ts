@@ -85,6 +85,7 @@ export function useExportController({
           : activeModule === "messenger"
             ? "social-media-creator-messenger-chat"
             : "social-media-creator-mikroblog",
+        activeModule,
         locale,
       );
     } catch {
