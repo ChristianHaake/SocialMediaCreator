@@ -571,13 +571,39 @@ test("photo image exports include uploaded media pixels", async ({
     { red: 255, green: 0, blue: 0 },
     128,
   );
+  const greenPng = await createSolidColorPng(
+    page,
+    { red: 0, green: 255, blue: 0 },
+    128,
+  );
+  const bluePng = await createSolidColorPng(
+    page,
+    { red: 0, green: 0, blue: 255 },
+    128,
+  );
 
+  await page.locator("#profile-image").setInputFiles({
+    name: "green-profile.png",
+    mimeType: "image/png",
+    buffer: greenPng,
+  });
   await page.locator("#post-image").setInputFiles({
     name: "red.png",
     mimeType: "image/png",
     buffer: redPng,
   });
+  await openSection(page, "Kommentare und Antworten");
+  await page.getByRole("button", { name: "Kommentar", exact: true }).click();
+  await page
+    .locator('input[id^="photo-comment-image-"]')
+    .last()
+    .setInputFiles({
+      name: "blue-comment.png",
+      mimeType: "image/png",
+      buffer: bluePng,
+    });
   await expect(page.locator(".photo-post__media img")).toBeVisible();
+  await expect(page.locator(".comment-thread img")).toBeVisible();
 
   for (const format of ["PNG", "JPG"] as const) {
     const imageDownload = page.waitForEvent("download");
@@ -598,6 +624,28 @@ test("photo image exports include uploaded media pixels", async ({
       pixelResult.matchedPixels,
       `${format} export did not contain uploaded red media pixels. Result: ${JSON.stringify(pixelResult)}`,
     ).toBeGreaterThan(0);
+
+    if (format === "PNG") {
+      const profilePixelResult = await imageHasPixelNearColor(page, bytes, {
+        red: 0,
+        green: 255,
+        blue: 0,
+      });
+      expect(
+        profilePixelResult.matchedPixels,
+        `PNG export did not contain uploaded green profile pixels. Result: ${JSON.stringify(profilePixelResult)}`,
+      ).toBeGreaterThan(0);
+
+      const commentPixelResult = await imageHasPixelNearColor(page, bytes, {
+        red: 0,
+        green: 0,
+        blue: 255,
+      });
+      expect(
+        commentPixelResult.matchedPixels,
+        `PNG export did not contain uploaded blue comment pixels. Result: ${JSON.stringify(commentPixelResult)}`,
+      ).toBeGreaterThan(0);
+    }
   }
 });
 
@@ -823,6 +871,11 @@ test("PDF export and local image verification are available", async ({
 
   const pdfDownload = page.waitForEvent("download");
   await page.getByRole("button", { name: "PDF" }).click();
+  await expect(
+    page.getByText(
+      "PDF-Exporte enthalten alle Beiträge und Medien des ausgewählten Formats.",
+    ),
+  ).toBeVisible();
   await continueExport(page);
   const pdf = await pdfDownload;
   expect(pdf.suggestedFilename()).toMatch(/\.pdf$/);

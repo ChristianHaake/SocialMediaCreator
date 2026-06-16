@@ -58,11 +58,12 @@ describe("image export", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    document.body.innerHTML = "";
     encoded = createEncodingCanvas();
     toCanvas.mockResolvedValue(encoded.canvas);
   });
 
-  it("exports PNG at the deterministic target width", async () => {
+  it("exports PNG from a padded module export frame", async () => {
     const click = vi
       .spyOn(HTMLAnchorElement.prototype, "click")
       .mockImplementation(() => undefined);
@@ -76,10 +77,15 @@ describe("image export", () => {
       "photoPost",
     );
 
-    expect(toCanvas).toHaveBeenCalledWith(
-      element,
-      expect.objectContaining({ pixelRatio: 2 }),
+    const renderedElement = toCanvas.mock.calls[0][0] as HTMLElement;
+    expect(renderedElement).not.toBe(element);
+    expect(renderedElement.classList.contains("export-frame--photoPost")).toBe(
+      true,
     );
+    expect(renderedElement.dataset.exportFrame).toBe("photoPost");
+    expect(renderedElement.dataset.imageExporting).toBe("true");
+    expect(renderedElement.style.padding).toBe("48px");
+    expect(toCanvas.mock.calls[0][1]?.pixelRatio).toBeCloseTo(1080 / 636, 4);
     expect(encoded.toBlob).toHaveBeenCalledWith(
       expect.any(Function),
       "image/png",
@@ -100,9 +106,9 @@ describe("image export", () => {
 
     await exportElementAsImage(element, "jpg", "test", "messenger");
 
-    expect(toCanvas).toHaveBeenCalledWith(
-      element,
-      expect.objectContaining({ pixelRatio: 2 }),
+    const renderedElement = toCanvas.mock.calls[0][0] as HTMLElement;
+    expect(renderedElement.classList.contains("export-frame--messenger")).toBe(
+      true,
     );
     expect(encoded.toBlob).toHaveBeenCalledWith(
       expect.any(Function),
@@ -119,6 +125,7 @@ describe("image export", () => {
     document.body.append(element);
     Object.defineProperty(element, "offsetWidth", { value: 540 });
     toCanvas.mockImplementationOnce(async (renderedElement: HTMLElement) => {
+      expect(renderedElement.classList.contains("export-frame")).toBe(true);
       expect(
         renderedElement.querySelector("[data-export-badge]")?.textContent,
       ).toBe(exportBadgeText);
@@ -130,7 +137,43 @@ describe("image export", () => {
     await exportElementAsImage(element, "png", "test", "photoPost");
 
     expect(element.querySelector("[data-export-badge]")).toBeNull();
+    expect(document.querySelector(".export-frame")).toBeNull();
     element.remove();
+  });
+
+  it("rewrites hidden blob images to data URLs in the export clone", async () => {
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(
+      () => undefined,
+    );
+    const decode = vi.fn(() => Promise.resolve());
+    Object.defineProperty(HTMLImageElement.prototype, "decode", {
+      configurable: true,
+      value: decode,
+    });
+    const blobImage = new Blob(["image"], { type: "image/png" });
+    const fetchImage = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue({
+        blob: () => Promise.resolve(blobImage),
+      } as Response);
+    const element = document.createElement("div");
+    element.innerHTML = `
+      <div class="photo-feed">
+        <img src="blob:hidden-profile" style="display: none" alt="">
+      </div>
+    `;
+
+    toCanvas.mockImplementationOnce(async (renderedElement: HTMLElement) => {
+      const image = renderedElement.querySelector("img");
+      expect(image?.getAttribute("src")).toMatch(/^data:image\/png;base64,/);
+      expect(image?.getAttribute("srcset")).toBeNull();
+      return encoded.canvas;
+    });
+
+    await exportElementAsImage(element, "png", "test", "photoPost");
+
+    expect(fetchImage).toHaveBeenCalledWith("blob:hidden-profile");
+    fetchImage.mockRestore();
   });
 
   it("rejects failed canvas encoding", async () => {
@@ -182,12 +225,13 @@ describe("image export", () => {
     element.innerHTML = '<div class="photo-post"><div class="photo-post__media"></div></div>';
     Object.defineProperty(element, "offsetWidth", { value: 540 });
 
-    await exportElementAsPdf(element, "test", "en");
+    await exportElementAsPdf(element, "test", "photoPost", "en");
 
-    expect(toCanvas).toHaveBeenCalledWith(
-      element,
-      expect.objectContaining({ pixelRatio: 2 }),
+    const renderedElement = toCanvas.mock.calls[0][0] as HTMLElement;
+    expect(renderedElement.classList.contains("export-frame--photoPost")).toBe(
+      true,
     );
+    expect(renderedElement.dataset.exporting).toBe("true");
     expect(encoded.canvas.toDataURL).toHaveBeenCalledWith("image/jpeg", 0.92);
     expect(pdfInstance.addImage).toHaveBeenCalledWith(
       "data:image/jpeg;base64,aGVsbG8=",
@@ -222,9 +266,16 @@ describe("image export", () => {
     `;
     Object.defineProperty(element, "offsetWidth", { value: 540 });
 
-    await exportElementAsPdf(element, "test", "en");
+    await exportElementAsPdf(element, "test", "photoPost", "en");
 
     expect(toCanvas).toHaveBeenCalledTimes(2);
+    expect(
+      toCanvas.mock.calls.every(([renderedElement]) =>
+        (renderedElement as HTMLElement).classList.contains(
+          "export-frame--photoPost",
+        ),
+      ),
+    ).toBe(true);
     expect(pdfInstance.addImage).toHaveBeenCalledTimes(2);
     expect(pdfInstance.addPage).toHaveBeenCalledTimes(1);
   });

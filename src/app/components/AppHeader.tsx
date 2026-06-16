@@ -1,4 +1,4 @@
-import { Check, GraduationCap, Image as ImageIcon } from "lucide-react";
+import { Check, GraduationCap } from "lucide-react";
 import { useTranslation } from "../../i18n";
 
 type AppHeaderProps = {
@@ -10,10 +10,13 @@ export function AppHeader({ onOpenTeacherInfo }: AppHeaderProps) {
   return (
     <header className="app-header">
       <a className="brand" href="/">
-        <span className="brand__mark">
-          <ImageIcon aria-hidden="true" size={21} />
-        </span>
-        <span>
+        <img
+          alt=""
+          aria-hidden="true"
+          className="brand__logo"
+          src="/brand/smc-logo-blue.png"
+        />
+        <span className="brand__text">
           <strong>SocialMediaCreator</strong>
           <small>{t("app.tagline")}</small>
         </span>

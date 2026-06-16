@@ -66,6 +66,12 @@ function getExportBackground(element: HTMLElement) {
     : "#ffffff";
 }
 
+function getExportFrameBackground(module: ModuleType) {
+  if (module === "messenger") return "#e8edea";
+  if (module === "microblog") return "#efedf4";
+  return "#eef1f5";
+}
+
 function waitForImage(image: HTMLImageElement) {
   if (image.complete && image.naturalWidth > 0 && image.naturalHeight > 0) {
     return Promise.resolve();
@@ -149,6 +155,56 @@ function dataUrlToBlob(dataUrl: string) {
   return new Blob([bytes], { type: mime });
 }
 
+function blobToDataUrl(blob: Blob) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+      } else {
+        reject(new Error("Blob image conversion failed."));
+      }
+    });
+    reader.addEventListener("error", () =>
+      reject(new Error("Blob image conversion failed.")),
+    );
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function blobToPngDataUrl(blob: Blob) {
+  const url = URL.createObjectURL(blob);
+  try {
+    const image = new Image();
+    await new Promise<void>((resolve, reject) => {
+      image.addEventListener("load", () => resolve(), { once: true });
+      image.addEventListener(
+        "error",
+        () => reject(new Error("Blob image failed to decode.")),
+        { once: true },
+      );
+      image.src = url;
+    });
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, image.naturalWidth);
+    canvas.height = Math.max(1, image.naturalHeight);
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Canvas 2D context unavailable");
+    context.drawImage(image, 0, 0);
+    return canvas.toDataURL("image/png");
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+async function blobToExportDataUrl(blob: Blob) {
+  if (blob.type === "image/png" || blob.type === "image/jpeg") {
+    return blobToDataUrl(blob);
+  }
+
+  return blobToPngDataUrl(blob);
+}
+
 export async function canvasToImageBlob(
   canvas: HTMLCanvasElement,
   type: "image/png" | "image/jpeg",
@@ -194,79 +250,106 @@ export async function canvasToImageBlob(
   }
 }
 
-async function inlineBlobImages(element: HTMLElement) {
-  const images = Array.from(element.querySelectorAll<HTMLImageElement>("img"))
-    .filter((image) => image.currentSrc.startsWith("blob:") || image.src.startsWith("blob:"));
-  const restore: Array<() => void> = [];
+function getImageSource(image: HTMLImageElement) {
+  return image.getAttribute("src") || image.currentSrc || image.src;
+}
+
+async function prepareExportImages(element: HTMLElement) {
+  const images = Array.from(element.querySelectorAll<HTMLImageElement>("img"));
 
   for (const image of images) {
-    await waitForImage(image);
-    const scale = Math.min(
-      1,
-      exportWidth / Math.max(image.naturalWidth, image.naturalHeight),
-    );
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
-    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
-    const context = canvas.getContext("2d");
-    if (!context) throw new Error("Canvas 2D context unavailable");
-    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    const source = getImageSource(image);
+    if (!source) continue;
 
-    const previousSrc = image.getAttribute("src");
-    const previousSrcset = image.getAttribute("srcset");
-    const previousWidth = image.getAttribute("width");
-    const previousHeight = image.getAttribute("height");
-    
     image.removeAttribute("srcset");
-    image.setAttribute("width", String(image.naturalWidth));
-    image.setAttribute("height", String(image.naturalHeight));
-    
-    // We convert the scaled canvas to a JPEG data URL to save memory,
-    // but we MUST convert it back to a blob URL. If we leave it as a data URL,
-    // html-to-image will skip `embedImages` for it and will NOT wait for it to
-    // decode in the cloned DOM, causing Safari to render it as completely blank.
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
-    const blob = dataUrlToBlob(dataUrl);
-    const optimizedBlobUrl = URL.createObjectURL(blob);
-    
-    await setImageSourceAndWait(image, optimizedBlobUrl);
-    await waitForRenderFrame();
-    
-    restore.push(() => {
-      URL.revokeObjectURL(optimizedBlobUrl);
-      if (previousSrc === null) {
-        image.removeAttribute("src");
-      } else {
-        image.setAttribute("src", previousSrc);
-      }
-      if (previousSrcset === null) {
-        image.removeAttribute("srcset");
-      } else {
-        image.setAttribute("srcset", previousSrcset);
-      }
-      if (previousWidth === null) {
-        image.removeAttribute("width");
-      } else {
-        image.setAttribute("width", previousWidth);
-      }
-      if (previousHeight === null) {
-        image.removeAttribute("height");
-      } else {
-        image.setAttribute("height", previousHeight);
-      }
-    });
+
+    if (source.startsWith("blob:")) {
+      const response = await fetch(source);
+      const dataUrl = await blobToExportDataUrl(await response.blob());
+      await setImageSourceAndWait(image, dataUrl);
+      continue;
+    }
+
+    if (source.startsWith("data:")) {
+      await setImageSourceAndWait(image, source);
+      continue;
+    }
+
+    if (!image.complete) {
+      await waitForImage(image);
+    }
+  }
+}
+
+function getExportContentWidth(source: HTMLElement) {
+  const content =
+    source.querySelector<HTMLElement>(
+      ".photo-feed, .messenger-preview, .microblog-feed",
+    ) ?? source;
+  const measured = content.getBoundingClientRect().width || content.offsetWidth;
+  return Math.max(280, Math.ceil(measured || 430));
+}
+
+function getExportFrameClass(module: ModuleType) {
+  return `export-frame--${module}`;
+}
+
+async function createExportFrame(
+  source: HTMLElement,
+  module: ModuleType,
+  mode: "image" | "pdf",
+) {
+  const frame = document.createElement("div");
+  const content = source.cloneNode(true) as HTMLElement;
+  const contentWidth = getExportContentWidth(source);
+  const horizontalPadding = 48;
+  const frameWidth = contentWidth + horizontalPadding * 2;
+
+  frame.className = `export-frame ${getExportFrameClass(module)}`;
+  frame.dataset.exportFrame = module;
+  if (mode === "image") {
+    frame.dataset.imageExporting = "true";
+  } else {
+    frame.dataset.exporting = "true";
   }
 
-  return () => {
-    restore.reverse().forEach((restoreImage) => restoreImage());
+  Object.assign(frame.style, {
+    position: "fixed",
+    left: "0",
+    top: "0",
+    zIndex: "-1",
+    width: `${frameWidth}px`,
+    boxSizing: "border-box",
+    display: "block",
+    padding: `${horizontalPadding}px`,
+    backgroundColor: getExportFrameBackground(module),
+    overflow: "visible",
+    pointerEvents: "none",
+  });
+  Object.assign(content.style, {
+    width: `${contentWidth}px`,
+    maxWidth: "none",
+    margin: "0 auto",
+  });
+
+  frame.append(content);
+  document.body.append(frame);
+  await prepareExportImages(frame);
+  await waitForRenderFrame();
+
+  return {
+    content,
+    frame,
+    cleanup: () => frame.remove(),
   };
 }
 
 function getRenderOptions(element: HTMLElement) {
+  const renderWidth = element.offsetWidth || Number.parseFloat(element.style.width) || 1;
   return {
     backgroundColor: getExportBackground(element),
-    cacheBust: false, // Must be false so html-to-image can fetch blob: URLs
-    pixelRatio: exportWidth / Math.max(element.offsetWidth, 1),
+    cacheBust: false,
+    pixelRatio: exportWidth / renderWidth,
   };
 }
 
@@ -278,7 +361,9 @@ async function renderElementCanvas(element: HTMLElement) {
 async function renderElementBlob(
   element: HTMLElement,
   format: ImageExportFormat,
+  module: ModuleType,
 ) {
+  const { frame, cleanup } = await createExportFrame(element, module, "image");
   const badge = document.createElement("div");
   badge.dataset.exportBadge = "true";
   badge.textContent = exportBadgeText;
@@ -299,25 +384,16 @@ async function renderElementBlob(
     letterSpacing: "0.01em",
     pointerEvents: "none",
   });
-  const previousPosition = element.style.position;
-  if (getComputedStyle(element).position === "static") {
-    element.style.position = "relative";
-  }
-  element.append(badge);
-  element.dataset.imageExporting = "true";
-  const restoreBlobImages = await inlineBlobImages(element);
+  frame.append(badge);
   try {
-    const canvas = await renderElementCanvas(element);
+    const canvas = await renderElementCanvas(frame);
     return canvasToImageBlob(
       canvas,
       format === "png" ? "image/png" : "image/jpeg",
       format === "jpg" ? 0.92 : undefined,
     );
   } finally {
-    restoreBlobImages();
-    badge.remove();
-    element.style.position = previousPosition;
-    delete element.dataset.imageExporting;
+    cleanup();
   }
 }
 
@@ -388,7 +464,7 @@ export async function exportElementAsImage(
   fileName = "social-media-creator-foto-post",
   module: ModuleType = "photoPost",
 ) {
-  const blob = await renderElementBlob(element, format);
+  const blob = await renderElementBlob(element, format, module);
   const markedBlob = await addImageMarker(blob, module);
   downloadBlob(markedBlob, `${fileName}.${format}`);
 }
@@ -396,6 +472,7 @@ export async function exportElementAsImage(
 export async function exportElementAsPdf(
   element: HTMLElement,
   fileName: string,
+  module: ModuleType,
   locale: Locale = "de",
 ) {
   const { jsPDF } = await import("jspdf");
@@ -416,6 +493,11 @@ export async function exportElementAsPdf(
   const contentWidth = pageWidth - margin * 2;
   const contentHeight = pageHeight - margin * 2 - 7;
   let pageCount = 0;
+  const { frame, cleanup } = await createExportFrame(element, module, "pdf");
+
+  function getRenderCssWidth() {
+    return frame.offsetWidth || Number.parseFloat(frame.style.width) || 1;
+  }
 
   function addExportFooter() {
     pdf.setFontSize(8);
@@ -451,7 +533,7 @@ export async function exportElementAsPdf(
     const pixelsPerPage = Math.floor(
       renderedCanvas.width * (contentHeight / contentWidth),
     );
-    const cssToImageScale = renderedCanvas.width / Math.max(element.offsetWidth, 1);
+    const cssToImageScale = renderedCanvas.width / getRenderCssWidth();
     const safeBreaks = (options.safeBreaks ?? [])
       .map((position) => Math.round(position * cssToImageScale))
       .filter((position) => position > 0 && position < renderedCanvas.height)
@@ -467,7 +549,7 @@ export async function exportElementAsPdf(
       canvas.height = slice.height;
       const context = canvas.getContext("2d");
       if (!context) throw new Error("PDF-Seite konnte nicht erstellt werden.");
-      context.fillStyle = getExportBackground(element);
+      context.fillStyle = getExportBackground(frame);
       context.fillRect(0, 0, canvas.width, canvas.height);
       context.drawImage(
         renderedCanvas,
@@ -495,22 +577,20 @@ export async function exportElementAsPdf(
   }
 
   async function renderCurrentState() {
-    return renderElementCanvas(element);
+    return renderElementCanvas(frame);
   }
 
   function safeBreaksFor(selector: string) {
-    const rootTop = element.getBoundingClientRect().top;
-    return Array.from(element.querySelectorAll<HTMLElement>(selector)).map(
+    const rootTop = frame.getBoundingClientRect().top;
+    return Array.from(frame.querySelectorAll<HTMLElement>(selector)).map(
       (item) => item.getBoundingClientRect().bottom - rootTop,
     );
   }
 
   const articles = Array.from(
-    element.querySelectorAll<HTMLElement>(".photo-post, .microblog-preview"),
+    frame.querySelectorAll<HTMLElement>(".photo-post, .microblog-preview"),
   );
 
-  const restoreBlobImages = await inlineBlobImages(element);
-  element.dataset.exporting = "true";
   try {
     if (articles.length === 0) {
       await addRenderedPage(await renderCurrentState(), {
@@ -542,12 +622,12 @@ export async function exportElementAsPdf(
                 item.style.display = item === activeMedium ? "block" : "none";
               });
               try {
-                element.dataset.exportingSingleMedia = "true";
+                frame.dataset.exportingSingleMedia = "true";
                 await addRenderedPage(await renderCurrentState(), {
                   fitSinglePage: true,
                 });
               } finally {
-                delete element.dataset.exportingSingleMedia;
+                delete frame.dataset.exportingSingleMedia;
               }
             }
           } finally {
@@ -563,8 +643,7 @@ export async function exportElementAsPdf(
       }
     }
   } finally {
-    delete element.dataset.exporting;
-    restoreBlobImages();
+    cleanup();
   }
 
   downloadBlob(pdf.output("blob"), `${fileName}.pdf`);

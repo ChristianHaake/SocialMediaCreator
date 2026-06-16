@@ -95,18 +95,14 @@ a {
   text-decoration: none;
 }
 
-.brand__mark {
-  display: grid;
-  width: 42px;
-  height: 42px;
-  place-items: center;
-  border-radius: 12px;
-  color: white;
-  background: var(--accent);
-  box-shadow: 0 8px 18px rgb(36 93 204 / 24%);
+.brand__logo {
+  display: block;
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
 }
 
-.brand > span:last-child {
+.brand__text {
   display: flex;
   flex-direction: column;
 }
