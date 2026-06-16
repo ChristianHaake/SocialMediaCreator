@@ -7,11 +7,13 @@ import "./styles/content-and-dialogs.css";
 import "./styles/responsive.css";
 
 // Auto-reload once when a new service worker takes control so the page
-// always runs the latest code.  The guard prevents infinite reload loops.
+// always runs the latest code.  Only reload when there was already a
+// controller (real update), not on the initial SW claim.
 if ("serviceWorker" in navigator) {
+  const hadController = !!navigator.serviceWorker.controller;
   let reloading = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => {
-    if (reloading) return;
+    if (!hadController || reloading) return;
     reloading = true;
     window.location.reload();
   });
