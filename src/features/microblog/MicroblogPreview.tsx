@@ -5,7 +5,7 @@ import {
   Repeat2,
   Share,
 } from "lucide-react";
-import { forwardRef, type KeyboardEvent } from "react";
+import { type KeyboardEvent } from "react";
 import type { MicroblogImages, MicroblogState } from "../../domain/types";
 import { formatTimelineDate, sortTimelinePosts } from "../../shared/lib/timeline";
 import { CommentThread } from "../../shared/components/CommentThread";
@@ -36,16 +36,12 @@ function handlePostKeyDown(
   onSelect();
 }
 
-export const MicroblogPreview = forwardRef<
-  HTMLDivElement,
-  MicroblogPreviewProps
->(function MicroblogPreview({ value, images, onPostSelect }, ref) {
+export function MicroblogPreview({ value, images, onPostSelect }: MicroblogPreviewProps) {
   const { locale, numberLocale, t } = useTranslation();
   const sortedPosts = sortTimelinePosts(value.posts, value.sortOrder);
   return (
     <div
       className={`microblog-feed microblog-feed--${value.layoutMode} simulation-theme theme-${value.theme}`}
-      ref={ref}
     >
       {sortedPosts.map((post, index) => {
         const displayName =
@@ -147,4 +143,4 @@ export const MicroblogPreview = forwardRef<
       })}
     </div>
   );
-});
+}

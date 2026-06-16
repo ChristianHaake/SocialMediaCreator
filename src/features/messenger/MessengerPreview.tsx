@@ -1,5 +1,5 @@
 import { ArrowLeft, CheckCheck, MoreVertical, Phone, Video } from "lucide-react";
-import { forwardRef } from "react";
+
 import type { MessengerImages, MessengerState } from "../../domain/types";
 import { useTranslation } from "../../i18n";
 
@@ -12,17 +12,13 @@ function initialFor(name: string) {
   return name.trim().charAt(0).toUpperCase() || "K";
 }
 
-export const MessengerPreview = forwardRef<
-  HTMLDivElement,
-  MessengerPreviewProps
->(function MessengerPreview({ value, images }, ref) {
+export function MessengerPreview({ value, images }: MessengerPreviewProps) {
   const { t } = useTranslation();
   const leftProfile = value.profiles.find((profile) => profile.side === "left")!;
 
   return (
     <div
       className={`messenger-preview simulation-theme theme-${value.theme}`}
-      ref={ref}
     >
       <div className="messenger-preview__header">
         <ArrowLeft aria-hidden="true" size={20} />
@@ -100,4 +96,4 @@ export const MessengerPreview = forwardRef<
       </div>
     </div>
   );
-});
+}
