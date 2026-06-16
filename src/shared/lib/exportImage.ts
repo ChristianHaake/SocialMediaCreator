@@ -82,6 +82,56 @@ function getExportBackground(element: HTMLElement) {
     : "#ffffff";
 }
 
+function waitForImage(image: HTMLImageElement) {
+  if (image.complete && image.naturalWidth > 0 && image.naturalHeight > 0) {
+    return Promise.resolve();
+  }
+
+  return new Promise<void>((resolve, reject) => {
+    image.addEventListener("load", () => resolve(), { once: true });
+    image.addEventListener("error", () => reject(new Error("Image failed to load")), {
+      once: true,
+    });
+  });
+}
+
+async function inlineBlobImages(element: HTMLElement) {
+  const images = Array.from(element.querySelectorAll<HTMLImageElement>("img"))
+    .filter((image) => image.currentSrc.startsWith("blob:") || image.src.startsWith("blob:"));
+  const restore: Array<() => void> = [];
+
+  for (const image of images) {
+    await waitForImage(image);
+    const canvas = document.createElement("canvas");
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Canvas 2D context unavailable");
+    context.drawImage(image, 0, 0);
+
+    const previousSrc = image.getAttribute("src");
+    const previousSrcset = image.getAttribute("srcset");
+    image.removeAttribute("srcset");
+    image.src = canvas.toDataURL("image/png");
+    restore.push(() => {
+      if (previousSrc === null) {
+        image.removeAttribute("src");
+      } else {
+        image.setAttribute("src", previousSrc);
+      }
+      if (previousSrcset === null) {
+        image.removeAttribute("srcset");
+      } else {
+        image.setAttribute("srcset", previousSrcset);
+      }
+    });
+  }
+
+  return () => {
+    restore.reverse().forEach((restoreImage) => restoreImage());
+  };
+}
+
 async function renderElementBlob(
   element: HTMLElement,
   format: ImageExportFormat,
@@ -118,6 +168,7 @@ async function renderElementBlob(
   }
   element.append(badge);
   element.dataset.exporting = "true";
+  const restoreBlobImages = await inlineBlobImages(element);
   try {
     const dataUrl =
       format === "png"
@@ -125,6 +176,7 @@ async function renderElementBlob(
         : await toJpeg(element, { ...commonOptions, quality: 0.92 });
     return dataUrlToBlob(dataUrl);
   } finally {
+    restoreBlobImages();
     badge.remove();
     element.style.position = previousPosition;
     delete element.dataset.exporting;
@@ -334,50 +386,55 @@ export async function exportElementAsPdf(
     ),
   );
 
-  if (articles.length === 0) {
-    await addRenderedPage(await renderCurrentState(), {
-      safeBreaks: safeBreaksFor(".message-row"),
-    });
-  } else {
-    const articleDisplays = articles.map((article) => article.style.display);
-    try {
-      for (const article of articles) {
-        articles.forEach((item) => {
-          item.style.display = item === article ? "" : "none";
-        });
-        const media = Array.from(
-          article.querySelectorAll<HTMLElement>(".photo-post__media"),
-        );
-        if (
-          media.length === 0 ||
-          article.classList.contains("photo-post--comments")
-        ) {
-          await addRenderedPage(await renderCurrentState(), {
-            safeBreaks: safeBreaksFor(".comment-thread__group"),
+  const restoreBlobImages = await inlineBlobImages(element);
+  try {
+    if (articles.length === 0) {
+      await addRenderedPage(await renderCurrentState(), {
+        safeBreaks: safeBreaksFor(".message-row"),
+      });
+    } else {
+      const articleDisplays = articles.map((article) => article.style.display);
+      try {
+        for (const article of articles) {
+          articles.forEach((item) => {
+            item.style.display = item === article ? "" : "none";
           });
-          continue;
-        }
-        const mediaDisplays = media.map((item) => item.style.display);
-        try {
-          for (const activeMedium of media) {
-            media.forEach((item) => {
-              item.style.display = item === activeMedium ? "block" : "none";
-            });
+          const media = Array.from(
+            article.querySelectorAll<HTMLElement>(".photo-post__media"),
+          );
+          if (
+            media.length === 0 ||
+            article.classList.contains("photo-post--comments")
+          ) {
             await addRenderedPage(await renderCurrentState(), {
-              fitSinglePage: true,
+              safeBreaks: safeBreaksFor(".comment-thread__group"),
+            });
+            continue;
+          }
+          const mediaDisplays = media.map((item) => item.style.display);
+          try {
+            for (const activeMedium of media) {
+              media.forEach((item) => {
+                item.style.display = item === activeMedium ? "block" : "none";
+              });
+              await addRenderedPage(await renderCurrentState(), {
+                fitSinglePage: true,
+              });
+            }
+          } finally {
+            media.forEach((item, index) => {
+              item.style.display = mediaDisplays[index];
             });
           }
-        } finally {
-          media.forEach((item, index) => {
-            item.style.display = mediaDisplays[index];
-          });
         }
+      } finally {
+        articles.forEach((article, index) => {
+          article.style.display = articleDisplays[index];
+        });
       }
-    } finally {
-      articles.forEach((article, index) => {
-        article.style.display = articleDisplays[index];
-      });
     }
+  } finally {
+    restoreBlobImages();
   }
 
   downloadBlob(pdf.output("blob"), `${fileName}.pdf`);

@@ -53,13 +53,6 @@ export const PhotoPostPreview = forwardRef<
             key={post.id}
             onClick={() => onPostSelect(post.id)}
           >
-            <button
-              className="preview-post-edit"
-              onClick={() => onPostSelect(post.id)}
-              type="button"
-            >
-              {t("post.edit")}
-            </button>
             <div className="photo-post__header">
               {postImages?.profileImage ? (
                 <img

@@ -63,13 +63,6 @@ export const MicroblogPreview = forwardRef<
             key={post.id}
             onClick={() => onPostSelect(post.id)}
           >
-            <button
-              className="preview-post-edit"
-              onClick={() => onPostSelect(post.id)}
-              type="button"
-            >
-              {t("post.edit")}
-            </button>
             <div className="microblog-preview__header">
               {postImages?.profileImage ? (
                 <img

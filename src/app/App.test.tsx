@@ -180,10 +180,8 @@ describe("App", () => {
       "neuer_account",
     );
 
-    const previewEditButtons = screen.getAllByRole("button", {
-      name: "Beitrag bearbeiten",
-    });
-    await user.click(previewEditButtons.at(-1) as HTMLElement);
+    const previewPosts = document.querySelectorAll(".photo-post");
+    await user.click(previewPosts[previewPosts.length - 1] as HTMLElement);
 
     expect(screen.getByLabelText("Benutzername")).toHaveValue("projekt_kurs");
     expect(document.querySelectorAll(".photo-post--selected")).toHaveLength(1);
