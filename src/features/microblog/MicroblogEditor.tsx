@@ -20,6 +20,7 @@ import {
   todayInputValue,
 } from "../../shared/lib/timeline";
 import { CommentEditor } from "../../shared/components/CommentEditor";
+import { EmojiTextarea } from "../../shared/components/EmojiTextarea";
 import { EditorDisclosure } from "../../shared/components/EditorDisclosure";
 import { ImageUploadField } from "../../shared/components/ImageUploadField";
 import { TimelinePostList } from "../../shared/components/TimelinePostList";
@@ -288,12 +289,12 @@ export function MicroblogEditor({
         number="02"
         title={t("microblog.contentTitle")}
       >
-        <label className="field">
+        <div className="field">
           <span className="field-label">{t("microblog.postText")}</span>
-          <textarea
+          <EmojiTextarea
             aria-label={t("microblog.postText")}
             maxLength={fieldLimits.microblog.text}
-            onChange={(event) => updatePost({ text: event.target.value })}
+            onChange={(text) => updatePost({ text })}
             rows={6}
             value={activePost.text}
           />
@@ -309,7 +310,7 @@ export function MicroblogEditor({
               ? t("microblog.long")
               : ""}
           </span>
-        </label>
+        </div>
         <div className="field-row">
           <label className="field">
             <span className="field-label">{t("common.date")}</span>

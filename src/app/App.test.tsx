@@ -28,6 +28,14 @@ afterEach(() => {
   window.localStorage.clear();
 });
 
+function emojiControlsFor(field: HTMLElement) {
+  const root = field.closest(".emoji-textarea");
+  if (!(root instanceof HTMLElement)) {
+    throw new Error("Emoji textarea wrapper missing.");
+  }
+  return within(root);
+}
+
 describe("App", () => {
   it("shows the educational simulation notice on the generator", () => {
     render(<App />);
@@ -278,6 +286,25 @@ describe("App", () => {
     ).toBeInTheDocument();
   });
 
+  it("adds emojis to photo captions", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const caption = screen.getByLabelText("Beschreibung");
+    await user.clear(caption);
+    await user.type(caption, "Projekt ");
+    const captionEmoji = emojiControlsFor(caption);
+    await user.click(captionEmoji.getByRole("button", { name: "Emoji auswählen" }));
+    await user.click(captionEmoji.getByRole("button", { name: "Emoji einfügen 🙂" }));
+
+    expect(caption).toHaveValue("Projekt 🙂");
+    expect(
+      within(document.querySelector(".photo-post") as HTMLElement).getByText(
+        /Projekt 🙂/,
+      ),
+    ).toBeInTheDocument();
+  });
+
   it("sorts photo posts by their structured timeline date", async () => {
     const user = userEvent.setup();
     render(<App />);
@@ -462,6 +489,43 @@ describe("App", () => {
     expect(screen.getByText("4 Nachrichten bearbeiten und sortieren")).toBeInTheDocument();
   });
 
+  it("adds emojis to messenger drafts and existing messages", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("tab", { name: "Messenger-Chat" }));
+    const preview = document.querySelector(".messenger-preview");
+    expect(preview).not.toBeNull();
+
+    const firstMessage = screen.getByLabelText("Text von Nachricht 1");
+    await user.clear(firstMessage);
+    await user.type(firstMessage, "Quelle ");
+    const firstMessageEmoji = emojiControlsFor(firstMessage);
+    await user.click(
+      firstMessageEmoji.getByRole("button", { name: "Emoji auswählen" }),
+    );
+    await user.click(
+      firstMessageEmoji.getByRole("button", { name: "Emoji einfügen 🙂" }),
+    );
+    expect(firstMessage).toHaveValue("Quelle 🙂");
+
+    const draft = screen.getByPlaceholderText(
+      "Was soll in der Nachricht stehen?",
+    );
+    await user.type(draft, "Neue ");
+    const draftEmoji = emojiControlsFor(draft);
+    await user.click(draftEmoji.getByRole("button", { name: "Emoji auswählen" }));
+    await user.click(draftEmoji.getByRole("button", { name: "Emoji einfügen 🙂" }));
+    await user.click(screen.getByRole("button", { name: "Hinzufügen" }));
+
+    expect(
+      within(preview as HTMLElement).getByText("Quelle 🙂"),
+    ).toBeInTheDocument();
+    expect(
+      within(preview as HTMLElement).getByText("Neue 🙂"),
+    ).toBeInTheDocument();
+  });
+
   it("reorders messenger messages without losing content", async () => {
     const user = userEvent.setup();
     render(<App />);
@@ -614,6 +678,59 @@ describe("App", () => {
         "Antwort am zweiten Beitrag",
       ),
     ).toBeInTheDocument();
+  });
+
+  it("adds emojis to microblog posts", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("tab", { name: "Mikroblog" }));
+    const text = screen.getByLabelText("Beitragstext");
+    await user.clear(text);
+    await user.type(text, "Kontext ");
+    const textEmoji = emojiControlsFor(text);
+    await user.click(textEmoji.getByRole("button", { name: "Emoji auswählen" }));
+    await user.click(textEmoji.getByRole("button", { name: "Emoji einfügen 🙂" }));
+
+    expect(text).toHaveValue("Kontext 🙂");
+    expect(
+      within(
+        document.querySelector(".microblog-preview") as HTMLElement,
+      ).getByText("Kontext 🙂"),
+    ).toBeInTheDocument();
+  });
+
+  it("adds emojis to comments and replies", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Kommentar" }));
+    const comment = screen.getAllByLabelText("Kommentartext").at(-1);
+    await user.clear(comment as HTMLElement);
+    await user.type(comment as HTMLElement, "Kommentar ");
+    const commentEmoji = emojiControlsFor(comment as HTMLElement);
+    await user.click(
+      commentEmoji.getByRole("button", { name: "Emoji auswählen" }),
+    );
+    await user.click(
+      commentEmoji.getByRole("button", { name: "Emoji einfügen 🙂" }),
+    );
+
+    await user.click(screen.getAllByRole("button", { name: "Antwort" }).at(-1) as HTMLElement);
+    const reply = screen.getAllByLabelText("Antworttext").at(-1) as HTMLElement;
+    await user.clear(reply);
+    await user.type(reply, "Antwort ");
+    const replyEmoji = emojiControlsFor(reply);
+    await user.click(
+      replyEmoji.getByRole("button", { name: "Emoji auswählen" }),
+    );
+    await user.click(
+      replyEmoji.getByRole("button", { name: "Emoji einfügen 🙂" }),
+    );
+
+    const preview = document.querySelector(".photo-post") as HTMLElement;
+    expect(within(preview).getByText("Kommentar 🙂")).toBeInTheDocument();
+    expect(within(preview).getByText("Antwort 🙂")).toBeInTheDocument();
   });
 
   it("applies the hard microblog text limit in the editor", async () => {

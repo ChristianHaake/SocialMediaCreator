@@ -116,6 +116,8 @@ export const en: Record<TranslationKey, string> = {
   "comment.newReply": "New reply",
   "comment.justNow": "just now",
   "comment.discussion": "Two-level discussion for the selected post",
+  "emoji.open": "Choose emoji",
+  "emoji.insert": "Insert emoji",
   "photo.appearanceDescription": "Color scheme and timeline order",
   "photo.postsDescription.one": "{count} post, automatically sorted chronologically",
   "photo.postsDescription.other":

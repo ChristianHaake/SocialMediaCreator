@@ -10,6 +10,7 @@ import type {
 } from "../../domain/types";
 import { createId } from "../../shared/lib/ids";
 import { useTranslation } from "../../i18n";
+import { EmojiTextarea } from "../../shared/components/EmojiTextarea";
 import { ImageUploadField } from "../../shared/components/ImageUploadField";
 import { ThemeSelector } from "../../shared/components/ThemeSelector";
 
@@ -185,21 +186,22 @@ export function MessengerEditor({
             ))}
           </select>
         </label>
-        <label className="field">
+        <div className="field">
           <span className="field-label">{t("messenger.messageText")}</span>
-          <textarea
+          <EmojiTextarea
+            aria-label={t("messenger.messageText")}
             maxLength={fieldLimits.messenger.messageText}
-            onChange={(event) =>
+            onChange={(text) =>
               setDraft((current) => ({
                 ...current,
-                text: event.target.value,
+                text,
               }))
             }
             placeholder={t("messenger.placeholder")}
             rows={3}
             value={draft.text}
           />
-        </label>
+        </div>
         <label className="field">
           <span className="field-label">{t("common.timestamp")}</span>
           <input
@@ -319,22 +321,22 @@ export function MessengerEditor({
                     ))}
                   </select>
                 </label>
-                <label className="field">
+                <div className="field">
                   <span className="field-label">{t("messenger.text")}</span>
-                  <textarea
+                  <EmojiTextarea
                     aria-label={
                       locale === "de"
                         ? `Text von Nachricht ${index + 1}`
                         : `Text of message ${index + 1}`
                     }
                     maxLength={fieldLimits.messenger.messageText}
-                    onChange={(event) =>
-                      updateMessage(message.id, { text: event.target.value })
+                    onChange={(text) =>
+                      updateMessage(message.id, { text })
                     }
                     rows={3}
                     value={message.text}
                   />
-                </label>
+                </div>
                 <label className="field">
                   <span className="field-label">{t("common.timestamp")}</span>
                   <input
