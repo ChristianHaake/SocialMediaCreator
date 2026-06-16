@@ -39,6 +39,48 @@ async function continueExport(page: Page) {
     .click();
 }
 
+async function imageHasPixelNearColor(
+  page: Page,
+  bytes: Uint8Array,
+  expected: { red: number; green: number; blue: number },
+) {
+  return page.evaluate(
+    async ({ data, expectedColor }) => {
+      const blob = new Blob([new Uint8Array(data)], { type: "image/png" });
+      const url = URL.createObjectURL(blob);
+      try {
+        const image = new Image();
+        await new Promise<void>((resolve, reject) => {
+          image.onload = () => resolve();
+          image.onerror = () => reject(new Error("Downloaded PNG did not decode."));
+          image.src = url;
+        });
+        const canvas = document.createElement("canvas");
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
+        const context = canvas.getContext("2d", { willReadFrequently: true });
+        if (!context) throw new Error("Canvas context unavailable.");
+        context.drawImage(image, 0, 0);
+        const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+        for (let index = 0; index < pixels.length; index += 4) {
+          if (
+            Math.abs(pixels[index] - expectedColor.red) < 18 &&
+            Math.abs(pixels[index + 1] - expectedColor.green) < 18 &&
+            Math.abs(pixels[index + 2] - expectedColor.blue) < 18 &&
+            pixels[index + 3] > 240
+          ) {
+            return true;
+          }
+        }
+        return false;
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    },
+    { data: Array.from(bytes), expectedColor: expected },
+  );
+}
+
 test("education notice and public guidance pages are visible and bilingual", async ({
   page,
 }) => {
@@ -453,6 +495,65 @@ test("photo posts follow date, optional time and timeline order", async ({
   await expect(page.locator(".photo-post").nth(1)).toContainText(
     "12.06.2026 · 08:30",
   );
+});
+
+test("single-media photo exports keep the media area full width", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  const sizes = await page.locator(".photo-feed").evaluate((feed) => {
+    const mediaList = feed.querySelector(".photo-post__media-list");
+    const media = feed.querySelector(".photo-post__media");
+    if (!(mediaList instanceof HTMLElement) || !(media instanceof HTMLElement)) {
+      throw new Error("Photo media markup missing.");
+    }
+    feed.setAttribute("data-exporting", "true");
+    const listBox = mediaList.getBoundingClientRect();
+    const mediaBox = media.getBoundingClientRect();
+    feed.removeAttribute("data-exporting");
+    return {
+      listWidth: Math.round(listBox.width),
+      mediaWidth: Math.round(mediaBox.width),
+    };
+  });
+
+  expect(sizes.mediaWidth).toBe(sizes.listWidth);
+});
+
+test("photo PNG export includes uploaded media pixels", async ({
+  browserName,
+  page,
+}) => {
+  test.skip(
+    browserName !== "chromium",
+    "Pixel-level export decode is covered in Chromium; cross-browser export downloads are covered separately.",
+  );
+
+  await page.goto("/");
+
+  const redPng = Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFElEQVR42mP8z8DwnwEJMDGgAcQBANyuBAVgrqXwAAAAAElFTkSuQmCC",
+    "base64",
+  );
+  await page.locator("#post-image").setInputFiles({
+    name: "red.png",
+    mimeType: "image/png",
+    buffer: redPng,
+  });
+  await expect(page.locator(".photo-post__media img")).toBeVisible();
+
+  const imageDownload = page.waitForEvent("download");
+  await page.getByRole("button", { name: "PNG" }).click();
+  await continueExport(page);
+  const image = await imageDownload;
+  const path = await image.path();
+  expect(path).not.toBeNull();
+  const bytes = new Uint8Array(await readFile(path!));
+
+  await expect(
+    imageHasPixelNearColor(page, bytes, { red: 255, green: 0, blue: 0 }),
+  ).resolves.toBe(true);
 });
 
 test("microblog feed and thread layouts follow the selected order", async ({

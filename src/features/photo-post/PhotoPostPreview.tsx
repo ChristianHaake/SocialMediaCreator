@@ -97,7 +97,13 @@ export const PhotoPostPreview = forwardRef<
               </span>
             </div>
 
-            <div className="photo-post__media-list">
+            <div
+              className={
+                post.media.length > 1
+                  ? "photo-post__media-list photo-post__media-list--carousel"
+                  : "photo-post__media-list"
+              }
+            >
               {post.media.map((media, index) => (
                 <div
                   className={

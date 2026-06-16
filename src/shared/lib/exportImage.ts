@@ -87,6 +87,46 @@ function waitForImage(image: HTMLImageElement) {
   });
 }
 
+function waitForNextImageLoad(image: HTMLImageElement, timeoutMs = 3_000) {
+  return new Promise<void>((resolve, reject) => {
+    let settled = false;
+    const finish = (error?: Error) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeout);
+      image.removeEventListener("load", onLoad);
+      image.removeEventListener("error", onError);
+      if (error) reject(error);
+      else resolve();
+    };
+    const onLoad = () => finish();
+    const onError = () => finish(new Error("Image failed to load"));
+    const timeout = window.setTimeout(() => {
+      if (image.complete && image.naturalWidth > 0 && image.naturalHeight > 0) {
+        finish();
+      } else {
+        finish(new Error("Image decode timed out"));
+      }
+    }, timeoutMs);
+    image.addEventListener("load", onLoad);
+    image.addEventListener("error", onError);
+  });
+}
+
+async function setImageSourceAndWait(image: HTMLImageElement, src: string) {
+  const loaded = waitForNextImageLoad(image);
+  image.src = src;
+  if ("decode" in image) {
+    try {
+      await Promise.race([image.decode(), loaded]);
+      return;
+    } catch {
+      // Fall back to load/error events below for browser-specific decode quirks.
+    }
+  }
+  await loaded;
+}
+
 async function inlineBlobImages(element: HTMLElement) {
   const images = Array.from(element.querySelectorAll<HTMLImageElement>("img"))
     .filter((image) => image.currentSrc.startsWith("blob:") || image.src.startsWith("blob:"));
@@ -108,7 +148,7 @@ async function inlineBlobImages(element: HTMLElement) {
     const previousSrc = image.getAttribute("src");
     const previousSrcset = image.getAttribute("srcset");
     image.removeAttribute("srcset");
-    image.src = canvas.toDataURL("image/png");
+    await setImageSourceAndWait(image, canvas.toDataURL("image/png"));
     restore.push(() => {
       if (previousSrc === null) {
         image.removeAttribute("src");
@@ -413,9 +453,14 @@ export async function exportElementAsPdf(
               media.forEach((item) => {
                 item.style.display = item === activeMedium ? "block" : "none";
               });
-              await addRenderedPage(await renderCurrentState(), {
-                fitSinglePage: true,
-              });
+              try {
+                element.dataset.exportingSingleMedia = "true";
+                await addRenderedPage(await renderCurrentState(), {
+                  fitSinglePage: true,
+                });
+              } finally {
+                delete element.dataset.exportingSingleMedia;
+              }
             }
           } finally {
             media.forEach((item, index) => {
