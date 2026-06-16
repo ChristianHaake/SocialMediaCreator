@@ -21,6 +21,7 @@ import {
   todayInputValue,
 } from "../../shared/lib/timeline";
 import { CommentEditor } from "../../shared/components/CommentEditor";
+import { EmojiTextarea } from "../../shared/components/EmojiTextarea";
 import { EditorDisclosure } from "../../shared/components/EditorDisclosure";
 import { ImageUploadField } from "../../shared/components/ImageUploadField";
 import { TimelinePostList } from "../../shared/components/TimelinePostList";
@@ -515,16 +516,16 @@ export function PhotoPostEditor({
         number="03"
         title={t("photo.contentTitle")}
       >
-        <label className="field">
+        <div className="field">
           <span className="field-label">{t("photo.caption")}</span>
-          <textarea
+          <EmojiTextarea
             aria-label={t("photo.caption")}
             maxLength={fieldLimits.photoPost.caption}
-            onChange={(event) => updatePost({ caption: event.target.value })}
+            onChange={(caption) => updatePost({ caption })}
             rows={4}
             value={activePost.caption}
           />
-        </label>
+        </div>
         <div className="field-row">
           <label className="field">
             <span className="field-label">Likes</span>

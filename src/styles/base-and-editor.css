@@ -589,6 +589,74 @@ main {
   resize: vertical;
 }
 
+.emoji-textarea {
+  position: relative;
+}
+
+.emoji-textarea__control {
+  position: relative;
+}
+
+.field .emoji-textarea textarea {
+  padding-right: 45px;
+}
+
+.emoji-textarea__button {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid #cfd5dd;
+  border-radius: 8px;
+  color: #344054;
+  background: #fff;
+  cursor: pointer;
+}
+
+.emoji-textarea__button:hover,
+.emoji-textarea__option:hover {
+  border-color: #9da7b5;
+  background: #f8fafc;
+}
+
+.emoji-textarea__button:focus-visible,
+.emoji-textarea__option:focus-visible {
+  outline: 3px solid rgb(36 93 204 / 28%);
+  outline-offset: 2px;
+}
+
+.emoji-textarea__popover {
+  position: absolute;
+  z-index: 30;
+  right: 0;
+  bottom: calc(100% + 8px);
+  display: grid;
+  grid-template-columns: repeat(8, 34px);
+  gap: 5px;
+  max-width: min(100%, 318px);
+  padding: 9px;
+  border: 1px solid #cfd5dd;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 14px 35px rgb(15 23 42 / 16%);
+}
+
+.emoji-textarea__option {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+}
+
 .field input:hover,
 .field textarea:hover,
 .field select:hover {
@@ -962,4 +1030,3 @@ main {
   cursor: not-allowed;
   opacity: 0.48;
 }
-

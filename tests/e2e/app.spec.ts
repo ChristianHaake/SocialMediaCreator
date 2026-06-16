@@ -328,6 +328,10 @@ test("configuration import validates before replacing editor state", async ({
 
 test("project archives restore optimized images", async ({ page }) => {
   await page.goto("/");
+  await page.getByLabel("Beschreibung").fill("Archiv ");
+  await page.getByRole("button", { name: "Emoji auswählen" }).click();
+  await page.getByRole("button", { name: "Emoji einfügen 🙂" }).click();
+  await expect(page.getByLabel("Beschreibung")).toHaveValue("Archiv 🙂");
   const onePixelPng = Buffer.from(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
     "base64",
@@ -357,6 +361,8 @@ test("project archives restore optimized images", async ({ page }) => {
     .locator('input[type="file"][accept*=".smc"]')
     .setInputFiles(archivePath!);
   await expect(page.locator("img.photo-post__avatar")).toHaveCount(1);
+  await expect(page.getByLabel("Beschreibung")).toHaveValue("Archiv 🙂");
+  await expect(page.locator(".photo-post")).toContainText("Archiv 🙂");
   await expect(page.getByText("profil-ä.png")).toBeVisible();
 });
 
@@ -599,6 +605,10 @@ test("PDF export and local image verification are available", async ({
   await page
     .getByRole("button", { name: "Neuen Beitrag hinzufügen" })
     .click();
+  await page.getByLabel("Beschreibung").fill("Export ");
+  await page.getByRole("button", { name: "Emoji auswählen" }).click();
+  await page.getByRole("button", { name: "Emoji einfügen 🙂" }).click();
+  await expect(page.locator(".photo-post").first()).toContainText("Export 🙂");
   await openSection(page, "Karussell");
   await page.getByRole("button", { name: "Medium", exact: true }).click();
   const onePixelPng = Buffer.from(

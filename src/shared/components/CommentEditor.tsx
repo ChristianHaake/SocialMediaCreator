@@ -3,6 +3,7 @@ import { fieldLimits } from "../../domain/constraints";
 import type { ImageState, PostComment } from "../../domain/types";
 import { createId } from "../lib/ids";
 import { useTranslation } from "../../i18n";
+import { EmojiTextarea } from "./EmojiTextarea";
 import { ImageUploadField } from "./ImageUploadField";
 
 type CommentEditorProps = {
@@ -136,17 +137,18 @@ export function CommentEditor({
                   value={comment.timestamp}
                 />
               </label>
-              <label className="field">
+              <div className="field">
                 <span className="field-label">{t("comment.text")}</span>
-                <textarea
+                <EmojiTextarea
+                  aria-label={t("comment.text")}
                   maxLength={fieldLimits.common.commentText}
-                  onChange={(event) =>
-                    updateComment(comment.id, { text: event.target.value })
+                  onChange={(text) =>
+                    updateComment(comment.id, { text })
                   }
                   rows={3}
                   value={comment.text}
                 />
-              </label>
+              </div>
 
               <div className="reply-editor">
                 <div className="comment-editor-heading">
@@ -222,15 +224,16 @@ export function CommentEditor({
                         value={reply.timestamp}
                       />
                     </label>
-                    <label className="field">
+                    <div className="field">
                       <span className="field-label">{t("comment.replyText")}</span>
-                      <textarea
+                      <EmojiTextarea
+                        aria-label={t("comment.replyText")}
                         maxLength={fieldLimits.common.commentText}
-                        onChange={(event) =>
+                        onChange={(text) =>
                           updateComment(comment.id, {
                             replies: comment.replies.map((item) =>
                               item.id === reply.id
-                                ? { ...item, text: event.target.value }
+                                ? { ...item, text }
                                 : item,
                             ),
                           })
@@ -238,7 +241,7 @@ export function CommentEditor({
                         rows={2}
                         value={reply.text}
                       />
-                    </label>
+                    </div>
                   </div>
                 ))}
               </div>

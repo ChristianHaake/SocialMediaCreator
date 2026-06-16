@@ -118,6 +118,8 @@ export const de = {
   "comment.newReply": "Neue Antwort",
   "comment.justNow": "gerade eben",
   "comment.discussion": "Zweistufige Diskussion zum ausgewählten Beitrag",
+  "emoji.open": "Emoji auswählen",
+  "emoji.insert": "Emoji einfügen",
   "photo.appearanceDescription": "Farbschema und Reihenfolge der Timeline",
   "photo.postsDescription.one": "{count} Beitrag, automatisch chronologisch sortiert",
   "photo.postsDescription.other":
