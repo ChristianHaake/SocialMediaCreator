@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -11,7 +11,7 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-async function openSection(page: any, title: string) {
+async function openSection(page: Page, title: string) {
   const details = page
     .locator("details.editor-disclosure")
     .filter({ has: page.getByRole("heading", { name: title, exact: true }) });
