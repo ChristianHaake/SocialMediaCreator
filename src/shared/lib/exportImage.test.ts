@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { toPng, toJpeg } = vi.hoisted(() => ({
+const { toCanvas, toPng } = vi.hoisted(() => ({
+  toCanvas: vi.fn(),
   toPng: vi.fn(),
-  toJpeg: vi.fn(),
 }));
 
-vi.mock("html-to-image", () => ({ toPng, toJpeg }));
+vi.mock("html-to-image", () => ({ toCanvas, toPng }));
 vi.mock("jspdf", () => ({
   jsPDF: vi.fn(),
 }));
@@ -13,16 +13,37 @@ vi.mock("jspdf", () => ({
 import {
   addImageMarker,
   calculatePageSlices,
+  canvasToImageBlob,
   exportBadgeText,
   exportElementAsImage,
   verifyImageMarker,
 } from "./exportImage";
 
+function createEncodingCanvas() {
+  const canvas = document.createElement("canvas");
+  const toBlob = vi.fn(
+    (
+      callback: BlobCallback,
+      type?: string,
+    ) => {
+      callback(new Blob(["hello"], { type }));
+    },
+  );
+  Object.defineProperty(canvas, "toBlob", {
+    configurable: true,
+    value: toBlob,
+  });
+  return { canvas, toBlob };
+}
+
 describe("image export", () => {
+  let encoded: ReturnType<typeof createEncodingCanvas>;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    encoded = createEncodingCanvas();
+    toCanvas.mockResolvedValue(encoded.canvas);
     toPng.mockResolvedValue("data:image/png;base64,aGVsbG8=");
-    toJpeg.mockResolvedValue("data:image/jpeg;base64,aGVsbG8=");
   });
 
   it("exports PNG at the deterministic target width", async () => {
@@ -39,9 +60,14 @@ describe("image export", () => {
       "photoPost",
     );
 
-    expect(toPng).toHaveBeenCalledWith(
+    expect(toCanvas).toHaveBeenCalledWith(
       element,
       expect.objectContaining({ pixelRatio: 2 }),
+    );
+    expect(encoded.toBlob).toHaveBeenCalledWith(
+      expect.any(Function),
+      "image/png",
+      undefined,
     );
     expect(click).toHaveBeenCalledOnce();
     expect((click.mock.instances[0] as HTMLAnchorElement).download).toBe(
@@ -58,9 +84,14 @@ describe("image export", () => {
 
     await exportElementAsImage(element, "jpg", "test", "messenger");
 
-    expect(toJpeg).toHaveBeenCalledWith(
+    expect(toCanvas).toHaveBeenCalledWith(
       element,
-      expect.objectContaining({ quality: 0.92 }),
+      expect.objectContaining({ pixelRatio: 2 }),
+    );
+    expect(encoded.toBlob).toHaveBeenCalledWith(
+      expect.any(Function),
+      "image/jpeg",
+      0.92,
     );
   });
 
@@ -71,17 +102,29 @@ describe("image export", () => {
     const element = document.createElement("div");
     document.body.append(element);
     Object.defineProperty(element, "offsetWidth", { value: 540 });
-    toPng.mockImplementationOnce(async (renderedElement: HTMLElement) => {
+    toCanvas.mockImplementationOnce(async (renderedElement: HTMLElement) => {
       expect(
         renderedElement.querySelector("[data-export-badge]")?.textContent,
       ).toBe(exportBadgeText);
-      return "data:image/png;base64,aGVsbG8=";
+      return encoded.canvas;
     });
 
     await exportElementAsImage(element, "png", "test", "photoPost");
 
     expect(element.querySelector("[data-export-badge]")).toBeNull();
     element.remove();
+  });
+
+  it("rejects failed canvas encoding", async () => {
+    const canvas = document.createElement("canvas");
+    Object.defineProperty(canvas, "toBlob", {
+      configurable: true,
+      value: (callback: BlobCallback) => callback(null),
+    });
+
+    await expect(canvasToImageBlob(canvas, "image/png")).rejects.toThrow(
+      "Canvas image encoding failed.",
+    );
   });
 });
 
