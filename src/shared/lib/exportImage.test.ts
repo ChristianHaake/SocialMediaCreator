@@ -122,6 +122,8 @@ describe("image export", () => {
       expect(
         renderedElement.querySelector("[data-export-badge]")?.textContent,
       ).toBe(exportBadgeText);
+      expect(renderedElement.dataset.imageExporting).toBe("true");
+      expect(renderedElement.dataset.exporting).toBeUndefined();
       return encoded.canvas;
     });
 
@@ -195,6 +197,36 @@ describe("image export", () => {
       expect.any(Number),
       expect.any(Number),
     );
+  });
+
+  it("renders each photo feed carousel medium as a separate PDF page", async () => {
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(
+      () => undefined,
+    );
+    Object.defineProperty(encoded.canvas, "width", { value: 1080 });
+    Object.defineProperty(encoded.canvas, "height", { value: 1080 });
+    Object.defineProperty(encoded.canvas, "toDataURL", {
+      configurable: true,
+      value: vi.fn(() => "data:image/jpeg;base64,aGVsbG8="),
+    });
+    const element = document.createElement("div");
+    element.innerHTML = `
+      <div class="photo-feed">
+        <article class="photo-post">
+          <div class="photo-post__media-list photo-post__media-list--carousel">
+            <div class="photo-post__media photo-post__media--active"></div>
+            <div class="photo-post__media"></div>
+          </div>
+        </article>
+      </div>
+    `;
+    Object.defineProperty(element, "offsetWidth", { value: 540 });
+
+    await exportElementAsPdf(element, "test", "en");
+
+    expect(toCanvas).toHaveBeenCalledTimes(2);
+    expect(pdfInstance.addImage).toHaveBeenCalledTimes(2);
+    expect(pdfInstance.addPage).toHaveBeenCalledTimes(1);
   });
 });
 

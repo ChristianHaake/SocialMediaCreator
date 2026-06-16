@@ -550,6 +550,7 @@ function AppContent() {
         open={teacherInfoOpen}
       />
       <ExportNoticeDialog
+        format={pendingExport}
         onCancel={cancelExport}
         onConfirm={confirmExport}
         open={pendingExport !== null}

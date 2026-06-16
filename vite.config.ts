@@ -2,6 +2,13 @@ import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 import { defineConfig } from "vitest/config";
 
+const icon = (src: string, sizes: string, type: string, purpose: string) => ({
+  src,
+  sizes,
+  type,
+  purpose,
+});
+
 export default defineConfig({
   plugins: [
     react(),
@@ -22,30 +29,10 @@ export default defineConfig({
         background_color: "#f3f5f8",
         theme_color: "#245dcc",
         icons: [
-          {
-            src: "/pwa-192x192.png",
-            sizes: "192x192",
-            type: "image/png",
-            purpose: "any",
-          },
-          {
-            src: "/pwa-512x512.png",
-            sizes: "512x512",
-            type: "image/png",
-            purpose: "any",
-          },
-          {
-            src: "/maskable-512x512.png",
-            sizes: "512x512",
-            type: "image/png",
-            purpose: "maskable",
-          },
-          {
-            src: "/favicon.svg",
-            sizes: "any",
-            type: "image/svg+xml",
-            purpose: "any",
-          },
+          icon("/pwa-192x192.png", "192x192", "image/png", "any"),
+          icon("/pwa-512x512.png", "512x512", "image/png", "any"),
+          icon("/maskable-512x512.png", "512x512", "image/png", "maskable"),
+          icon("/favicon.svg", "any", "image/svg+xml", "any"),
         ],
       },
       workbox: {

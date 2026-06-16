@@ -834,16 +834,20 @@
 }
 
 [data-exporting="true"] .photo-post.photo-post--selected,
-[data-exporting="true"] .microblog-preview.microblog-preview--selected {
+[data-exporting="true"] .microblog-preview.microblog-preview--selected,
+[data-image-exporting="true"] .photo-post.photo-post--selected,
+[data-image-exporting="true"] .microblog-preview.microblog-preview--selected {
   border-color: var(--simulation-border);
   box-shadow: none;
 }
 
-[data-exporting="true"] .photo-post.photo-post--selected {
+[data-exporting="true"] .photo-post.photo-post--selected,
+[data-image-exporting="true"] .photo-post.photo-post--selected {
   box-shadow: 0 20px 50px rgb(15 23 42 / 14%);
 }
 
-.export-wrapper[data-exporting="true"] {
+.export-wrapper[data-exporting="true"],
+.export-wrapper[data-image-exporting="true"] {
   padding: 32px;
   background-color: #ffffff;
 }

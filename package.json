@@ -25,6 +25,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "test:e2e:chromium": "playwright test --project=chromium",
     "verify": "npm test && npm run lint -- --max-warnings=0 && npm run build && npm run test:e2e",
     "smoke:production": "node scripts/smoke-production.mjs"
   },

@@ -12,8 +12,6 @@ import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const distDir = "dist";
-// Keep SVG/XML namespace URLs (not network requests).
-const keep = /^https?:\/\/(?:www\.)?w3\.org\//;
 const urlPattern = /https?:\/\/[^\s"'`)\\]+/g;
 
 const targets = readdirSync(distDir).filter(
@@ -26,7 +24,6 @@ for (const name of targets) {
   const source = readFileSync(path, "utf8");
   const stripped = [];
   const next = source.replace(urlPattern, (url) => {
-    if (keep.test(url)) return url;
     stripped.push(url);
     return "";
   });
