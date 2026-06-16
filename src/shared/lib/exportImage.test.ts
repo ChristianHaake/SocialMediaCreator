@@ -1,14 +1,30 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { toCanvas, toPng } = vi.hoisted(() => ({
-  toCanvas: vi.fn(),
-  toPng: vi.fn(),
-}));
+const { jsPDF, pdfInstance, toCanvas } = vi.hoisted(() => {
+  const pdfInstance = {
+    addImage: vi.fn(),
+    addPage: vi.fn(),
+    output: vi.fn(() => new Blob(["pdf"], { type: "application/pdf" })),
+    setFontSize: vi.fn(),
+    setProperties: vi.fn(),
+    setTextColor: vi.fn(),
+    text: vi.fn(),
+  };
+  return {
+    jsPDF: vi.fn(
+      class {
+        constructor() {
+          return pdfInstance;
+        }
+      },
+    ),
+    pdfInstance,
+    toCanvas: vi.fn(),
+  };
+});
 
-vi.mock("html-to-image", () => ({ toCanvas, toPng }));
-vi.mock("jspdf", () => ({
-  jsPDF: vi.fn(),
-}));
+vi.mock("html-to-image", () => ({ toCanvas }));
+vi.mock("jspdf", () => ({ jsPDF }));
 
 import {
   addImageMarker,
@@ -16,6 +32,7 @@ import {
   canvasToImageBlob,
   exportBadgeText,
   exportElementAsImage,
+  exportElementAsPdf,
   verifyImageMarker,
 } from "./exportImage";
 
@@ -43,7 +60,6 @@ describe("image export", () => {
     vi.clearAllMocks();
     encoded = createEncodingCanvas();
     toCanvas.mockResolvedValue(encoded.canvas);
-    toPng.mockResolvedValue("data:image/png;base64,aGVsbG8=");
   });
 
   it("exports PNG at the deterministic target width", async () => {
@@ -121,9 +137,63 @@ describe("image export", () => {
       configurable: true,
       value: (callback: BlobCallback) => callback(null),
     });
+    Object.defineProperty(canvas, "toDataURL", {
+      configurable: true,
+      value: () => {
+        throw new Error("Data URL fallback unavailable.");
+      },
+    });
 
     await expect(canvasToImageBlob(canvas, "image/png")).rejects.toThrow(
       "Canvas image encoding failed.",
+    );
+  });
+
+  it("falls back to a PNG data URL when PNG blob encoding fails", async () => {
+    const canvas = document.createElement("canvas");
+    Object.defineProperty(canvas, "toBlob", {
+      configurable: true,
+      value: (callback: BlobCallback) => callback(null),
+    });
+    Object.defineProperty(canvas, "toDataURL", {
+      configurable: true,
+      value: vi.fn(() => "data:image/png;base64,aGVsbG8="),
+    });
+
+    const blob = await canvasToImageBlob(canvas, "image/png");
+
+    expect(blob.type).toBe("image/png");
+    expect(await blob.text()).toBe("hello");
+  });
+
+  it("renders PDFs from the shared canvas renderer as JPEG pages", async () => {
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(
+      () => undefined,
+    );
+    Object.defineProperty(encoded.canvas, "width", { value: 1080 });
+    Object.defineProperty(encoded.canvas, "height", { value: 1080 });
+    Object.defineProperty(encoded.canvas, "toDataURL", {
+      configurable: true,
+      value: vi.fn(() => "data:image/jpeg;base64,aGVsbG8="),
+    });
+    const element = document.createElement("div");
+    element.innerHTML = '<div class="photo-post"><div class="photo-post__media"></div></div>';
+    Object.defineProperty(element, "offsetWidth", { value: 540 });
+
+    await exportElementAsPdf(element, "test", "en");
+
+    expect(toCanvas).toHaveBeenCalledWith(
+      element,
+      expect.objectContaining({ pixelRatio: 2 }),
+    );
+    expect(encoded.canvas.toDataURL).toHaveBeenCalledWith("image/jpeg", 0.92);
+    expect(pdfInstance.addImage).toHaveBeenCalledWith(
+      "data:image/jpeg;base64,aGVsbG8=",
+      "JPEG",
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Number),
     );
   });
 });

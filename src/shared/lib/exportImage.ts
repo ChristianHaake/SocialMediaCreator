@@ -1,4 +1,4 @@
-import { toCanvas, toPng } from "html-to-image";
+import { toCanvas } from "html-to-image";
 import type { Locale, ModuleType } from "../../domain/types";
 import { downloadBlob } from "./downloads";
 
@@ -128,29 +128,70 @@ async function setImageSourceAndWait(image: HTMLImageElement, src: string) {
   await waitForNextImageLoad(image, src);
 }
 
+function waitForRenderFrame() {
+  return new Promise<void>((resolve) => {
+    if (typeof window.requestAnimationFrame === "function") {
+      window.requestAnimationFrame(() => resolve());
+      return;
+    }
+    globalThis.setTimeout(resolve, 0);
+  });
+}
+
+function dataUrlToBlob(dataUrl: string) {
+  const [header, base64] = dataUrl.split(",");
+  const mime = header.match(/^data:([^;]+);base64$/)?.[1] ?? "image/png";
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return new Blob([bytes], { type: mime });
+}
+
 export async function canvasToImageBlob(
   canvas: HTMLCanvasElement,
   type: "image/png" | "image/jpeg",
   quality?: number,
 ) {
-  const blob = await new Promise<Blob>((resolve, reject) => {
-    const timeout = window.setTimeout(() => {
-      reject(new Error("Canvas image encoding timed out."));
-    }, 5_000);
-    canvas.toBlob(
-      (encodedBlob) => {
+  try {
+    return await new Promise<Blob>((resolve, reject) => {
+      let settled = false;
+      const finish = (blob: Blob | null, error?: Error) => {
+        if (settled) return;
+        settled = true;
         window.clearTimeout(timeout);
-        if (!encodedBlob) {
+        if (error) {
+          reject(error);
+          return;
+        }
+        if (!blob) {
           reject(new Error("Canvas image encoding failed."));
           return;
         }
-        resolve(encodedBlob);
-      },
-      type,
-      quality,
-    );
-  });
-  return blob;
+        resolve(blob);
+      };
+      const timeout = window.setTimeout(() => {
+        finish(null, new Error("Canvas image encoding timed out."));
+      }, 5_000);
+      canvas.toBlob(
+        (encodedBlob) => finish(encodedBlob),
+        type,
+        quality,
+      );
+    });
+  } catch (error) {
+    if (type !== "image/png") throw error;
+    try {
+      const dataUrl = canvas.toDataURL("image/png");
+      if (dataUrl.startsWith("data:")) {
+        return dataUrlToBlob(dataUrl);
+      }
+    } catch {
+      // Keep the original canvas encoding error if the fallback is unavailable.
+    }
+    throw error;
+  }
 }
 
 async function inlineBlobImages(element: HTMLElement) {
@@ -175,6 +216,7 @@ async function inlineBlobImages(element: HTMLElement) {
     const previousSrcset = image.getAttribute("srcset");
     image.removeAttribute("srcset");
     await setImageSourceAndWait(image, canvas.toDataURL("image/png"));
+    await waitForRenderFrame();
     restore.push(() => {
       if (previousSrc === null) {
         image.removeAttribute("src");
@@ -194,16 +236,23 @@ async function inlineBlobImages(element: HTMLElement) {
   };
 }
 
+function getRenderOptions(element: HTMLElement) {
+  return {
+    backgroundColor: getExportBackground(element),
+    cacheBust: true,
+    pixelRatio: exportWidth / Math.max(element.offsetWidth, 1),
+  };
+}
+
+async function renderElementCanvas(element: HTMLElement) {
+  await waitForRenderFrame();
+  return toCanvas(element, getRenderOptions(element));
+}
+
 async function renderElementBlob(
   element: HTMLElement,
   format: ImageExportFormat,
 ) {
-  const scale = exportWidth / Math.max(element.offsetWidth, 1);
-  const commonOptions = {
-    backgroundColor: getExportBackground(element),
-    cacheBust: true,
-    pixelRatio: scale,
-  };
   const badge = document.createElement("div");
   badge.dataset.exportBadge = "true";
   badge.textContent = exportBadgeText;
@@ -232,7 +281,7 @@ async function renderElementBlob(
   element.dataset.exporting = "true";
   const restoreBlobImages = await inlineBlobImages(element);
   try {
-    const canvas = await toCanvas(element, commonOptions);
+    const canvas = await renderElementCanvas(element);
     return canvasToImageBlob(
       canvas,
       format === "png" ? "image/png" : "image/jpeg",
@@ -318,15 +367,6 @@ export async function exportElementAsImage(
   downloadBlob(markedBlob, `${fileName}.${format}`);
 }
 
-function loadImage(dataUrl: string) {
-  return new Promise<HTMLImageElement>((resolve, reject) => {
-    const image = new Image();
-    image.onload = () => resolve(image);
-    image.onerror = reject;
-    image.src = dataUrl;
-  });
-}
-
 export async function exportElementAsPdf(
   element: HTMLElement,
   fileName: string,
@@ -360,80 +400,76 @@ export async function exportElementAsPdf(
   }
 
   async function addRenderedPage(
-    dataUrl: string,
+    renderedCanvas: HTMLCanvasElement,
     options: { fitSinglePage?: boolean; safeBreaks?: number[] } = {},
   ) {
-    const image = await loadImage(dataUrl);
     if (options.fitSinglePage) {
       if (pageCount > 0) pdf.addPage();
       pageCount += 1;
       const scale = Math.min(
-        contentWidth / image.width,
-        contentHeight / image.height,
+        contentWidth / renderedCanvas.width,
+        contentHeight / renderedCanvas.height,
       );
       pdf.addImage(
-        dataUrl,
-        "PNG",
-        margin + (contentWidth - image.width * scale) / 2,
+        renderedCanvas.toDataURL("image/jpeg", 0.92),
+        "JPEG",
+        margin + (contentWidth - renderedCanvas.width * scale) / 2,
         margin,
-        image.width * scale,
-        image.height * scale,
+        renderedCanvas.width * scale,
+        renderedCanvas.height * scale,
       );
       addExportFooter();
       return;
     }
 
     const pixelsPerPage = Math.floor(
-      image.width * (contentHeight / contentWidth),
+      renderedCanvas.width * (contentHeight / contentWidth),
     );
-    const cssToImageScale = image.width / Math.max(element.offsetWidth, 1);
+    const cssToImageScale = renderedCanvas.width / Math.max(element.offsetWidth, 1);
     const safeBreaks = (options.safeBreaks ?? [])
       .map((position) => Math.round(position * cssToImageScale))
-      .filter((position) => position > 0 && position < image.height)
+      .filter((position) => position > 0 && position < renderedCanvas.height)
       .sort((left, right) => left - right);
 
     for (const slice of calculatePageSlices(
-      image.height,
+      renderedCanvas.height,
       pixelsPerPage,
       safeBreaks,
     )) {
       const canvas = document.createElement("canvas");
-      canvas.width = image.width;
+      canvas.width = renderedCanvas.width;
       canvas.height = slice.height;
       const context = canvas.getContext("2d");
       if (!context) throw new Error("PDF-Seite konnte nicht erstellt werden.");
+      context.fillStyle = getExportBackground(element);
+      context.fillRect(0, 0, canvas.width, canvas.height);
       context.drawImage(
-        image,
+        renderedCanvas,
         0,
         slice.y,
-        image.width,
+        renderedCanvas.width,
         slice.height,
         0,
         0,
-        image.width,
+        renderedCanvas.width,
         slice.height,
       );
       if (pageCount > 0) pdf.addPage();
       pageCount += 1;
       pdf.addImage(
-        canvas.toDataURL("image/png"),
-        "PNG",
+        canvas.toDataURL("image/jpeg", 0.92),
+        "JPEG",
         margin,
         margin,
         contentWidth,
-        contentWidth * (slice.height / image.width),
+        contentWidth * (slice.height / renderedCanvas.width),
       );
       addExportFooter();
     }
   }
 
   async function renderCurrentState() {
-    const scale = exportWidth / Math.max(element.offsetWidth, 1);
-    return toPng(element, {
-      backgroundColor: getExportBackground(element),
-      cacheBust: true,
-      pixelRatio: scale,
-    });
+    return renderElementCanvas(element);
   }
 
   function safeBreaksFor(selector: string) {
