@@ -54,7 +54,6 @@ describe("downloadBlob", () => {
     expect(link.rel).toBe("noopener");
     expect(link.download).toBe("test.txt");
 
-    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
     delete (window as unknown as Record<string, unknown>)["matchMedia"];
   });
 });
