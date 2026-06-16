@@ -295,8 +295,15 @@
 .photo-feed[data-exporting="true"] .photo-post__media-list--carousel {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  padding: 8px;
+  gap: 10px;
+  align-items: start;
+  padding: 10px;
+}
+
+.photo-feed[data-exporting="true"] .photo-post__media-list--carousel .photo-post__media:last-child:nth-child(odd) {
+  width: calc(50% - 5px);
+  justify-self: center;
+  grid-column: 1 / -1;
 }
 
 .photo-feed[data-exporting-single-media="true"] .photo-post__media-list--carousel {
@@ -306,6 +313,14 @@
 
 .photo-feed[data-exporting="true"] .photo-post__media {
   display: block;
+}
+
+.photo-feed[data-exporting="true"] .carousel-counter {
+  top: 14px;
+  right: 14px;
+  padding: 4px 9px;
+  background: rgb(0 0 0 / 62%);
+  font-size: 0.7rem;
 }
 
 .photo-feed[data-exporting="true"] .carousel-dots {

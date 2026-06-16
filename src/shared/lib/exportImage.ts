@@ -1,4 +1,4 @@
-import { toJpeg, toPng } from "html-to-image";
+import { toCanvas, toPng } from "html-to-image";
 import type { Locale, ModuleType } from "../../domain/types";
 import { downloadBlob } from "./downloads";
 
@@ -50,14 +50,6 @@ export function calculatePageSlices(
   return slices;
 }
 
-function dataUrlToBlob(dataUrl: string) {
-  const [header, encoded] = dataUrl.split(",");
-  const mimeType = /data:([^;]+)/.exec(header)?.[1] ?? "application/octet-stream";
-  const binary = atob(encoded);
-  const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
-  return new Blob([bytes], { type: mimeType });
-}
-
 function bytesToHex(bytes: ArrayBuffer) {
   return Array.from(new Uint8Array(bytes), (byte) =>
     byte.toString(16).padStart(2, "0"),
@@ -87,7 +79,11 @@ function waitForImage(image: HTMLImageElement) {
   });
 }
 
-function waitForNextImageLoad(image: HTMLImageElement, timeoutMs = 3_000) {
+function waitForNextImageLoad(
+  image: HTMLImageElement,
+  src: string,
+  timeoutMs = 3_000,
+) {
   return new Promise<void>((resolve, reject) => {
     let settled = false;
     const finish = (error?: Error) => {
@@ -110,21 +106,51 @@ function waitForNextImageLoad(image: HTMLImageElement, timeoutMs = 3_000) {
     }, timeoutMs);
     image.addEventListener("load", onLoad);
     image.addEventListener("error", onError);
+    image.src = src;
+    if ("decode" in image) {
+      image.decode().then(
+        () => finish(),
+        () => {
+          if (
+            image.complete &&
+            image.naturalWidth > 0 &&
+            image.naturalHeight > 0
+          ) {
+            finish();
+          }
+        },
+      );
+    }
   });
 }
 
 async function setImageSourceAndWait(image: HTMLImageElement, src: string) {
-  const loaded = waitForNextImageLoad(image);
-  image.src = src;
-  if ("decode" in image) {
-    try {
-      await Promise.race([image.decode(), loaded]);
-      return;
-    } catch {
-      // Fall back to load/error events below for browser-specific decode quirks.
-    }
-  }
-  await loaded;
+  await waitForNextImageLoad(image, src);
+}
+
+export async function canvasToImageBlob(
+  canvas: HTMLCanvasElement,
+  type: "image/png" | "image/jpeg",
+  quality?: number,
+) {
+  const blob = await new Promise<Blob>((resolve, reject) => {
+    const timeout = window.setTimeout(() => {
+      reject(new Error("Canvas image encoding timed out."));
+    }, 5_000);
+    canvas.toBlob(
+      (encodedBlob) => {
+        window.clearTimeout(timeout);
+        if (!encodedBlob) {
+          reject(new Error("Canvas image encoding failed."));
+          return;
+        }
+        resolve(encodedBlob);
+      },
+      type,
+      quality,
+    );
+  });
+  return blob;
 }
 
 async function inlineBlobImages(element: HTMLElement) {
@@ -206,11 +232,12 @@ async function renderElementBlob(
   element.dataset.exporting = "true";
   const restoreBlobImages = await inlineBlobImages(element);
   try {
-    const dataUrl =
-      format === "png"
-        ? await toPng(element, commonOptions)
-        : await toJpeg(element, { ...commonOptions, quality: 0.92 });
-    return dataUrlToBlob(dataUrl);
+    const canvas = await toCanvas(element, commonOptions);
+    return canvasToImageBlob(
+      canvas,
+      format === "png" ? "image/png" : "image/jpeg",
+      format === "jpg" ? 0.92 : undefined,
+    );
   } finally {
     restoreBlobImages();
     badge.remove();

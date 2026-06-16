@@ -43,16 +43,18 @@ async function imageHasPixelNearColor(
   page: Page,
   bytes: Uint8Array,
   expected: { red: number; green: number; blue: number },
+  mimeType = "image/png",
 ) {
   return page.evaluate(
-    async ({ data, expectedColor }) => {
-      const blob = new Blob([new Uint8Array(data)], { type: "image/png" });
+    async ({ data, expectedColor, type }) => {
+      const blob = new Blob([new Uint8Array(data)], { type });
       const url = URL.createObjectURL(blob);
       try {
         const image = new Image();
         await new Promise<void>((resolve, reject) => {
           image.onload = () => resolve();
-          image.onerror = () => reject(new Error("Downloaded PNG did not decode."));
+          image.onerror = () =>
+            reject(new Error("Downloaded image did not decode."));
           image.src = url;
         });
         const canvas = document.createElement("canvas");
@@ -64,9 +66,9 @@ async function imageHasPixelNearColor(
         const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
         for (let index = 0; index < pixels.length; index += 4) {
           if (
-            Math.abs(pixels[index] - expectedColor.red) < 18 &&
-            Math.abs(pixels[index + 1] - expectedColor.green) < 18 &&
-            Math.abs(pixels[index + 2] - expectedColor.blue) < 18 &&
+            Math.abs(pixels[index] - expectedColor.red) < 48 &&
+            Math.abs(pixels[index + 1] - expectedColor.green) < 48 &&
+            Math.abs(pixels[index + 2] - expectedColor.blue) < 48 &&
             pixels[index + 3] > 240
           ) {
             return true;
@@ -77,9 +79,14 @@ async function imageHasPixelNearColor(
         URL.revokeObjectURL(url);
       }
     },
-    { data: Array.from(bytes), expectedColor: expected },
+    { data: Array.from(bytes), expectedColor: expected, type: mimeType },
   );
 }
+
+const redPng = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFElEQVR42mP8z8DwnwEJMDGgAcQBANyuBAVgrqXwAAAAAElFTkSuQmCC",
+  "base64",
+);
 
 test("education notice and public guidance pages are visible and bilingual", async ({
   page,
@@ -521,27 +528,81 @@ test("single-media photo exports keep the media area full width", async ({
   expect(sizes.mediaWidth).toBe(sizes.listWidth);
 });
 
-test("photo PNG export includes uploaded media pixels", async ({
+test("photo image exports include uploaded media pixels", async ({
   browserName,
   page,
 }) => {
   test.skip(
-    browserName !== "chromium",
-    "Pixel-level export decode is covered in Chromium; cross-browser export downloads are covered separately.",
+    browserName === "firefox",
+    "Firefox download events are covered by lighter export tests; Safari PNG coverage runs in WebKit.",
   );
 
   await page.goto("/");
 
-  const redPng = Buffer.from(
-    "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFElEQVR42mP8z8DwnwEJMDGgAcQBANyuBAVgrqXwAAAAAElFTkSuQmCC",
-    "base64",
-  );
   await page.locator("#post-image").setInputFiles({
     name: "red.png",
     mimeType: "image/png",
     buffer: redPng,
   });
   await expect(page.locator(".photo-post__media img")).toBeVisible();
+
+  for (const format of ["PNG", "JPG"] as const) {
+    const imageDownload = page.waitForEvent("download");
+    await page.getByRole("button", { name: format }).click();
+    await continueExport(page);
+    const image = await imageDownload;
+    const path = await image.path();
+    expect(path).not.toBeNull();
+    const bytes = new Uint8Array(await readFile(path!));
+
+    await expect(
+      imageHasPixelNearColor(
+        page,
+        bytes,
+        { red: 255, green: 0, blue: 0 },
+        format === "PNG" ? "image/png" : "image/jpeg",
+      ),
+    ).resolves.toBe(true);
+  }
+});
+
+test("carousel image export keeps the grid and media pixels", async ({
+  browserName,
+  page,
+}) => {
+  test.skip(
+    browserName === "firefox",
+    "Firefox download events are covered by lighter export tests; Safari PNG coverage runs in WebKit.",
+  );
+
+  await page.goto("/");
+  await openSection(page, "Karussell");
+  await page.locator("#post-image").setInputFiles({
+    name: "red-1.png",
+    mimeType: "image/png",
+    buffer: redPng,
+  });
+  await page.getByRole("button", { name: "Medium", exact: true }).click();
+  await page.locator("#post-image").setInputFiles({
+    name: "red-2.png",
+    mimeType: "image/png",
+    buffer: redPng,
+  });
+  await expect(page.locator(".photo-post__media img")).toHaveCount(2);
+
+  const grid = await page.locator(".photo-feed").evaluate((feed) => {
+    feed.setAttribute("data-exporting", "true");
+    const media = Array.from(
+      feed.querySelectorAll<HTMLElement>(".photo-post__media"),
+    );
+    const widths = media.map((item) =>
+      Math.round(item.getBoundingClientRect().width),
+    );
+    feed.removeAttribute("data-exporting");
+    return widths;
+  });
+  expect(grid).toHaveLength(2);
+  expect(grid[0]).toBe(grid[1]);
 
   const imageDownload = page.waitForEvent("download");
   await page.getByRole("button", { name: "PNG" }).click();
