@@ -9,7 +9,7 @@
   --app-bg: #f3f5f8;
   --panel-bg: #ffffff;
   --text-main: #111827;
-  --text-muted: #667085;
+  --text-muted: #475467;
   --border-soft: #dfe3e8;
   --accent: #245dcc;
   --accent-dark: #1949a4;
@@ -156,7 +156,7 @@ a {
   display: inline-flex;
   gap: 7px;
   align-items: center;
-  color: #176b3a;
+  color: #0f512a;
   font-size: 0.82rem;
   font-weight: 700;
 }
@@ -274,7 +274,7 @@ main {
   padding: 10px 16px;
   border: 0;
   border-radius: 11px;
-  color: #7a8492;
+  color: #475467;
   background: transparent;
   font-size: 0.9rem;
   font-weight: 750;
@@ -935,7 +935,7 @@ main {
 }
 
 .post-selector__select small {
-  color: #7a8492;
+  color: #475467;
   font-size: 0.67rem;
 }
 
