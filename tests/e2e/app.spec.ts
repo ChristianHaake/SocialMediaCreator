@@ -517,6 +517,16 @@ test("PDF export and local image verification are available", async ({
     .click();
   await openSection(page, "Karussell");
   await page.getByRole("button", { name: "Medium", exact: true }).click();
+  const onePixelPng = Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+    "base64",
+  );
+  await page.locator("#post-image").setInputFiles({
+    name: "pixel.png",
+    mimeType: "image/png",
+    buffer: onePixelPng,
+  });
+  await expect(page.locator(".photo-post__media img")).toBeVisible();
 
   const pdfDownload = page.waitForEvent("download");
   await page.getByRole("button", { name: "PDF" }).click();
@@ -535,6 +545,11 @@ test("PDF export and local image verification are available", async ({
   const image = await imageDownload;
   const imagePath = await image.path();
   expect(imagePath).not.toBeNull();
+
+  const jpgDownload = page.waitForEvent("download");
+  await page.getByRole("button", { name: "JPG" }).click();
+  await continueExport(page);
+  expect((await jpgDownload).suggestedFilename()).toMatch(/\.jpg$/);
 
   await page.goto("/verifizieren");
   await page.locator('input[type="file"]').setInputFiles(imagePath!);
