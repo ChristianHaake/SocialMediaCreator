@@ -4,6 +4,10 @@ import type { ImageErrorCode } from "../../i18n";
 const acceptedImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 export const maxImageSize = 5 * 1024 * 1024;
 export const maxImageDimension = 4096;
+// Hard ceiling for an uploaded image we are willing to decode and downscale.
+// Above this we reject outright instead of allocating a giant bitmap — a guard
+// against decompression bombs and runaway memory.
+export const maxSourceImageDimension = 12000;
 export const optimizedImageDimension = 2048;
 export const optimizedImageQuality = 0.82;
 
@@ -126,4 +130,51 @@ export async function optimizeImage(blob: Blob): Promise<Blob> {
   } finally {
     bitmap.close();
   }
+}
+
+// Upload-time preparation: validate the file, and instead of rejecting an
+// oversized image (too many bytes or too many pixels), downscale it via
+// optimizeImage and accept the smaller result. validateImageFile stays strict
+// for the project-import path; this is only for direct uploads.
+export async function prepareImageForUpload(
+  file: File,
+): Promise<{ image: ImageState } | { error: ImageErrorCode }> {
+  if (!acceptedImageTypes.has(file.type)) {
+    return { error: "image.invalidType" };
+  }
+
+  const header = new Uint8Array(await file.slice(0, 12).arrayBuffer());
+  if (!hasImageSignature(file.type, header)) {
+    return { error: "image.invalidData" };
+  }
+
+  const dimensions = await getImageDimensions(file);
+  if (!dimensions) {
+    return { error: "image.decodeFailed" };
+  }
+  if (
+    dimensions.width > maxSourceImageDimension ||
+    dimensions.height > maxSourceImageDimension
+  ) {
+    return { error: "image.tooManyPixels" };
+  }
+
+  const oversized =
+    file.size > maxImageSize ||
+    dimensions.width > maxImageDimension ||
+    dimensions.height > maxImageDimension;
+  if (!oversized) {
+    return { image: createImageState(file) };
+  }
+
+  let optimized: Blob;
+  try {
+    optimized = await optimizeImage(file);
+  } catch {
+    return { error: "image.decodeFailed" };
+  }
+  if (optimized.size > maxImageSize) {
+    return { error: "image.tooLarge" };
+  }
+  return { image: createImageState(optimized, file.name, true) };
 }

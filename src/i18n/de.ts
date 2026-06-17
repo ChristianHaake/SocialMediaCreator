@@ -107,7 +107,8 @@ export const de = {
   "image.choose": "Bild auswählen",
   "image.replace": "Bild ersetzen",
   "image.remove": "{label} entfernen",
-  "image.hint": "PNG, JPG oder WebP, maximal 5 MB und 4096 px",
+  "image.hint": "PNG, JPG oder WebP – große Bilder werden automatisch verkleinert.",
+  "image.processing": "Bild wird verkleinert …",
   "image.invalidType": "Bitte wähle eine PNG-, JPG- oder WebP-Datei aus.",
   "image.tooLarge": "Das Bild darf höchstens 5 MB groß sein.",
   "image.tooManyPixels":

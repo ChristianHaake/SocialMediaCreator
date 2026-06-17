@@ -105,7 +105,8 @@ export const en: Record<TranslationKey, string> = {
   "image.choose": "Choose image",
   "image.replace": "Replace image",
   "image.remove": "Remove {label}",
-  "image.hint": "PNG, JPG, or WebP, maximum 5 MB and 4096 px",
+  "image.hint": "PNG, JPG, or WebP — large images are reduced automatically.",
+  "image.processing": "Reducing image …",
   "image.invalidType": "Choose a PNG, JPG, or WebP file.",
   "image.tooLarge": "The image must not exceed 5 MB.",
   "image.tooManyPixels":
