@@ -97,8 +97,8 @@ a {
 
 .brand__logo {
   display: block;
-  width: 46px;
   height: 46px;
+  width: auto;
   object-fit: contain;
 }
 
