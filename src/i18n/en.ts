@@ -111,6 +111,8 @@ export const en: Record<TranslationKey, string> = {
   "image.tooLarge": "The image must not exceed 5 MB.",
   "image.tooManyPixels":
     "Image width and height must each be no more than 4096 pixels.",
+  "image.tooLargeToProcess":
+    "This image is too large to process (max. 12000 px per side).",
   "image.invalidData": "The file does not contain a valid PNG, JPG, or WebP image.",
   "image.decodeFailed": "The image is damaged or cannot be read.",
   "comment.count.one": "{count} comment",

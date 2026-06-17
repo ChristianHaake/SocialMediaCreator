@@ -182,7 +182,7 @@ export async function prepareImageForUpload(
     dimensions.width > maxSourceImageDimension ||
     dimensions.height > maxSourceImageDimension
   ) {
-    return { error: "image.tooManyPixels" };
+    return { error: "image.tooLargeToProcess" };
   }
 
   // Non-canonical but decodable formats (e.g. AVIF/HEIC/GIF) are re-encoded to a

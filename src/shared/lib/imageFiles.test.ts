@@ -193,7 +193,7 @@ describe("prepareImageForUpload", () => {
     const file = pngFile("bomb.png");
 
     await expect(prepareImageForUpload(file)).resolves.toEqual({
-      error: "image.tooManyPixels",
+      error: "image.tooLargeToProcess",
     });
   });
 

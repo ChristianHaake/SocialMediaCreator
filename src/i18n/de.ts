@@ -113,6 +113,8 @@ export const de = {
   "image.tooLarge": "Das Bild darf höchstens 5 MB groß sein.",
   "image.tooManyPixels":
     "Breite und Höhe des Bildes dürfen jeweils höchstens 4096 Pixel betragen.",
+  "image.tooLargeToProcess":
+    "Dieses Bild ist zu groß zum Verarbeiten (max. 12000 px pro Seite).",
   "image.invalidData":
     "Die Datei enthält kein gültiges PNG-, JPG- oder WebP-Bild.",
   "image.decodeFailed": "Das Bild ist beschädigt oder kann nicht gelesen werden.",

@@ -94,6 +94,7 @@ export type ImageErrorCode =
   | "image.invalidType"
   | "image.tooLarge"
   | "image.tooManyPixels"
+  | "image.tooLargeToProcess"
   | "image.invalidData"
   | "image.decodeFailed";
 
