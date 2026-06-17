@@ -195,6 +195,11 @@
     grid-template-columns: 1fr;
   }
 
+  .status--action {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
   .editor-form {
     gap: 14px;
     padding: 16px 12px 22px;

@@ -34,8 +34,13 @@ export const en: Record<TranslationKey, string> = {
   "app.clearSavedConfirm":
     "Delete everything saved locally on this device and start fresh?",
   "app.clearedSaved": "Local data cleared.",
-  "app.imageExportError": "The image could not be created. Please try again.",
-  "app.pdfExportError": "The PDF could not be created. Please try again.",
+  "app.updateAvailable": "A new version is available.",
+  "app.updateNow": "Update",
+  "app.refreshApp": "Update app",
+  "app.imageExportError":
+    "The image export could not be started. Update the app or open it in the browser.",
+  "app.pdfExportError":
+    "The PDF export could not be started. Update the app or open it in the browser.",
   "app.notFound": "Page not found",
   "app.notFoundText":
     "The requested page does not exist. Return to the app or use a footer link.",

@@ -36,6 +36,7 @@ import {
 } from "../domain/types";
 import { useProjectImages } from "./useProjectImages";
 import { useProjectStorage } from "./useProjectStorage";
+import { usePwaUpdate } from "./usePwaUpdate";
 import { useSessionPersistence } from "./useSessionPersistence";
 import { useExportController } from "./useExportController";
 
@@ -72,6 +73,11 @@ function AppContent() {
   const [teacherInfoOpen, setTeacherInfoOpen] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
   const configInputRef = useRef<HTMLInputElement>(null);
+  const {
+    refreshApp,
+    resetAppVersion,
+    updateAvailable,
+  } = usePwaUpdate();
 
   const {
     projectOperation,
@@ -375,6 +381,18 @@ function AppContent() {
     <div className="app">
       <AppHeader onOpenTeacherInfo={() => setTeacherInfoOpen(true)} />
       {pathname === "/" && <EducationNotice />}
+      {updateAvailable && (
+        <div className="status status--success status--action" role="status">
+          <span>{t("app.updateAvailable")}</span>
+          <button
+            className="button button--secondary"
+            onClick={refreshApp}
+            type="button"
+          >
+            {t("app.updateNow")}
+          </button>
+        </div>
+      )}
 
       {pathname === "/verifizieren" ? (
         <VerificationPage />
@@ -578,9 +596,16 @@ function AppContent() {
                 </div>
               </div>
               {exportError && (
-                <p className="status status--error" role="alert">
-                  {exportError}
-                </p>
+                <div className="status status--error status--action" role="alert">
+                  <span>{exportError}</span>
+                  <button
+                    className="button button--secondary"
+                    onClick={() => void resetAppVersion()}
+                    type="button"
+                  >
+                    {t("app.refreshApp")}
+                  </button>
+                </div>
               )}
               {configStatus && (
                 <p

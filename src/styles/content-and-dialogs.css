@@ -43,6 +43,17 @@
   background: #edfbf2;
 }
 
+.status--action {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.status--action .button {
+  flex: 0 0 auto;
+}
+
 .preview-panel > .status {
   margin: 0;
   border-width: 1px 0 0;
@@ -330,4 +341,3 @@
   justify-content: flex-end;
   margin-top: 24px;
 }
-
