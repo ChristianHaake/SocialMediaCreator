@@ -1,7 +1,8 @@
 import type { ImageState } from "../../domain/types";
 import type { ImageErrorCode } from "../../i18n";
 
-const acceptedImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
+// Formats we store/serialize directly (export, archive, marker all assume these).
+const canonicalImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 export const maxImageSize = 5 * 1024 * 1024;
 export const maxImageDimension = 4096;
 // Hard ceiling for an uploaded image we are willing to decode and downscale.
@@ -11,20 +12,51 @@ export const maxSourceImageDimension = 12000;
 export const optimizedImageDimension = 2048;
 export const optimizedImageQuality = 0.82;
 
-function hasImageSignature(type: string, bytes: Uint8Array) {
-  if (type === "image/png") {
-    const signature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
-    return signature.every((byte, index) => bytes[index] === byte);
-  }
+// Detect the real image format from the file's magic bytes, ignoring the
+// (often wrong or empty) declared MIME type and the file extension. This is what
+// fixes uploads from tools like fobizz, where a saved image arrives as AVIF or
+// with a mismatched type/extension. Returns the canonical MIME, or null when the
+// bytes don't match any image format we support.
+function detectImageType(bytes: Uint8Array): string | null {
+  const ascii = (start: number, end: number) =>
+    String.fromCharCode(...bytes.slice(start, end));
 
-  if (type === "image/jpeg") {
-    return bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+  if (
+    bytes.length >= 8 &&
+    bytes[0] === 0x89 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x4e &&
+    bytes[3] === 0x47 &&
+    bytes[4] === 0x0d &&
+    bytes[5] === 0x0a &&
+    bytes[6] === 0x1a &&
+    bytes[7] === 0x0a
+  ) {
+    return "image/png";
   }
-
-  return (
-    String.fromCharCode(...bytes.slice(0, 4)) === "RIFF" &&
-    String.fromCharCode(...bytes.slice(8, 12)) === "WEBP"
-  );
+  if (
+    bytes.length >= 3 &&
+    bytes[0] === 0xff &&
+    bytes[1] === 0xd8 &&
+    bytes[2] === 0xff
+  ) {
+    return "image/jpeg";
+  }
+  if (bytes.length >= 12 && ascii(0, 4) === "RIFF" && ascii(8, 12) === "WEBP") {
+    return "image/webp";
+  }
+  if (bytes.length >= 6 && ascii(0, 3) === "GIF") {
+    return "image/gif";
+  }
+  // ISO-BMFF container: AVIF / HEIC share the `....ftyp<brand>` header.
+  if (bytes.length >= 12 && ascii(4, 8) === "ftyp") {
+    const brand = ascii(8, 12);
+    if (brand === "avif" || brand === "avis") return "image/avif";
+    if (["heic", "heix", "heif", "hevc", "mif1", "msf1"].includes(brand)) {
+      return "image/heic";
+    }
+  }
+  return null;
 }
 
 async function getImageDimensions(file: Blob) {
@@ -61,16 +93,13 @@ async function getImageDimensions(file: Blob) {
 export async function validateImageFile(
   file: File,
 ): Promise<ImageErrorCode | null> {
-  if (!acceptedImageTypes.has(file.type)) {
-    return "image.invalidType";
-  }
-
   if (file.size > maxImageSize) {
     return "image.tooLarge";
   }
 
   const header = new Uint8Array(await file.slice(0, 12).arrayBuffer());
-  if (!hasImageSignature(file.type, header)) {
+  const detected = detectImageType(header);
+  if (!detected || !canonicalImageTypes.has(detected)) {
     return "image.invalidData";
   }
 
@@ -139,12 +168,9 @@ export async function optimizeImage(blob: Blob): Promise<Blob> {
 export async function prepareImageForUpload(
   file: File,
 ): Promise<{ image: ImageState } | { error: ImageErrorCode }> {
-  if (!acceptedImageTypes.has(file.type)) {
-    return { error: "image.invalidType" };
-  }
-
   const header = new Uint8Array(await file.slice(0, 12).arrayBuffer());
-  if (!hasImageSignature(file.type, header)) {
+  const detected = detectImageType(header);
+  if (!detected) {
     return { error: "image.invalidData" };
   }
 
@@ -159,11 +185,14 @@ export async function prepareImageForUpload(
     return { error: "image.tooManyPixels" };
   }
 
+  // Non-canonical but decodable formats (e.g. AVIF/HEIC/GIF) are re-encoded to a
+  // format the rest of the app (export, archive, marker) can handle.
+  const needsReencode = !canonicalImageTypes.has(detected);
   const oversized =
     file.size > maxImageSize ||
     dimensions.width > maxImageDimension ||
     dimensions.height > maxImageDimension;
-  if (!oversized) {
+  if (!needsReencode && !oversized) {
     return { image: createImageState(file) };
   }
 

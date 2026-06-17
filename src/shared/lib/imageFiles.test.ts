@@ -11,6 +11,14 @@ afterEach(() => {
 });
 
 const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+// "RIFF" ____ "WEBP"
+const WEBP_HEADER = [
+  0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50,
+];
+// ____ "ftyp" "avif"
+const AVIF_HEADER = [
+  0x00, 0x00, 0x00, 0x20, 0x66, 0x74, 0x79, 0x70, 0x61, 0x76, 0x69, 0x66,
+];
 
 function pngFile(name: string, padTo = 0) {
   const bytes = new Uint8Array(Math.max(PNG_SIGNATURE.length, padTo));
@@ -60,7 +68,7 @@ describe("validateImageFile", () => {
       type: "image/svg+xml",
     });
 
-    await expect(validateImageFile(file)).resolves.toBe("image.invalidType");
+    await expect(validateImageFile(file)).resolves.toBe("image.invalidData");
   });
 
   it("rejects images larger than 5 MB", async () => {
@@ -71,12 +79,21 @@ describe("validateImageFile", () => {
     await expect(validateImageFile(file)).resolves.toBe("image.tooLarge");
   });
 
-  it("rejects files with a forged image MIME type", async () => {
+  it("rejects files whose bytes are not a known image", async () => {
     const file = new File(["not an image"], "fake.png", {
       type: "image/png",
     });
 
     await expect(validateImageFile(file)).resolves.toBe("image.invalidData");
+  });
+
+  it("accepts a real image even when the declared MIME type is wrong", async () => {
+    stubBitmap(800, 600);
+    const file = new File([new Uint8Array(WEBP_HEADER)], "from-fobizz.png", {
+      type: "application/octet-stream",
+    });
+
+    await expect(validateImageFile(file)).resolves.toBeNull();
   });
 
   it("rejects signed but undecodable image files", async () => {
@@ -183,15 +200,48 @@ describe("prepareImageForUpload", () => {
   it("rejects an unsupported type", async () => {
     const file = new File(["x"], "a.svg", { type: "image/svg+xml" });
     await expect(prepareImageForUpload(file)).resolves.toEqual({
-      error: "image.invalidType",
+      error: "image.invalidData",
     });
   });
 
-  it("rejects a forged image", async () => {
+  it("rejects bytes that are not a known image", async () => {
     const file = new File(["not an image"], "fake.png", { type: "image/png" });
     await expect(prepareImageForUpload(file)).resolves.toEqual({
       error: "image.invalidData",
     });
+  });
+
+  it("accepts a WebP saved with a wrong/empty MIME type (the fobizz case)", async () => {
+    stubBitmap(900, 700);
+    vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:mock");
+    const file = new File([new Uint8Array(WEBP_HEADER)], "image.png", {
+      type: "",
+    });
+
+    const result = await prepareImageForUpload(file);
+
+    expect("image" in result).toBe(true);
+    if ("image" in result) {
+      expect(result.image.optimized).toBe(false);
+      expect(result.image.blob).toBe(file);
+    }
+  });
+
+  it("re-encodes an AVIF upload to a canonical format", async () => {
+    stubBitmap(1000, 800);
+    const reencoded = new Blob([new Uint8Array(9000)], { type: "image/webp" });
+    stubCanvas(reencoded);
+    const file = new File([new Uint8Array(AVIF_HEADER)], "ai.avif", {
+      type: "image/avif",
+    });
+
+    const result = await prepareImageForUpload(file);
+
+    expect("image" in result).toBe(true);
+    if ("image" in result) {
+      expect(result.image.optimized).toBe(true);
+      expect(result.image.blob).toBe(reencoded);
+    }
   });
 
   it("rejects when reduction still exceeds the size limit", async () => {

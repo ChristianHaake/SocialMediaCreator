@@ -60,7 +60,7 @@ export function ImageUploadField({
               : t("image.choose")}
         </label>
         <input
-          accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+          accept=".jpg,.jpeg,.png,.webp,.avif,.gif,.heic,image/jpeg,image/png,image/webp,image/avif,image/gif,image/heic"
           className="visually-hidden"
           disabled={processing}
           id={id}
