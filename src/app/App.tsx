@@ -35,6 +35,7 @@ import {
 } from "../domain/types";
 import { useProjectImages } from "./useProjectImages";
 import { useProjectStorage } from "./useProjectStorage";
+import { useSessionPersistence } from "./useSessionPersistence";
 import { useExportController } from "./useExportController";
 
 type MobileView = "editor" | "preview";
@@ -100,6 +101,25 @@ function AppContent() {
     microblogImages,
     replaceModuleImages,
     clearModuleImages,
+  });
+
+  useSessionPersistence({
+    locale,
+    activeModule,
+    setActiveModule,
+    photoPost,
+    messenger,
+    microblog,
+    setPhotoPost,
+    setMessenger,
+    setMicroblog,
+    initialPhotoPost,
+    initialMessenger,
+    initialMicroblog,
+    photoImages,
+    messengerImages,
+    microblogImages,
+    replaceModuleImages,
   });
 
   const {
