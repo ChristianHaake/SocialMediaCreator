@@ -36,6 +36,9 @@ Shared capabilities include:
 - PNG, JPG, and A4 PDF export
 - mandatory visible simulation labels on every exported result
 - local project archive import and export, including optimized images
+- **Progressive Web App (PWA)** support for installation and offline use
+- **Auto-saving** of the active working session to the browser
+- Intelligent image handling with automatic reduction of oversized uploads
 - accessible keyboard navigation and mobile editor/preview switching
 
 ## Educational and safety model
@@ -57,6 +60,9 @@ information, and the legal notice are available from the application footer.
 Post content, uploaded images, and project configurations are processed in the
 browser. The application has no user accounts, content database, or server-side
 storage for created simulations.
+
+The active session is continuously auto-saved to the local browser database (IndexedDB)
+and can be cleared by the user at any time.
 
 Images are represented by local object URLs. Saved `.smc` project archives
 include WebP-optimized copies of the active module's images. Archive creation
