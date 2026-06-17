@@ -204,7 +204,7 @@ test("language switch preserves content and exports locale in config v6", async 
   await expect(page.locator(".photo-post__date")).toHaveText("06/11/2026");
 
   const downloadPromise = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Save" }).click();
+  await page.getByRole("button", { name: "Save", exact: true }).click();
   const download = await downloadPromise;
   const path = await download.path();
   expect(path).not.toBeNull();
@@ -669,13 +669,13 @@ test("carousel image export uses the selected medium", async ({
     { red: 0, green: 255, blue: 0 },
     128,
   );
-  await openSection(page, "Karussell");
+  await openSection(page, "Beitragsbild");
   await page.locator("#post-image").setInputFiles({
     name: "red-1.png",
     mimeType: "image/png",
     buffer: redPng,
   });
-  await page.getByRole("button", { name: "Medium", exact: true }).click();
+  await page.getByRole("button", { name: "Bild", exact: true }).click();
   await page.locator("#post-image").setInputFiles({
     name: "green-2.png",
     mimeType: "image/png",
@@ -821,8 +821,8 @@ test("carousel, video simulation, reply chains and comment view work together", 
 }) => {
   await page.goto("/");
 
-  await openSection(page, "Karussell");
-  await page.getByRole("button", { name: "Medium", exact: true }).click();
+  await openSection(page, "Beitragsbild");
+  await page.getByRole("button", { name: "Bild", exact: true }).click();
   await page.getByLabel("Medientyp").selectOption("video");
   await page.getByLabel("Videolänge").fill("0:42");
   await page.getByLabel("Aufrufe").fill("1.240");
@@ -856,8 +856,8 @@ test("PDF export and local image verification are available", async ({
   await page.getByRole("button", { name: "Emoji auswählen" }).click();
   await page.getByRole("button", { name: "Emoji einfügen 🙂" }).click();
   await expect(page.locator(".photo-post").first()).toContainText("Export 🙂");
-  await openSection(page, "Karussell");
-  await page.getByRole("button", { name: "Medium", exact: true }).click();
+  await openSection(page, "Beitragsbild");
+  await page.getByRole("button", { name: "Bild", exact: true }).click();
   const onePixelPng = Buffer.from(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
     "base64",

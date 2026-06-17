@@ -26,6 +26,12 @@ export const de = {
   "app.loadConfirm":
     "Beim Laden werden die Eingaben und Bilder dieses Moduls ersetzt. Projekt laden?",
   "app.loaded": "Projekt geladen.",
+  "app.clearSaved": "Daten löschen",
+  "app.clearSavedHint":
+    "Lokal auf diesem Gerät gespeicherte Eingaben und Bilder löschen",
+  "app.clearSavedConfirm":
+    "Alle lokal auf diesem Gerät gespeicherten Eingaben und Bilder löschen und neu beginnen?",
+  "app.clearedSaved": "Lokale Daten gelöscht.",
   "app.imageExportError":
     "Das Bild konnte nicht erstellt werden. Bitte versuche es erneut.",
   "app.pdfExportError":
@@ -101,11 +107,14 @@ export const de = {
   "image.choose": "Bild auswählen",
   "image.replace": "Bild ersetzen",
   "image.remove": "{label} entfernen",
-  "image.hint": "PNG, JPG oder WebP, maximal 5 MB und 4096 px",
+  "image.hint": "PNG, JPG oder WebP – große Bilder werden automatisch verkleinert.",
+  "image.processing": "Bild wird verkleinert …",
   "image.invalidType": "Bitte wähle eine PNG-, JPG- oder WebP-Datei aus.",
   "image.tooLarge": "Das Bild darf höchstens 5 MB groß sein.",
   "image.tooManyPixels":
     "Breite und Höhe des Bildes dürfen jeweils höchstens 4096 Pixel betragen.",
+  "image.tooLargeToProcess":
+    "Dieses Bild ist zu groß zum Verarbeiten (max. 12000 px pro Seite).",
   "image.invalidData":
     "Die Datei enthält kein gültiges PNG-, JPG- oder WebP-Bild.",
   "image.decodeFailed": "Das Bild ist beschädigt oder kann nicht gelesen werden.",
@@ -130,12 +139,13 @@ export const de = {
   "photo.username": "Benutzername",
   "photo.location": "Ort",
   "photo.showLocation": "Ort in der Vorschau anzeigen",
-  "photo.carousel": "Karussell",
-  "photo.carouselDescription": "Bis zu zehn Bilder oder Video-Thumbnails",
-  "photo.medium": "Medium",
+  "photo.carousel": "Beitragsbild",
+  "photo.carouselDescription":
+    "Ein Bild – mehrere ergeben ein Karussell (bis zu zehn).",
+  "photo.medium": "Bild",
   "photo.image": "Bild",
   "photo.video": "Video",
-  "photo.mediumFile": "Datei für Medium {index}",
+  "photo.mediumFile": "Datei für Bild {index}",
   "photo.mediaType": "Medientyp",
   "photo.videoSimulation": "Video-Simulation",
   "photo.altText": "Alternativtext",
@@ -154,7 +164,7 @@ export const de = {
   "photo.newAccount": "neuer_account",
   "photo.newPost": "Neuer Beitrag",
   "photo.placeholder": "Dein Bild erscheint hier",
-  "photo.carouselSelect": "Karussellbild auswählen",
+  "photo.carouselSelect": "Bild auswählen",
   "photo.showImage": "Bild {index} anzeigen",
   "photo.likes": "{count} Likes",
   "photo.viewComments": "{count} Kommentare ansehen",

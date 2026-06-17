@@ -1,8 +1,8 @@
 import { ImagePlus, Trash2 } from "lucide-react";
-import type { ChangeEvent } from "react";
+import { useState, type ChangeEvent } from "react";
 import type { ImageState } from "../../domain/types";
 import { useTranslation } from "../../i18n";
-import { createImageState, validateImageFile } from "../lib/imageFiles";
+import { prepareImageForUpload } from "../lib/imageFiles";
 
 type ImageUploadFieldProps = {
   id: string;
@@ -20,35 +20,49 @@ export function ImageUploadField({
   onError,
 }: ImageUploadFieldProps) {
   const { t } = useTranslation();
+  const [processing, setProcessing] = useState(false);
   async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
 
-    if (!file) {
+    if (!file || processing) {
       return;
     }
 
-    const error = await validateImageFile(file);
-    if (error) {
-      onError(t(error));
-      return;
-    }
-
+    setProcessing(true);
     onError(null);
-    onChange(createImageState(file));
+    try {
+      const result = await prepareImageForUpload(file);
+      if ("error" in result) {
+        onError(t(result.error));
+        return;
+      }
+      onChange(result.image);
+    } finally {
+      setProcessing(false);
+    }
   }
 
   return (
     <div className="image-upload">
       <span className="field-label">{label}</span>
       <div className="image-upload__actions">
-        <label className="button button--secondary" htmlFor={id}>
+        <label
+          aria-disabled={processing}
+          className="button button--secondary"
+          htmlFor={id}
+        >
           <ImagePlus aria-hidden="true" size={18} />
-          {image ? t("image.replace") : t("image.choose")}
+          {processing
+            ? t("image.processing")
+            : image
+              ? t("image.replace")
+              : t("image.choose")}
         </label>
         <input
-          accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+          accept=".jpg,.jpeg,.png,.webp,.avif,.gif,.heic,image/jpeg,image/png,image/webp,image/avif,image/gif,image/heic"
           className="visually-hidden"
+          disabled={processing}
           id={id}
           onChange={handleFileChange}
           type="file"
@@ -57,6 +71,7 @@ export function ImageUploadField({
           <button
             aria-label={t("image.remove", { label })}
             className="icon-button"
+            disabled={processing}
             onClick={() => onChange(null)}
             type="button"
           >

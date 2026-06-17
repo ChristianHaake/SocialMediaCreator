@@ -842,7 +842,7 @@ describe("App", () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(screen.getByRole("button", { name: "Medium" }));
+    await user.click(screen.getByRole("button", { name: "Bild" }));
     expect(screen.getByText("2/2")).toBeInTheDocument();
     await user.selectOptions(screen.getByLabelText("Medientyp"), "video");
     await user.type(screen.getByLabelText("Videolänge"), "0:42");
@@ -850,9 +850,9 @@ describe("App", () => {
 
     expect(screen.getByText("1.240 Aufrufe · 0:42")).toBeInTheDocument();
     await user.click(
-      screen.getByRole("button", { name: "Medium 2 nach oben verschieben" }),
+      screen.getByRole("button", { name: "Bild 2 nach oben verschieben" }),
     );
-    expect(screen.getByRole("button", { name: "Medium 1 nach oben verschieben" }))
+    expect(screen.getByRole("button", { name: "Bild 1 nach oben verschieben" }))
       .toBeDisabled();
   });
 });
