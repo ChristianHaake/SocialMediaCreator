@@ -114,11 +114,21 @@ function waitForImageWithTimeout(image: HTMLImageElement, timeoutMs = 3_000) {
 
 function waitForRenderFrame() {
   return new Promise<void>((resolve) => {
-    if (typeof window.requestAnimationFrame === "function") {
-      window.requestAnimationFrame(() => resolve());
-      return;
+    let settled = false;
+    const fallback = globalThis.setTimeout(() => finish(), 50);
+    function finish() {
+      if (settled) return;
+      settled = true;
+      globalThis.clearTimeout(fallback);
+      resolve();
     }
-    globalThis.setTimeout(resolve, 0);
+    // requestAnimationFrame is paused while the document is hidden (background
+    // tab, unfocused PWA). rAF-only here would hang the entire export — it never
+    // fires, so "Creating…" sticks forever. Race it against a timer that still
+    // runs while hidden; rAF wins when visible, the timer rescues when not.
+    if (typeof window.requestAnimationFrame === "function") {
+      window.requestAnimationFrame(() => finish());
+    }
   });
 }
 
@@ -260,8 +270,15 @@ async function createExportFrame(
 
   frame.append(content);
   document.body.append(frame);
-  await prepareExportImages(frame);
-  await waitForRenderFrame();
+  try {
+    await prepareExportImages(frame);
+    await waitForRenderFrame();
+  } catch (error) {
+    // Never leave the offscreen frame attached if setup fails — a leaked
+    // position:fixed export-frame would pile up visibly on every retry.
+    frame.remove();
+    throw error;
+  }
 
   return {
     content,
@@ -279,9 +296,37 @@ function getRenderOptions(element: HTMLElement) {
   };
 }
 
+// html-to-image resolves its rendered image inside requestAnimationFrame
+// (its util.js createImage). rAF is paused while the document is hidden, so
+// toCanvas never resolves and the whole export hangs with no error whenever the
+// tab/PWA is not focused. Route rAF through a timer while hidden, only for the
+// duration of the render, then restore it.
+async function withRenderFrameFallback<T>(run: () => Promise<T>): Promise<T> {
+  if (typeof window === "undefined" || !window.requestAnimationFrame) {
+    return run();
+  }
+  const original = window.requestAnimationFrame.bind(window);
+  window.requestAnimationFrame = ((callback: FrameRequestCallback): number => {
+    if (typeof document !== "undefined" && document.hidden) {
+      return window.setTimeout(
+        () => callback(performance.now()),
+        16,
+      ) as unknown as number;
+    }
+    return original(callback);
+  }) as typeof window.requestAnimationFrame;
+  try {
+    return await run();
+  } finally {
+    window.requestAnimationFrame = original;
+  }
+}
+
 async function renderElementCanvas(element: HTMLElement) {
   await waitForRenderFrame();
-  return toCanvas(element, getRenderOptions(element));
+  return withRenderFrameFallback(() =>
+    toCanvas(element, getRenderOptions(element)),
+  );
 }
 
 async function renderElementBlob(
