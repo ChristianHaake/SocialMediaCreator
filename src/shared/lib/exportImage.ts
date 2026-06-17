@@ -72,24 +72,14 @@ function getExportFrameBackground(module: ModuleType) {
   return "#eef1f5";
 }
 
-function waitForImage(image: HTMLImageElement) {
-  if (image.complete && image.naturalWidth > 0 && image.naturalHeight > 0) {
+const isImageReady = (image: HTMLImageElement) =>
+  image.complete && image.naturalWidth > 0 && image.naturalHeight > 0;
+
+function waitForImageWithTimeout(image: HTMLImageElement, timeoutMs = 3_000) {
+  if (isImageReady(image)) {
     return Promise.resolve();
   }
 
-  return new Promise<void>((resolve, reject) => {
-    image.addEventListener("load", () => resolve(), { once: true });
-    image.addEventListener("error", () => reject(new Error("Image failed to load")), {
-      once: true,
-    });
-  });
-}
-
-function waitForNextImageLoad(
-  image: HTMLImageElement,
-  src: string,
-  timeoutMs = 3_000,
-) {
   return new Promise<void>((resolve, reject) => {
     let settled = false;
     const finish = (error?: Error) => {
@@ -104,34 +94,22 @@ function waitForNextImageLoad(
     const onLoad = () => finish();
     const onError = () => finish(new Error("Image failed to load"));
     const timeout = window.setTimeout(() => {
-      if (image.complete && image.naturalWidth > 0 && image.naturalHeight > 0) {
-        finish();
-      } else {
-        finish(new Error("Image decode timed out"));
-      }
+      finish(
+        isImageReady(image) ? undefined : new Error("Image decode timed out"),
+      );
     }, timeoutMs);
     image.addEventListener("load", onLoad);
     image.addEventListener("error", onError);
-    image.src = src;
-    if ("decode" in image) {
+    if ("decode" in image && typeof image.decode === "function") {
       image.decode().then(
         () => finish(),
-        () => {
-          if (
-            image.complete &&
-            image.naturalWidth > 0 &&
-            image.naturalHeight > 0
-          ) {
-            finish();
-          }
-        },
+        () =>
+          finish(
+            isImageReady(image) ? undefined : new Error("Image failed to decode"),
+          ),
       );
     }
   });
-}
-
-async function setImageSourceAndWait(image: HTMLImageElement, src: string) {
-  await waitForNextImageLoad(image, src);
 }
 
 function waitForRenderFrame() {
@@ -153,56 +131,6 @@ function dataUrlToBlob(dataUrl: string) {
     bytes[index] = binary.charCodeAt(index);
   }
   return new Blob([bytes], { type: mime });
-}
-
-function blobToDataUrl(blob: Blob) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.addEventListener("load", () => {
-      if (typeof reader.result === "string") {
-        resolve(reader.result);
-      } else {
-        reject(new Error("Blob image conversion failed."));
-      }
-    });
-    reader.addEventListener("error", () =>
-      reject(new Error("Blob image conversion failed.")),
-    );
-    reader.readAsDataURL(blob);
-  });
-}
-
-async function blobToPngDataUrl(blob: Blob) {
-  const url = URL.createObjectURL(blob);
-  try {
-    const image = new Image();
-    await new Promise<void>((resolve, reject) => {
-      image.addEventListener("load", () => resolve(), { once: true });
-      image.addEventListener(
-        "error",
-        () => reject(new Error("Blob image failed to decode.")),
-        { once: true },
-      );
-      image.src = url;
-    });
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.max(1, image.naturalWidth);
-    canvas.height = Math.max(1, image.naturalHeight);
-    const context = canvas.getContext("2d");
-    if (!context) throw new Error("Canvas 2D context unavailable");
-    context.drawImage(image, 0, 0);
-    return canvas.toDataURL("image/png");
-  } finally {
-    URL.revokeObjectURL(url);
-  }
-}
-
-async function blobToExportDataUrl(blob: Blob) {
-  if (blob.type === "image/png" || blob.type === "image/jpeg") {
-    return blobToDataUrl(blob);
-  }
-
-  return blobToPngDataUrl(blob);
 }
 
 export async function canvasToImageBlob(
@@ -257,28 +185,26 @@ function getImageSource(image: HTMLImageElement) {
 async function prepareExportImages(element: HTMLElement) {
   const images = Array.from(element.querySelectorAll<HTMLImageElement>("img"));
 
-  for (const image of images) {
-    const source = getImageSource(image);
-    if (!source) continue;
-
-    image.removeAttribute("srcset");
-
-    if (source.startsWith("blob:")) {
-      const response = await fetch(source);
-      const dataUrl = await blobToExportDataUrl(await response.blob());
-      await setImageSourceAndWait(image, dataUrl);
-      continue;
-    }
-
-    if (source.startsWith("data:")) {
-      await setImageSourceAndWait(image, source);
-      continue;
-    }
-
-    if (!image.complete) {
-      await waitForImage(image);
-    }
-  }
+  // Wait for each image to decode so the offscreen <foreignObject> rasterization
+  // captures it. We deliberately keep blob:/http srcs untouched: html-to-image
+  // re-fetches and awaits those during embedImages, which is what makes images
+  // appear (notably on WebKit). Rewriting them to data: URLs makes html-to-image
+  // skip that decode-await and renders blank on Safari — and the blob: fetch it
+  // performs needs `connect-src 'self' blob:` in the CSP (see public/_headers).
+  // Best-effort and isolated per image: a single failed image must never abort
+  // the whole export.
+  await Promise.all(
+    images.map(async (image) => {
+      image.removeAttribute("srcset");
+      const source = getImageSource(image);
+      if (!source) return;
+      try {
+        await waitForImageWithTimeout(image);
+      } catch (error) {
+        console.warn("[Export] Skipped an image that failed to load", error);
+      }
+    }),
+  );
 }
 
 function getExportContentWidth(source: HTMLElement) {

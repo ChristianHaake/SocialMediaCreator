@@ -141,39 +141,55 @@ describe("image export", () => {
     element.remove();
   });
 
-  it("rewrites hidden blob images to data URLs in the export clone", async () => {
+  it("keeps blob image sources so html-to-image embeds and awaits them", async () => {
     vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(
       () => undefined,
     );
-    const decode = vi.fn(() => Promise.resolve());
     Object.defineProperty(HTMLImageElement.prototype, "decode", {
       configurable: true,
-      value: decode,
+      value: vi.fn(() => Promise.resolve()),
     });
-    const blobImage = new Blob(["image"], { type: "image/png" });
-    const fetchImage = vi
-      .spyOn(globalThis, "fetch")
-      .mockResolvedValue({
-        blob: () => Promise.resolve(blobImage),
-      } as Response);
     const element = document.createElement("div");
     element.innerHTML = `
       <div class="photo-feed">
-        <img src="blob:hidden-profile" style="display: none" alt="">
+        <img src="blob:hidden-profile" srcset="blob:hidden-profile 2x" alt="">
       </div>
     `;
 
     toCanvas.mockImplementationOnce(async (renderedElement: HTMLElement) => {
       const image = renderedElement.querySelector("img");
-      expect(image?.getAttribute("src")).toMatch(/^data:image\/png;base64,/);
+      // Source stays a blob: URL. html-to-image fetches + awaits decode for
+      // blob:/http srcs; rewriting to a data: URL makes it skip the await and
+      // renders blank on WebKit. srcset is dropped to avoid a re-pick.
+      expect(image?.getAttribute("src")).toBe("blob:hidden-profile");
       expect(image?.getAttribute("srcset")).toBeNull();
       return encoded.canvas;
     });
 
     await exportElementAsImage(element, "png", "test", "photoPost");
+  });
 
-    expect(fetchImage).toHaveBeenCalledWith("blob:hidden-profile");
-    fetchImage.mockRestore();
+  it("completes the export when an image fails to decode", async () => {
+    const click = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(() => undefined);
+    Object.defineProperty(HTMLImageElement.prototype, "decode", {
+      configurable: true,
+      value: vi.fn(() => Promise.reject(new Error("decode failed"))),
+    });
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const element = document.createElement("div");
+    element.innerHTML = `
+      <div class="photo-feed">
+        <img src="blob:broken" alt="">
+      </div>
+    `;
+
+    await expect(
+      exportElementAsImage(element, "png", "test", "photoPost"),
+    ).resolves.toBeUndefined();
+    expect(click).toHaveBeenCalledOnce();
+    warn.mockRestore();
   });
 
   it("rejects failed canvas encoding", async () => {

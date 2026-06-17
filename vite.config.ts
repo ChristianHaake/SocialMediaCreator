@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 import { defineConfig } from "vitest/config";
@@ -8,6 +11,25 @@ const icon = (src: string, sizes: string, type: string, purpose: string) => ({
   type,
   purpose,
 });
+
+// The production Content-Security-Policy lives in public/_headers, applied by
+// the host at deploy time. `vite preview` — which the Playwright E2E suite runs
+// against — does not read that file, so without this the suite runs with no CSP
+// and misses regressions like connect-src dropping blob: (breaks image export).
+// Derive the header from the same file so the policy can never drift.
+function productionContentSecurityPolicy(): string {
+  const headersPath = resolve(
+    dirname(fileURLToPath(import.meta.url)),
+    "public/_headers",
+  );
+  const match = readFileSync(headersPath, "utf8").match(
+    /^\s*Content-Security-Policy:\s*(.+)$/m,
+  );
+  if (!match) {
+    throw new Error(`Content-Security-Policy not found in ${headersPath}`);
+  }
+  return match[1].trim();
+}
 
 export default defineConfig({
   plugins: [
@@ -43,6 +65,13 @@ export default defineConfig({
       },
     }),
   ],
+  preview: {
+    // Enforce the real production CSP so E2E export tests catch policy
+    // regressions (e.g. connect-src must keep blob: for html-to-image).
+    headers: {
+      "Content-Security-Policy": productionContentSecurityPolicy(),
+    },
+  },
   test: {
     environment: "jsdom",
     include: ["src/**/*.test.{ts,tsx}"],
