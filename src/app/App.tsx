@@ -6,6 +6,7 @@ import {
   MessageSquareText,
   PenLine,
   RotateCcw,
+  Trash2,
 } from "lucide-react";
 import {
   type KeyboardEvent,
@@ -103,7 +104,7 @@ function AppContent() {
     clearModuleImages,
   });
 
-  useSessionPersistence({
+  const { clearSession } = useSessionPersistence({
     locale,
     activeModule,
     setActiveModule,
@@ -253,6 +254,26 @@ function AppContent() {
     setImageError(null);
     setExportError(null);
     setConfigStatus(null);
+  }
+
+  async function clearSavedData() {
+    if (!window.confirm(t("app.clearSavedConfirm"))) return;
+    await clearSession();
+    const nextPhoto = getDefaultPhotoPost(locale);
+    initialPhotoPost.current = nextPhoto;
+    setPhotoPost(nextPhoto);
+    const nextMessenger = getDefaultMessenger(locale);
+    initialMessenger.current = nextMessenger;
+    setMessenger(nextMessenger);
+    const nextMicroblog = getDefaultMicroblog(locale);
+    initialMicroblog.current = nextMicroblog;
+    setMicroblog(nextMicroblog);
+    clearModuleImages("photoPost");
+    clearModuleImages("messenger");
+    clearModuleImages("microblog");
+    setImageError(null);
+    setExportError(null);
+    setConfigStatus({ type: "success", message: t("app.clearedSaved") });
   }
 
 
@@ -513,6 +534,16 @@ function AppContent() {
                     {projectOperation === "saving"
                       ? t("app.saving")
                       : t("app.save")}
+                  </button>
+                  <button
+                    className="button button--secondary"
+                    disabled={projectOperation !== null}
+                    onClick={() => void clearSavedData()}
+                    title={t("app.clearSavedHint")}
+                    type="button"
+                  >
+                    <Trash2 aria-hidden="true" size={17} />
+                    {t("app.clearSaved")}
                   </button>
                 </div>
                 <div className="action-group">

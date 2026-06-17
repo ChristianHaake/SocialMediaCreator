@@ -26,6 +26,12 @@ export const de = {
   "app.loadConfirm":
     "Beim Laden werden die Eingaben und Bilder dieses Moduls ersetzt. Projekt laden?",
   "app.loaded": "Projekt geladen.",
+  "app.clearSaved": "Daten löschen",
+  "app.clearSavedHint":
+    "Lokal auf diesem Gerät gespeicherte Eingaben und Bilder löschen",
+  "app.clearSavedConfirm":
+    "Alle lokal auf diesem Gerät gespeicherten Eingaben und Bilder löschen und neu beginnen?",
+  "app.clearedSaved": "Lokale Daten gelöscht.",
   "app.imageExportError":
     "Das Bild konnte nicht erstellt werden. Bitte versuche es erneut.",
   "app.pdfExportError":

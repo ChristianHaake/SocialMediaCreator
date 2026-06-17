@@ -29,6 +29,11 @@ export const en: Record<TranslationKey, string> = {
   "app.loadConfirm":
     "Loading will replace this module's input and images. Load project?",
   "app.loaded": "Project loaded.",
+  "app.clearSaved": "Clear saved data",
+  "app.clearSavedHint": "Delete entries and images saved locally on this device",
+  "app.clearSavedConfirm":
+    "Delete everything saved locally on this device and start fresh?",
+  "app.clearedSaved": "Local data cleared.",
   "app.imageExportError": "The image could not be created. Please try again.",
   "app.pdfExportError": "The PDF could not be created. Please try again.",
   "app.notFound": "Page not found",
