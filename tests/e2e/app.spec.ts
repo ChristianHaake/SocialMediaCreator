@@ -204,7 +204,7 @@ test("language switch preserves content and exports locale in config v6", async 
   await expect(page.locator(".photo-post__date")).toHaveText("06/11/2026");
 
   const downloadPromise = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Save" }).click();
+  await page.getByRole("button", { name: "Save", exact: true }).click();
   const download = await downloadPromise;
   const path = await download.path();
   expect(path).not.toBeNull();

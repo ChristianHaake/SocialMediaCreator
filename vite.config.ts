@@ -68,8 +68,16 @@ export default defineConfig({
   preview: {
     // Enforce the real production CSP so E2E export tests catch policy
     // regressions (e.g. connect-src must keep blob: for html-to-image).
+    // `upgrade-insecure-requests` is dropped here only: vite preview serves over
+    // plain http on localhost, and WebKit (unlike Chromium/Firefox) upgrades
+    // http://127.0.0.1 to https for that directive, which fails the TLS
+    // handshake and breaks the app — so it would block all WebKit E2E. The
+    // directive stays in public/_headers, where production is served over https.
     headers: {
-      "Content-Security-Policy": productionContentSecurityPolicy(),
+      "Content-Security-Policy": productionContentSecurityPolicy().replace(
+        /;\s*upgrade-insecure-requests\s*/i,
+        "",
+      ),
     },
   },
   test: {
