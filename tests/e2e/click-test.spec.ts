@@ -117,8 +117,8 @@ test("Photo-Post editor detailed interaction flow", async ({ page }) => {
   await expect(page.locator(".photo-post").last().locator(".photo-post__date")).toContainText("16.06.2026 · 14:30");
 
   // 4. Carousel medium settings
-  await openSection(page, "Karussell");
-  await page.getByRole("button", { name: "Medium", exact: true }).click();
+  await openSection(page, "Beitragsbild");
+  await page.getByRole("button", { name: "Bild", exact: true }).click();
   const carouselItems = page.locator(".media-editor-list li");
   await expect(carouselItems).toHaveCount(2);
 
