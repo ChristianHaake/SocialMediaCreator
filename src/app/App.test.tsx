@@ -403,46 +403,59 @@ describe("App", () => {
     await waitFor(() => expect(trigger).toHaveFocus());
   });
 
-  it("renders direct content routes", () => {
+  it("renders direct content routes", async () => {
     window.history.replaceState({}, "", "/datenschutz");
     render(<App />);
 
     expect(
-      screen.getByRole("heading", { level: 1, name: "Datenschutz" }),
+      await screen.findByRole("heading", { level: 1, name: "Datenschutz" }),
     ).toBeInTheDocument();
     expect(screen.getByText("4. Bereitstellung über Cloudflare")).toBeInTheDocument();
   });
 
-  it("renders educator, responsible-use and terms content", () => {
+  it("renders educator, responsible-use and terms content", async () => {
     window.history.replaceState({}, "", "/lehrkraefte");
     const { unmount } = render(<App />);
     expect(
-      screen.getByRole("heading", { level: 1, name: "Hinweise für Lehrkräfte" }),
+      await screen.findByRole("heading", {
+        level: 1,
+        name: "Hinweise für Lehrkräfte",
+      }),
     ).toBeInTheDocument();
     expect(screen.getByText("Unterrichtsszenario 5: Plattformmechaniken")).toBeInTheDocument();
     unmount();
 
     window.history.replaceState({}, "", "/nutzungsbedingungen");
     render(<App />);
-    expect(screen.getByText("Identitätsmissbrauch oder Nachahmung realer Personen ohne Erlaubnis")).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        "Identitätsmissbrauch oder Nachahmung realer Personen ohne Erlaubnis",
+      ),
+    ).toBeInTheDocument();
     expect(screen.getByText("Cybermobbing, Belästigung, Einschüchterung oder Diskriminierung")).toBeInTheDocument();
   });
 
-  it("renders an application-level not-found page", () => {
+  it("renders an application-level not-found page", async () => {
     window.history.replaceState({}, "", "/existiert-nicht");
     render(<App />);
 
     expect(
-      screen.getByRole("heading", { level: 1, name: "Seite nicht gefunden" }),
+      await screen.findByRole("heading", {
+        level: 1,
+        name: "Seite nicht gefunden",
+      }),
     ).toBeInTheDocument();
   });
 
-  it("renders the local image verification route", () => {
+  it("renders the local image verification route", async () => {
     window.history.replaceState({}, "", "/verifizieren");
     render(<App />);
 
     expect(
-      screen.getByRole("heading", { level: 1, name: "Bild verifizieren" }),
+      await screen.findByRole("heading", {
+        level: 1,
+        name: "Bild verifizieren",
+      }),
     ).toBeInTheDocument();
     expect(
       screen.getByText(/kein fälschungssicherer Echtheitsbeweis/),

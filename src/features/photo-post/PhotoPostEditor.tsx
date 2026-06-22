@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import {
   useEffect,
+  useMemo,
   useRef,
   type Dispatch,
   type SetStateAction,
@@ -78,6 +79,15 @@ function createPhotoPost(locale: "de" | "en"): PhotoPost {
   };
 }
 
+function parseMetricInput(value: string) {
+  const next = Number(value);
+  if (!Number.isFinite(next)) return 0;
+  return Math.min(
+    fieldLimits.common.metric,
+    Math.max(0, Math.floor(next)),
+  );
+}
+
 export function PhotoPostEditor({
   value,
   onChange,
@@ -100,7 +110,10 @@ export function PhotoPostEditor({
     media: {},
     commentImages: {},
   };
-  const sortedPosts = sortTimelinePosts(value.posts, value.sortOrder);
+  const sortedPosts = useMemo(
+    () => sortTimelinePosts(value.posts, value.sortOrder),
+    [value.posts, value.sortOrder],
+  );
   const detailRef = useRef<HTMLElement>(null);
   const authorInputRef = useRef<HTMLInputElement>(null);
   const previousActivePostId = useRef(activePost.id);
@@ -530,10 +543,12 @@ export function PhotoPostEditor({
           <label className="field">
             <span className="field-label">Likes</span>
             <input
+              max={fieldLimits.common.metric}
               min={0}
               onChange={(event) =>
-                updatePost({ likes: Math.max(0, Number(event.target.value)) })
+                updatePost({ likes: parseMetricInput(event.target.value) })
               }
+              step={1}
               type="number"
               value={activePost.likes}
             />
@@ -541,12 +556,14 @@ export function PhotoPostEditor({
           <label className="field">
             <span className="field-label">{t("photo.commentCount")}</span>
             <input
+              max={fieldLimits.common.metric}
               min={0}
               onChange={(event) =>
                 updatePost({
-                  commentCount: Math.max(0, Number(event.target.value)),
+                  commentCount: parseMetricInput(event.target.value),
                 })
               }
+              step={1}
               type="number"
               value={activePost.commentCount}
             />

@@ -6,7 +6,7 @@ import {
   Play,
   Send,
 } from "lucide-react";
-import { type KeyboardEvent } from "react";
+import { type KeyboardEvent, useMemo } from "react";
 import type { PhotoPostImages, PhotoPostState } from "../../domain/types";
 import { formatTimelineDate, sortTimelinePosts } from "../../shared/lib/timeline";
 import { CommentThread } from "../../shared/components/CommentThread";
@@ -40,9 +40,13 @@ export function PhotoPostPreview({
   onPostSelect,
 }: PhotoPostPreviewProps) {
   const { locale, numberLocale, t } = useTranslation();
+  const sortedPosts = useMemo(
+    () => sortTimelinePosts(value.posts, value.sortOrder),
+    [value.posts, value.sortOrder],
+  );
   return (
     <div className={`photo-feed simulation-theme theme-${value.theme}`}>
-      {sortTimelinePosts(value.posts, value.sortOrder).map((post) => {
+      {sortedPosts.map((post) => {
         const username = post.username.trim() || (locale === "de" ? "benutzername" : "username");
         const postImages = images[post.id];
         const selected = post.id === value.activePostId;
@@ -158,7 +162,10 @@ export function PhotoPostPreview({
                     aria-label={t("photo.showImage", { index: index + 1 })}
                     aria-pressed={media.id === post.activeMediaId}
                     key={media.id}
-                    onClick={() => onActiveMediaChange(post.id, media.id)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onActiveMediaChange(post.id, media.id);
+                    }}
                     type="button"
                   />
                 ))}

@@ -66,8 +66,13 @@ function isStringWithin(value: unknown, maxLength: number): value is string {
   return typeof value === "string" && value.length <= maxLength;
 }
 
-function isNonNegativeNumber(value: unknown): value is number {
-  return typeof value === "number" && Number.isFinite(value) && value >= 0;
+function isMetricNumber(value: unknown): value is number {
+  return (
+    typeof value === "number" &&
+    Number.isInteger(value) &&
+    value >= 0 &&
+    value <= fieldLimits.common.metric
+  );
 }
 
 function isTheme(value: unknown): value is Theme {
@@ -201,8 +206,8 @@ function isPhotoPost(value: unknown): value is PhotoPost {
     isDate(value.date) &&
     isOptionalTime(value.time) &&
     isViewMode(value.viewMode) &&
-    isNonNegativeNumber(value.likes) &&
-    isNonNegativeNumber(value.commentCount) &&
+    isMetricNumber(value.likes) &&
+    isMetricNumber(value.commentCount) &&
     typeof value.showLocation === "boolean" &&
     typeof value.showComments === "boolean" &&
     isStringWithin(value.activeMediaId, fieldLimits.common.postId) &&
@@ -302,9 +307,9 @@ function isMicroblogPost(value: unknown): value is MicroblogPost {
     isDate(value.date) &&
     isOptionalTime(value.time) &&
     isViewMode(value.viewMode) &&
-    isNonNegativeNumber(value.replies) &&
-    isNonNegativeNumber(value.reposts) &&
-    isNonNegativeNumber(value.likes) &&
+    isMetricNumber(value.replies) &&
+    isMetricNumber(value.reposts) &&
+    isMetricNumber(value.likes) &&
     hasValidComments(value.comments)
   );
 }

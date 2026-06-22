@@ -10,12 +10,13 @@ import {
 } from "lucide-react";
 import {
   type KeyboardEvent,
+  lazy,
   useRef,
   useState,
+  Suspense,
 } from "react";
 import { AppFooter } from "./components/AppFooter";
 import { AppHeader } from "./components/AppHeader";
-import { ContentPage } from "./components/ContentPage";
 import { EducationNotice } from "./components/EducationNotice";
 import { ExportNoticeDialog } from "./components/ExportNoticeDialog";
 import { MessengerEditor } from "../features/messenger/MessengerEditor";
@@ -25,8 +26,6 @@ import { MicroblogPreview } from "../features/microblog/MicroblogPreview";
 import { PhotoPostEditor } from "../features/photo-post/PhotoPostEditor";
 import { PhotoPostPreview } from "../features/photo-post/PhotoPostPreview";
 import { TeacherInfoDialog } from "./components/TeacherInfoDialog";
-import { VerificationPage } from "../features/verification/VerificationPage";
-import { contentPages, isContentPath } from "../content";
 import { LocaleProvider, useTranslation } from "../i18n";
 import type { ModuleType } from "../domain/types";
 import {
@@ -42,6 +41,16 @@ import { useExportController } from "./useExportController";
 
 type MobileView = "editor" | "preview";
 
+const ContentRoute = lazy(() =>
+  import("./components/ContentRoute").then(({ ContentRoute }) => ({
+    default: ContentRoute,
+  })),
+);
+const VerificationPage = lazy(() =>
+  import("../features/verification/VerificationPage").then(
+    ({ VerificationPage }) => ({ default: VerificationPage }),
+  ),
+);
 
 function AppContent() {
   const { locale, setLocale, t } = useTranslation();
@@ -79,6 +88,25 @@ function AppContent() {
     updateAvailable,
   } = usePwaUpdate();
 
+  const { cancelPendingSessionRestore, clearSession } = useSessionPersistence({
+    locale,
+    activeModule,
+    setActiveModule,
+    photoPost,
+    messenger,
+    microblog,
+    setPhotoPost,
+    setMessenger,
+    setMicroblog,
+    initialPhotoPost,
+    initialMessenger,
+    initialMicroblog,
+    photoImages,
+    messengerImages,
+    microblogImages,
+    replaceModuleImages,
+  });
+
   const {
     projectOperation,
     configStatus,
@@ -108,25 +136,7 @@ function AppContent() {
     microblogImages,
     replaceModuleImages,
     clearModuleImages,
-  });
-
-  const { clearSession } = useSessionPersistence({
-    locale,
-    activeModule,
-    setActiveModule,
-    photoPost,
-    messenger,
-    microblog,
-    setPhotoPost,
-    setMessenger,
-    setMicroblog,
-    initialPhotoPost,
-    initialMessenger,
-    initialMicroblog,
-    photoImages,
-    messengerImages,
-    microblogImages,
-    replaceModuleImages,
+    cancelPendingSessionRestore,
   });
 
   const {
@@ -395,14 +405,13 @@ function AppContent() {
       )}
 
       {pathname === "/verifizieren" ? (
-        <VerificationPage />
-      ) : isContentPath(pathname) ? (
-        <ContentPage {...contentPages[locale][pathname]} />
+        <Suspense fallback={null}>
+          <VerificationPage />
+        </Suspense>
       ) : pathname !== "/" ? (
-        <ContentPage
-          content={t("app.notFoundText")}
-          title={t("app.notFound")}
-        />
+        <Suspense fallback={null}>
+          <ContentRoute pathname={pathname} />
+        </Suspense>
       ) : (
         <main>
           <section className="intro">

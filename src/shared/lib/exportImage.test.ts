@@ -33,6 +33,7 @@ import {
   exportBadgeText,
   exportElementAsImage,
   exportElementAsPdf,
+  maxVerificationImageSize,
   verifyImageMarker,
 } from "./exportImage";
 
@@ -331,6 +332,40 @@ describe("local image marker", () => {
         new Blob(["ordinary-image"], { type: "image/png" }),
       ),
     ).toEqual({ status: "none" });
+  });
+
+  it("returns none for oversized verification files", async () => {
+    const oversized = new Blob([
+      new Uint8Array(maxVerificationImageSize + 1),
+    ]);
+
+    await expect(verifyImageMarker(oversized)).resolves.toEqual({
+      status: "none",
+    });
+  });
+
+  it("rejects malformed marker metadata", async () => {
+    const marker = new TextEncoder().encode(
+      JSON.stringify({
+        appId: "SocialMediaCreator",
+        markerVersion: 1,
+        module: "photoPost",
+        exportedAt: "not-a-date",
+        sha256: "0".repeat(64),
+      }),
+    );
+    const length = new Uint8Array(4);
+    new DataView(length.buffer).setUint32(0, marker.length);
+    const file = new Blob([
+      "image-data",
+      marker,
+      length,
+      new TextEncoder().encode("SMC-MARKER-V1"),
+    ]);
+
+    await expect(verifyImageMarker(file)).resolves.toEqual({
+      status: "none",
+    });
   });
 });
 

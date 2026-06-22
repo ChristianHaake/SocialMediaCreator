@@ -58,6 +58,12 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,webmanifest,woff2}"],
+        globIgnores: [
+          "brand/*.png",
+          "**/html2canvas*.js",
+          "**/jspdf*.js",
+          "**/purify*.js",
+        ],
         navigateFallback: "/index.html",
         cleanupOutdatedCaches: true,
         clientsClaim: true,

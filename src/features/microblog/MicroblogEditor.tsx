@@ -1,6 +1,7 @@
 import { Plus } from "lucide-react";
 import {
   useEffect,
+  useMemo,
   useRef,
   type Dispatch,
   type SetStateAction,
@@ -57,6 +58,15 @@ function createMicroblogPost(locale: "de" | "en"): MicroblogPost {
   };
 }
 
+function parseMetricInput(value: string) {
+  const next = Number(value);
+  if (!Number.isFinite(next)) return 0;
+  return Math.min(
+    fieldLimits.common.metric,
+    Math.max(0, Math.floor(next)),
+  );
+}
+
 export function MicroblogEditor({
   value,
   onChange,
@@ -74,7 +84,10 @@ export function MicroblogEditor({
     profileImage: null,
     commentImages: {},
   };
-  const sortedPosts = sortTimelinePosts(value.posts, value.sortOrder);
+  const sortedPosts = useMemo(
+    () => sortTimelinePosts(value.posts, value.sortOrder),
+    [value.posts, value.sortOrder],
+  );
   const detailRef = useRef<HTMLElement>(null);
   const authorInputRef = useRef<HTMLInputElement>(null);
   const previousActivePostId = useRef(activePost.id);
@@ -362,12 +375,14 @@ export function MicroblogEditor({
             <label className="field" key={key}>
               <span className="field-label">{label}</span>
               <input
+                max={fieldLimits.common.metric}
                 min={0}
                 onChange={(event) =>
                   updatePost({
-                    [key]: Math.max(0, Number(event.target.value)),
+                    [key]: parseMetricInput(event.target.value),
                   })
                 }
+                step={1}
                 type="number"
                 value={activePost[key as "replies" | "reposts" | "likes"]}
               />

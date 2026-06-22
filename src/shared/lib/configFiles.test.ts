@@ -115,6 +115,18 @@ describe("configuration version 6", () => {
     );
   });
 
+  it("rejects non-integer, infinite and oversized metrics", () => {
+    for (const likes of [1.5, Infinity, fieldLimits.common.metric + 1]) {
+      const config = createPhotoPostConfig({
+        ...defaultPhotoPost,
+        posts: [{ ...defaultPhotoPost.posts[0], likes }],
+      });
+      expect(() => parseConfig(JSON.stringify(config))).toThrow(
+        "config.incomplete",
+      );
+    }
+  });
+
   it("rejects invalid locale values", () => {
     const config = {
       ...createMicroblogConfig(defaultMicroblog),

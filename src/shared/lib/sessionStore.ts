@@ -10,6 +10,23 @@ const DB_NAME = "smc-session";
 const STORE = "snapshots";
 const DB_VERSION = 1;
 const MODULES: ModuleType[] = ["photoPost", "messenger", "microblog"];
+const SNAPSHOT_TTL_MS = 24 * 60 * 60 * 1000;
+
+type StoredSnapshot = {
+  blob: Blob;
+  savedAt: number;
+};
+
+function isStoredSnapshot(value: unknown): value is StoredSnapshot {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "blob" in value &&
+    (value as { blob?: unknown }).blob instanceof Blob &&
+    "savedAt" in value &&
+    typeof (value as { savedAt?: unknown }).savedAt === "number"
+  );
+}
 
 function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -54,7 +71,7 @@ export function putSessionSnapshot(
   module: ModuleType,
   blob: Blob,
 ): Promise<void> {
-  return write((store) => store.put(blob, module));
+  return write((store) => store.put({ blob, savedAt: Date.now() }, module));
 }
 
 export function deleteSessionSnapshot(module: ModuleType): Promise<void> {
@@ -73,12 +90,21 @@ export async function getSessionSnapshots(): Promise<
     return await new Promise<Partial<Record<ModuleType, Blob>>>(
       (resolve, reject) => {
         const out: Partial<Record<ModuleType, Blob>> = {};
-        const transaction = db.transaction(STORE, "readonly");
+        const transaction = db.transaction(STORE, "readwrite");
         const store = transaction.objectStore(STORE);
         for (const module of MODULES) {
           const request = store.get(module);
           request.onsuccess = () => {
-            if (request.result instanceof Blob) out[module] = request.result;
+            if (request.result instanceof Blob) {
+              out[module] = request.result;
+              return;
+            }
+            if (!isStoredSnapshot(request.result)) return;
+            if (Date.now() - request.result.savedAt > SNAPSHOT_TTL_MS) {
+              store.delete(module);
+              return;
+            }
+            out[module] = request.result.blob;
           };
         }
         transaction.oncomplete = () => resolve(out);

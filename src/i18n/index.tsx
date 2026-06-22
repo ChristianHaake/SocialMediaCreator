@@ -18,8 +18,12 @@ const dictionaries = { de, en };
 const storageKey = "social-media-creator-locale";
 
 function detectLocale(): Locale {
-  const stored = window.localStorage.getItem(storageKey);
-  if (stored === "de" || stored === "en") return stored;
+  try {
+    const stored = window.localStorage.getItem(storageKey);
+    if (stored === "de" || stored === "en") return stored;
+  } catch {
+    // Fall back to browser language when localStorage is blocked.
+  }
   return window.navigator.language.toLowerCase().startsWith("en") ? "en" : "de";
 }
 
@@ -46,7 +50,11 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   const [locale, setLocale] = useState<Locale>(detectLocale);
 
   useEffect(() => {
-    window.localStorage.setItem(storageKey, locale);
+    try {
+      window.localStorage.setItem(storageKey, locale);
+    } catch {
+      // Locale selection still works for the current render.
+    }
     document.documentElement.lang = locale;
     document.title = "SocialMediaCreator";
     document

@@ -1,26 +1,19 @@
 import { toCanvas } from "html-to-image";
 import type { Locale, ModuleType } from "../../domain/types";
 import { downloadBlob } from "./downloads";
+import { addImageMarker } from "./imageMarkers";
+export {
+  addImageMarker,
+  maxVerificationImageSize,
+  verifyImageMarker,
+} from "./imageMarkers";
+export type { ImageMarker, VerificationResult } from "./imageMarkers";
 
 export type ImageExportFormat = "png" | "jpg";
 export type ExportFormat = ImageExportFormat | "pdf";
 
 const exportWidth = 1080;
-const markerMagic = new TextEncoder().encode("SMC-MARKER-V1");
 export const exportBadgeText = "SocialMediaCreator · Simulation";
-
-export type ImageMarker = {
-  appId: "SocialMediaCreator";
-  markerVersion: 1;
-  module: ModuleType;
-  exportedAt: string;
-  sha256: string;
-};
-
-export type VerificationResult =
-  | { status: "valid"; marker: ImageMarker }
-  | { status: "modified"; marker: ImageMarker }
-  | { status: "none" };
 
 export function calculatePageSlices(
   imageHeight: number,
@@ -48,12 +41,6 @@ export function calculatePageSlices(
   }
 
   return slices;
-}
-
-function bytesToHex(bytes: ArrayBuffer) {
-  return Array.from(new Uint8Array(bytes), (byte) =>
-    byte.toString(16).padStart(2, "0"),
-  ).join("");
 }
 
 function getExportBackground(element: HTMLElement) {
@@ -366,67 +353,6 @@ async function renderElementBlob(
   } finally {
     cleanup();
   }
-}
-
-export async function addImageMarker(blob: Blob, module: ModuleType) {
-  const imageBytes = new Uint8Array(await blob.arrayBuffer());
-  const marker: ImageMarker = {
-    appId: "SocialMediaCreator",
-    markerVersion: 1,
-    module,
-    exportedAt: new Date().toISOString(),
-    sha256: bytesToHex(await crypto.subtle.digest("SHA-256", imageBytes)),
-  };
-  const markerBytes = new TextEncoder().encode(JSON.stringify(marker));
-  const length = new Uint8Array(4);
-  new DataView(length.buffer).setUint32(0, markerBytes.length);
-  return new Blob([imageBytes, markerBytes, length, markerMagic], {
-    type: blob.type,
-  });
-}
-
-export async function verifyImageMarker(file: Blob): Promise<VerificationResult> {
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  const trailerLength = markerMagic.length + 4;
-  if (bytes.length <= trailerLength) return { status: "none" };
-
-  const magicStart = bytes.length - markerMagic.length;
-  const hasMagic = markerMagic.every(
-    (byte, index) => bytes[magicStart + index] === byte,
-  );
-  if (!hasMagic) return { status: "none" };
-
-  const lengthStart = magicStart - 4;
-  const markerLength = new DataView(
-    bytes.buffer,
-    bytes.byteOffset + lengthStart,
-    4,
-  ).getUint32(0);
-  const markerStart = lengthStart - markerLength;
-  if (markerStart < 0) return { status: "none" };
-
-  let marker: ImageMarker;
-  try {
-    marker = JSON.parse(
-      new TextDecoder().decode(bytes.slice(markerStart, lengthStart)),
-    ) as ImageMarker;
-  } catch {
-    return { status: "none" };
-  }
-  if (
-    marker.appId !== "SocialMediaCreator" ||
-    marker.markerVersion !== 1 ||
-    !["photoPost", "messenger", "microblog"].includes(marker.module)
-  ) {
-    return { status: "none" };
-  }
-
-  const digest = bytesToHex(
-    await crypto.subtle.digest("SHA-256", bytes.slice(0, markerStart)),
-  );
-  return digest === marker.sha256
-    ? { status: "valid", marker }
-    : { status: "modified", marker };
 }
 
 export async function exportElementAsImage(

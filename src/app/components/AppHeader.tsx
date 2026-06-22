@@ -10,14 +10,11 @@ export function AppHeader({ onOpenTeacherInfo }: AppHeaderProps) {
   return (
     <header className="app-header">
       <a className="brand" href="/">
-        <picture>
-          <source media="(min-width: 421px)" srcSet="/brand/smc-logo-blue-wide.png" />
-          <img
-            alt="SocialMediaCreator"
-            className="brand__logo"
-            src="/brand/smc-logo-blue-square.png"
-          />
-        </picture>
+        <img
+          alt="SocialMediaCreator"
+          className="brand__logo"
+          src="/brand/smc-logo-blue-wide.png"
+        />
         <span className="brand__text">
           <small>{t("app.tagline")}</small>
         </span>

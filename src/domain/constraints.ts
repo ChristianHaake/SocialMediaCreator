@@ -8,6 +8,7 @@ export const fieldLimits = {
     timestamp: 80,
     comments: 100,
     replies: 100,
+    metric: 999999999,
   },
   photoPost: {
     username: 30,

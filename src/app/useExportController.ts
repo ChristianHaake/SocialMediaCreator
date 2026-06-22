@@ -1,12 +1,7 @@
 import { useState, type RefObject } from "react";
 import { isStandaloneMode } from "../shared/lib/downloads";
 import { hasExportConsent, storeExportConsent } from "../shared/lib/exportConsent";
-import {
-  exportElementAsImage,
-  exportElementAsPdf,
-  type ExportFormat,
-  type ImageExportFormat,
-} from "../shared/lib/exportImage";
+import type { ExportFormat, ImageExportFormat } from "../shared/lib/exportImage";
 import type { ModuleType } from "../domain/types";
 import type { TranslationKey } from "../i18n/de";
 
@@ -57,6 +52,7 @@ export function useExportController({
     setExportError(null);
     setExporting(format);
     try {
+      const { exportElementAsImage } = await import("../shared/lib/exportImage");
       await exportElementAsImage(
         previewRef.current,
         format,
@@ -86,6 +82,7 @@ export function useExportController({
     setExportError(null);
     setExporting("pdf");
     try {
+      const { exportElementAsPdf } = await import("../shared/lib/exportImage");
       await exportElementAsPdf(
         previewRef.current,
         activeModule === "photoPost"
