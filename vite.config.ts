@@ -56,7 +56,6 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: false,
-      includeAssets: ["favicon.svg", "apple-touch-icon-180x180.png"],
       manifest: {
         name: "SocialMediaCreator",
         short_name: "SocialMediaCreator",
@@ -79,6 +78,10 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,svg,png,webmanifest,woff2}"],
         globIgnores: [
           "brand/*.png",
+          "favicon.svg",
+          "manifest.webmanifest",
+          "maskable-512x512.png",
+          "pwa-*.png",
           "**/html2canvas*.js",
           "**/jspdf*.js",
           "**/purify*.js",
