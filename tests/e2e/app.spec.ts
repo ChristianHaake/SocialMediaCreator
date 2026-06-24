@@ -25,7 +25,8 @@ async function openSection(page: Page, title: string) {
   const details = page
     .locator("details.editor-disclosure")
     .filter({ has: page.getByRole("heading", { name: title, exact: true }) });
-  if (!(await details.getAttribute("open"))) {
+  if ((await details.count()) === 0) return;
+  if ((await details.getAttribute("open")) === null) {
     await details.locator("summary").click();
   }
 }
@@ -172,7 +173,7 @@ test("first export requires consent and every export shows the notice", async ({
   await continueButton.click();
   await firstDownload;
 
-  await page.reload();
+  await page.goto("/", { waitUntil: "domcontentloaded" });
   await page.getByRole("button", { name: "PNG" }).click();
   await expect(
     page.getByRole("dialog", { name: "Hinweis vor dem Export" }),
@@ -518,11 +519,18 @@ test("photo posts follow date, optional time and timeline order", async ({
   await page.getByLabel("Beschreibung").fill("Chronologisch neuer");
   await page.getByLabel("Datum").fill("2026-06-12");
   await page.getByLabel("Uhrzeit (optional)").fill("08:30");
+  await expect(page.getByLabel("Datum")).toHaveAttribute(
+    "aria-invalid",
+    "false",
+  );
+  await expect(page.getByLabel("Uhrzeit (optional)")).toHaveAttribute(
+    "aria-invalid",
+    "false",
+  );
   await expect(page.locator(".photo-post").nth(0)).toContainText(
     "Chronologisch neuer",
   );
 
-  await openSection(page, "Darstellung");
   await page.getByLabel("Timeline-Reihenfolge").selectOption("oldest");
   await expect(page.locator(".photo-post").nth(1)).toContainText(
     "Chronologisch neuer",
@@ -711,7 +719,7 @@ test("microblog feed and thread layouts follow the selected order", async ({
     /microblog-feed--feed/,
   );
 
-  await openSection(page, "Darstellung");
+  await expect(page.getByLabel("Timeline-Darstellung")).toBeVisible();
   await page.getByLabel("Timeline-Darstellung").selectOption("thread");
   await expect(page.locator(".microblog-feed")).toHaveClass(
     /microblog-feed--thread/,
@@ -721,9 +729,23 @@ test("microblog feed and thread layouts follow the selected order", async ({
     .getByRole("button", { name: "Neuen Beitrag hinzufügen" })
     .click();
   await page.getByLabel("Beitragstext").fill("Zweiter Thread-Beitrag");
-  await page.getByLabel("Datum").fill("2026-06-12");
+  await page.getByLabel("Datum").focus();
+  await page.keyboard.press(process.platform === "darwin" ? "Meta+A" : "Control+A");
+  await page.keyboard.type("2026-06-12");
+  await page.getByLabel("Uhrzeit (optional)").fill("15:00");
+  await expect(page.getByLabel("Datum")).toHaveAttribute(
+    "aria-invalid",
+    "false",
+  );
+  await expect(page.getByLabel("Uhrzeit (optional)")).toHaveAttribute(
+    "aria-invalid",
+    "false",
+  );
   await expect(page.locator(".microblog-preview").nth(0)).toContainText(
     "Zweiter Thread-Beitrag",
+  );
+  await expect(page.locator(".microblog-preview").nth(0)).toContainText(
+    "12.06.2026 · 15:00",
   );
   await page.getByLabel("Timeline-Reihenfolge").selectOption("oldest");
   await expect(page.locator(".microblog-preview").nth(1)).toContainText(
@@ -737,6 +759,7 @@ test("two-profile messenger supports sender, timestamp, seen status and themes",
   await page.goto("/");
   await page.getByRole("tab", { name: "Messenger-Chat" }).click();
 
+  await openSection(page, "Chat-Profile");
   await page.getByLabel("Name").nth(0).fill("Linkes Profil");
   await page.getByLabel("Name").nth(1).fill("Rechtes Profil");
   await page.getByLabel("Online-Status").nth(0).fill("beschäftigt");

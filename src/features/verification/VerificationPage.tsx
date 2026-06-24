@@ -3,7 +3,7 @@ import { useState, type ChangeEvent } from "react";
 import {
   verifyImageMarker,
   type VerificationResult,
-} from "../../shared/lib/exportImage";
+} from "../../shared/lib/imageMarkers";
 import { useTranslation } from "../../i18n";
 
 export function VerificationPage() {

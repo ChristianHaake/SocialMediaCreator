@@ -21,7 +21,12 @@ export function downloadBlob(blob: Blob, fileName: string) {
   }
 
   document.body.append(link);
-  link.click();
-  link.remove();
+  try {
+    link.click();
+  } catch {
+    window.open(url, "_blank", "noopener");
+  } finally {
+    link.remove();
+  }
   window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }

@@ -17,6 +17,11 @@ Veröffentlichung in eine versionierte Sektion verschoben.
   optimierte Bilder des aktiven Moduls gemeinsam.
 - Dokumentiertes, versioniertes Archivformat mit strikter Pfad-, Größen-,
   Manifest- und Medienvalidierung.
+- **Progressive Web App (PWA):** Unterstützung für Offline-Nutzung, Installation als App und Updates per Service Worker.
+- **Auto-Save:** Die aktuelle Sitzung wird automatisch lokal in der IndexedDB gesichert, um Datenverlust zu vermeiden.
+- **Datenschutz:** Neue Schaltfläche "Gespeicherte Daten löschen", um die Auto-Save-Daten und Session manuell zu entfernen.
+- **Bildexport:** Markenlogo zu den Bildexporten hinzugefügt.
+- **Bild-Upload:** Zu große Bilder werden nun automatisch vor dem Import verkleinert, anstatt sie direkt abzuweisen.
 
 ### Geändert
 
@@ -33,6 +38,17 @@ Veröffentlichung in eine versionierte Sektion verschoben.
   einen dedizierten Hook ausgelagert.
 - Monolithische Style- und Übersetzungsdateien in geordnete Layer und
   sprachspezifische Wörterbücher aufgeteilt.
+- **Bild-Upload:** Dateien werden nun anhand ihres tatsächlichen Inhalts statt des deklarierten MIME-Typs validiert (behebt Import-Probleme von bestimmten Quellen wie fobizz).
+- **Benennung:** Die deutschen Begriffe "Karussell" und "Medium" wurden zu "Beitragsbild" und "Bild" geändert.
+- **Styling:** Die gedeckte Farbpalette ("muted") wurde optisch verfeinert.
+- **Export-Logik:** Verbesserungen beim Klonen von Knoten für den Bildexport.
+
+### Behoben
+
+- **Safari-Export:** Fehler mit fehlenden oder fehlerhaft decodierten Bildern in Safari-Exporten behoben (Proxying via Blob-URLs).
+- **Export:** Einfrieren von Bild- und PDF-Exporten verhindert, wenn der Tab während des Vorgangs ausgeblendet (hidden) wird.
+- **Bild-Upload:** Genauere Fehlermeldungen für Bilder, die auch nach Skalierung das absolute Größenlimit überschreiten.
+- **Downloads:** Probleme mit PWA-Downloads in bestimmten Browserkontexten behoben.
 
 ## [1.0.0] - 2026-06-12
 

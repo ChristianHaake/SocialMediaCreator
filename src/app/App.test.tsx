@@ -158,7 +158,9 @@ describe("App", () => {
         name: "Ausgewählten Beitrag bearbeiten",
       }),
     ).toBeInTheDocument();
-    expect(screen.getAllByText("Aktiv").length).toBeGreaterThan(0);
+    expect(
+      document.querySelectorAll(".post-management .post-selector--active"),
+    ).toHaveLength(1);
   });
 
   it("activates a new post and focuses its author field", async () => {
@@ -403,46 +405,59 @@ describe("App", () => {
     await waitFor(() => expect(trigger).toHaveFocus());
   });
 
-  it("renders direct content routes", () => {
+  it("renders direct content routes", async () => {
     window.history.replaceState({}, "", "/datenschutz");
     render(<App />);
 
     expect(
-      screen.getByRole("heading", { level: 1, name: "Datenschutz" }),
+      await screen.findByRole("heading", { level: 1, name: "Datenschutz" }),
     ).toBeInTheDocument();
     expect(screen.getByText("4. Bereitstellung über Cloudflare")).toBeInTheDocument();
   });
 
-  it("renders educator, responsible-use and terms content", () => {
+  it("renders educator, responsible-use and terms content", async () => {
     window.history.replaceState({}, "", "/lehrkraefte");
     const { unmount } = render(<App />);
     expect(
-      screen.getByRole("heading", { level: 1, name: "Hinweise für Lehrkräfte" }),
+      await screen.findByRole("heading", {
+        level: 1,
+        name: "Hinweise für Lehrkräfte",
+      }),
     ).toBeInTheDocument();
     expect(screen.getByText("Unterrichtsszenario 5: Plattformmechaniken")).toBeInTheDocument();
     unmount();
 
     window.history.replaceState({}, "", "/nutzungsbedingungen");
     render(<App />);
-    expect(screen.getByText("Identitätsmissbrauch oder Nachahmung realer Personen ohne Erlaubnis")).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        "Identitätsmissbrauch oder Nachahmung realer Personen ohne Erlaubnis",
+      ),
+    ).toBeInTheDocument();
     expect(screen.getByText("Cybermobbing, Belästigung, Einschüchterung oder Diskriminierung")).toBeInTheDocument();
   });
 
-  it("renders an application-level not-found page", () => {
+  it("renders an application-level not-found page", async () => {
     window.history.replaceState({}, "", "/existiert-nicht");
     render(<App />);
 
     expect(
-      screen.getByRole("heading", { level: 1, name: "Seite nicht gefunden" }),
+      await screen.findByRole("heading", {
+        level: 1,
+        name: "Seite nicht gefunden",
+      }),
     ).toBeInTheDocument();
   });
 
-  it("renders the local image verification route", () => {
+  it("renders the local image verification route", async () => {
     window.history.replaceState({}, "", "/verifizieren");
     render(<App />);
 
     expect(
-      screen.getByRole("heading", { level: 1, name: "Bild verifizieren" }),
+      await screen.findByRole("heading", {
+        level: 1,
+        name: "Bild verifizieren",
+      }),
     ).toBeInTheDocument();
     expect(
       screen.getByText(/kein fälschungssicherer Echtheitsbeweis/),
@@ -750,6 +765,11 @@ describe("App", () => {
     render(<App />);
 
     await user.click(screen.getByRole("tab", { name: "Mikroblog" }));
+    expect(
+      document
+        .querySelector("details.editor-disclosure")
+        ?.hasAttribute("open"),
+    ).toBe(true);
     expect(document.querySelector(".microblog-feed")).toHaveClass(
       "microblog-feed--feed",
     );
@@ -809,14 +829,16 @@ describe("App", () => {
       within(preview as HTMLElement).getByText("11.06.2026 · 10:15"),
     ).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText("Datum"), {
-      target: { value: "2026-06-12" },
-    });
-    fireEvent.change(screen.getByLabelText("Uhrzeit (optional)"), {
-      target: { value: "" },
-    });
+    await user.clear(screen.getByLabelText("Datum"));
+    await user.type(screen.getByLabelText("Datum"), "2026-06-12");
+    await user.clear(screen.getByLabelText("Uhrzeit (optional)"));
     expect(
       within(preview as HTMLElement).getByText("12.06.2026"),
+    ).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText("Uhrzeit (optional)"), "15:00");
+    expect(
+      within(preview as HTMLElement).getByText("12.06.2026 · 15:00"),
     ).toBeInTheDocument();
   });
 

@@ -38,6 +38,7 @@ export const maxProjectSize = 25 * 1024 * 1024;
 const maxProjectJsonSize = 1024 * 1024;
 const projectFileName = "project.json";
 const mediaPathPattern = /^media\/[0-9]{4}\.(?:webp|png)$/;
+const optimizedArchiveImages = new WeakMap<Blob, Blob>();
 
 type PhotoReference =
   | { kind: "photo-profile"; postId: string }
@@ -204,6 +205,15 @@ function collectMedia(
   return collected;
 }
 
+async function getArchiveImageBlob(image: ImageState) {
+  if (image.optimized) return image.blob;
+  const cached = optimizedArchiveImages.get(image.blob);
+  if (cached) return cached;
+  const optimized = await optimizeImage(image.blob);
+  optimizedArchiveImages.set(image.blob, optimized);
+  return optimized;
+}
+
 export async function createProjectArchive(
   module: ModuleType,
   data: PhotoPostState | MessengerState | MicroblogState,
@@ -217,9 +227,7 @@ export async function createProjectArchive(
   let totalSize = 0;
 
   for (const [index, item] of media.entries()) {
-    const optimized = item.image.optimized
-      ? item.image.blob
-      : await optimizeImage(item.image.blob);
+    const optimized = await getArchiveImageBlob(item.image);
     if (optimized.size > maxImageSize) {
       throw new ProjectArchiveError("project.tooLarge");
     }

@@ -10,12 +10,13 @@ import {
 } from "lucide-react";
 import {
   type KeyboardEvent,
+  lazy,
   useRef,
   useState,
+  Suspense,
 } from "react";
 import { AppFooter } from "./components/AppFooter";
 import { AppHeader } from "./components/AppHeader";
-import { ContentPage } from "./components/ContentPage";
 import { EducationNotice } from "./components/EducationNotice";
 import { ExportNoticeDialog } from "./components/ExportNoticeDialog";
 import { MessengerEditor } from "../features/messenger/MessengerEditor";
@@ -25,8 +26,6 @@ import { MicroblogPreview } from "../features/microblog/MicroblogPreview";
 import { PhotoPostEditor } from "../features/photo-post/PhotoPostEditor";
 import { PhotoPostPreview } from "../features/photo-post/PhotoPostPreview";
 import { TeacherInfoDialog } from "./components/TeacherInfoDialog";
-import { VerificationPage } from "../features/verification/VerificationPage";
-import { contentPages, isContentPath } from "../content";
 import { LocaleProvider, useTranslation } from "../i18n";
 import type { ModuleType } from "../domain/types";
 import {
@@ -36,11 +35,22 @@ import {
 } from "../domain/types";
 import { useProjectImages } from "./useProjectImages";
 import { useProjectStorage } from "./useProjectStorage";
+import { usePwaUpdate } from "./usePwaUpdate";
 import { useSessionPersistence } from "./useSessionPersistence";
 import { useExportController } from "./useExportController";
 
 type MobileView = "editor" | "preview";
 
+const ContentRoute = lazy(() =>
+  import("./components/ContentRoute").then(({ ContentRoute }) => ({
+    default: ContentRoute,
+  })),
+);
+const VerificationPage = lazy(() =>
+  import("../features/verification/VerificationPage").then(
+    ({ VerificationPage }) => ({ default: VerificationPage }),
+  ),
+);
 
 function AppContent() {
   const { locale, setLocale, t } = useTranslation();
@@ -72,6 +82,30 @@ function AppContent() {
   const [teacherInfoOpen, setTeacherInfoOpen] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
   const configInputRef = useRef<HTMLInputElement>(null);
+  const {
+    refreshApp,
+    resetAppVersion,
+    updateAvailable,
+  } = usePwaUpdate();
+
+  const { cancelPendingSessionRestore, clearSession } = useSessionPersistence({
+    locale,
+    activeModule,
+    setActiveModule,
+    photoPost,
+    messenger,
+    microblog,
+    setPhotoPost,
+    setMessenger,
+    setMicroblog,
+    initialPhotoPost,
+    initialMessenger,
+    initialMicroblog,
+    photoImages,
+    messengerImages,
+    microblogImages,
+    replaceModuleImages,
+  });
 
   const {
     projectOperation,
@@ -102,25 +136,7 @@ function AppContent() {
     microblogImages,
     replaceModuleImages,
     clearModuleImages,
-  });
-
-  const { clearSession } = useSessionPersistence({
-    locale,
-    activeModule,
-    setActiveModule,
-    photoPost,
-    messenger,
-    microblog,
-    setPhotoPost,
-    setMessenger,
-    setMicroblog,
-    initialPhotoPost,
-    initialMessenger,
-    initialMicroblog,
-    photoImages,
-    messengerImages,
-    microblogImages,
-    replaceModuleImages,
+    cancelPendingSessionRestore,
   });
 
   const {
@@ -375,16 +391,27 @@ function AppContent() {
     <div className="app">
       <AppHeader onOpenTeacherInfo={() => setTeacherInfoOpen(true)} />
       {pathname === "/" && <EducationNotice />}
+      {updateAvailable && (
+        <div className="status status--success status--action" role="status">
+          <span>{t("app.updateAvailable")}</span>
+          <button
+            className="button button--secondary"
+            onClick={refreshApp}
+            type="button"
+          >
+            {t("app.updateNow")}
+          </button>
+        </div>
+      )}
 
       {pathname === "/verifizieren" ? (
-        <VerificationPage />
-      ) : isContentPath(pathname) ? (
-        <ContentPage {...contentPages[locale][pathname]} />
+        <Suspense fallback={null}>
+          <VerificationPage />
+        </Suspense>
       ) : pathname !== "/" ? (
-        <ContentPage
-          content={t("app.notFoundText")}
-          title={t("app.notFound")}
-        />
+        <Suspense fallback={null}>
+          <ContentRoute pathname={pathname} />
+        </Suspense>
       ) : (
         <main>
           <section className="intro">
@@ -578,9 +605,16 @@ function AppContent() {
                 </div>
               </div>
               {exportError && (
-                <p className="status status--error" role="alert">
-                  {exportError}
-                </p>
+                <div className="status status--error status--action" role="alert">
+                  <span>{exportError}</span>
+                  <button
+                    className="button button--secondary"
+                    onClick={() => void resetAppVersion()}
+                    type="button"
+                  >
+                    {t("app.refreshApp")}
+                  </button>
+                </div>
               )}
               {configStatus && (
                 <p

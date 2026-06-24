@@ -15,7 +15,8 @@ async function openSection(page: Page, title: string) {
   const details = page
     .locator("details.editor-disclosure")
     .filter({ has: page.getByRole("heading", { name: title, exact: true }) });
-  if (!(await details.getAttribute("open"))) {
+  if ((await details.count()) === 0) return;
+  if ((await details.getAttribute("open")) === null) {
     await details.locator("summary").click();
   }
 }
@@ -53,7 +54,6 @@ test("General app controls, translations, and static page navigation", async ({ 
   const footerPages = [
     { name: "Hilfe", header: "Hilfe" },
     { name: "Über das Projekt", header: "Über das Projekt" },
-    { name: "Hinweise für Lehrkräfte", header: "Hinweise für Lehrkräfte" },
     { name: "Verantwortungsvoller Einsatz", header: "Verantwortungsvoller Einsatz" },
     { name: "Nutzungsbedingungen", header: "Nutzungsbedingungen" },
     { name: "Bild verifizieren", header: "Bild verifizieren" },
@@ -194,6 +194,7 @@ test("Messenger-Chat editor detailed interaction flow", async ({ page }) => {
   await expect(page.locator(".messenger-preview")).toHaveClass(/theme-dim/);
 
   // Edit profiles
+  await openSection(page, "Chat-Profile");
   await page.getByLabel("Name").nth(0).fill("Alice");
   await page.getByLabel("Name").nth(1).fill("Bob");
   await page.getByLabel("Online-Status").nth(0).fill("online");
@@ -234,6 +235,7 @@ test("Messenger-Chat editor detailed interaction flow", async ({ page }) => {
   await expect(previewMessages.nth(3)).toContainText("Hi Bob!");
 
   // Edit text of message 5 (which is Bob's message now)
+  await page.locator(".message-editor-list li").nth(4).locator("summary").click();
   await page.locator(".message-editor-list li").nth(4).locator("textarea").fill("Hello Alice, this is Bob! (Edited)");
   await expect(previewMessages.nth(4)).toContainText("Hello Alice, this is Bob! (Edited)");
 

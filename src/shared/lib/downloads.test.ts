@@ -56,5 +56,19 @@ describe("downloadBlob", () => {
 
     delete (window as unknown as Record<string, unknown>)["matchMedia"];
   });
-});
 
+  it("opens the blob URL when the anchor download cannot be started", () => {
+    const open = vi.spyOn(window, "open").mockImplementation(() => null);
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {
+      throw new Error("download blocked");
+    });
+
+    downloadBlob(new Blob(["data"], { type: "text/plain" }), "test.txt");
+
+    expect(open).toHaveBeenCalledWith("blob:download", "_blank", "noopener");
+    expect(URL.revokeObjectURL).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(60_000);
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:download");
+  });
+});

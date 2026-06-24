@@ -36,8 +36,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      // External registration script — CSP is script-src 'self' (no unsafe-inline).
-      injectRegister: "script-defer",
+      injectRegister: false,
       includeAssets: ["favicon.svg", "apple-touch-icon-180x180.png"],
       manifest: {
         name: "SocialMediaCreator",
@@ -59,9 +58,16 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,webmanifest,woff2}"],
+        globIgnores: [
+          "brand/*.png",
+          "**/html2canvas*.js",
+          "**/jspdf*.js",
+          "**/purify*.js",
+        ],
         navigateFallback: "/index.html",
         cleanupOutdatedCaches: true,
         clientsClaim: true,
+        maximumFileSizeToCacheInBytes: 4000000,
       },
     }),
   ],

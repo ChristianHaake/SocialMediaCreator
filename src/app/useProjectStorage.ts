@@ -37,6 +37,7 @@ export interface ProjectStorageConfig {
   microblogImages: MicroblogImages;
   replaceModuleImages: (module: ModuleType, images: ProjectImageMaps) => void;
   clearModuleImages: (module: ModuleType) => void;
+  cancelPendingSessionRestore: () => void;
 }
 
 function getProjectErrorCode(error: unknown): TranslationKey | null {
@@ -107,6 +108,7 @@ export function useProjectStorage(config: ProjectStorageConfig) {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file || projectOperation) return;
+    config.cancelPendingSessionRestore();
 
     setConfigStatus(null);
     setProjectOperation("loading");

@@ -20,8 +20,8 @@
 
 .preview-stage {
   display: grid;
-  min-height: 650px;
-  padding: clamp(26px, 5vw, 64px) 24px;
+  min-height: 560px;
+  padding: clamp(22px, 4vw, 48px) 24px;
   place-items: center;
   background:
     radial-gradient(circle at 50% 20%, rgb(36 93 204 / 7%), transparent 38%),
@@ -29,7 +29,6 @@
 }
 
 .preview-stage--messenger {
-  align-items: start;
   background:
     radial-gradient(circle at 50% 10%, rgb(24 121 89 / 8%), transparent 35%),
     #e9eeeb;
@@ -43,6 +42,12 @@
 
 .export-frame {
   box-sizing: border-box;
+}
+
+.export-wrapper {
+  display: grid;
+  width: 100%;
+  justify-items: center;
 }
 
 .photo-feed {

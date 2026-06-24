@@ -1,6 +1,7 @@
 import { Plus } from "lucide-react";
 import {
   useEffect,
+  useMemo,
   useRef,
   type Dispatch,
   type SetStateAction,
@@ -23,6 +24,7 @@ import { CommentEditor } from "../../shared/components/CommentEditor";
 import { EmojiTextarea } from "../../shared/components/EmojiTextarea";
 import { EditorDisclosure } from "../../shared/components/EditorDisclosure";
 import { ImageUploadField } from "../../shared/components/ImageUploadField";
+import { StructuredTimestampFields } from "../../shared/components/StructuredTimestampFields";
 import { TimelinePostList } from "../../shared/components/TimelinePostList";
 import { ThemeSelector } from "../../shared/components/ThemeSelector";
 
@@ -57,6 +59,15 @@ function createMicroblogPost(locale: "de" | "en"): MicroblogPost {
   };
 }
 
+function parseMetricInput(value: string) {
+  const next = Number(value);
+  if (!Number.isFinite(next)) return 0;
+  return Math.min(
+    fieldLimits.common.metric,
+    Math.max(0, Math.floor(next)),
+  );
+}
+
 export function MicroblogEditor({
   value,
   onChange,
@@ -74,7 +85,10 @@ export function MicroblogEditor({
     profileImage: null,
     commentImages: {},
   };
-  const sortedPosts = sortTimelinePosts(value.posts, value.sortOrder);
+  const sortedPosts = useMemo(
+    () => sortTimelinePosts(value.posts, value.sortOrder),
+    [value.posts, value.sortOrder],
+  );
   const detailRef = useRef<HTMLElement>(null);
   const authorInputRef = useRef<HTMLInputElement>(null);
   const previousActivePostId = useRef(activePost.id);
@@ -147,10 +161,7 @@ export function MicroblogEditor({
           <h3>{t("project.settings")}</h3>
           <p>{t("project.settingsDescription")}</p>
         </header>
-        <EditorDisclosure
-          description={t("microblog.appearanceDescription")}
-          title={t("common.appearance")}
-        >
+        <div className="editor-master-section__content">
           <ThemeSelector
             onChange={(theme) => onChange((current) => ({ ...current, theme }))}
             value={value.theme}
@@ -185,7 +196,7 @@ export function MicroblogEditor({
               <option value="oldest">{t("common.oldest")}</option>
             </select>
           </label>
-        </EditorDisclosure>
+        </div>
       </section>
 
       <section className="post-management">
@@ -229,7 +240,6 @@ export function MicroblogEditor({
       <section className="active-post-editor" ref={detailRef}>
         <header className="active-post-editor__header">
           <div>
-            <span className="post-selector__badge">{t("post.active")}</span>
             <h3>{t("post.editSelected")}</h3>
             <p>{t("post.editDescription")}</p>
           </div>
@@ -311,27 +321,12 @@ export function MicroblogEditor({
               : ""}
           </span>
         </div>
-        <div className="field-row">
-          <label className="field">
-            <span className="field-label">{t("common.date")}</span>
-            <input
-              onChange={(event) => {
-                if (event.target.value) updatePost({ date: event.target.value });
-              }}
-              required
-              type="date"
-              value={activePost.date}
-            />
-          </label>
-          <label className="field">
-            <span className="field-label">{t("common.timeOptional")}</span>
-            <input
-              onChange={(event) => updatePost({ time: event.target.value })}
-              type="time"
-              value={activePost.time}
-            />
-          </label>
-        </div>
+        <StructuredTimestampFields
+          date={activePost.date}
+          onDateChange={(date) => updatePost({ date })}
+          onTimeChange={(time) => updatePost({ time })}
+          time={activePost.time}
+        />
         <label className="field">
           <span className="field-label">{t("common.viewMode")}</span>
           <select
@@ -362,12 +357,14 @@ export function MicroblogEditor({
             <label className="field" key={key}>
               <span className="field-label">{label}</span>
               <input
+                max={fieldLimits.common.metric}
                 min={0}
                 onChange={(event) =>
                   updatePost({
-                    [key]: Math.max(0, Number(event.target.value)),
+                    [key]: parseMetricInput(event.target.value),
                   })
                 }
+                step={1}
                 type="number"
                 value={activePost[key as "replies" | "reposts" | "likes"]}
               />

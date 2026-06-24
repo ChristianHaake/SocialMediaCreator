@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import {
   useEffect,
+  useMemo,
   useRef,
   type Dispatch,
   type SetStateAction,
@@ -24,6 +25,7 @@ import { CommentEditor } from "../../shared/components/CommentEditor";
 import { EmojiTextarea } from "../../shared/components/EmojiTextarea";
 import { EditorDisclosure } from "../../shared/components/EditorDisclosure";
 import { ImageUploadField } from "../../shared/components/ImageUploadField";
+import { StructuredTimestampFields } from "../../shared/components/StructuredTimestampFields";
 import { TimelinePostList } from "../../shared/components/TimelinePostList";
 import { ThemeSelector } from "../../shared/components/ThemeSelector";
 
@@ -78,6 +80,15 @@ function createPhotoPost(locale: "de" | "en"): PhotoPost {
   };
 }
 
+function parseMetricInput(value: string) {
+  const next = Number(value);
+  if (!Number.isFinite(next)) return 0;
+  return Math.min(
+    fieldLimits.common.metric,
+    Math.max(0, Math.floor(next)),
+  );
+}
+
 export function PhotoPostEditor({
   value,
   onChange,
@@ -100,7 +111,10 @@ export function PhotoPostEditor({
     media: {},
     commentImages: {},
   };
-  const sortedPosts = sortTimelinePosts(value.posts, value.sortOrder);
+  const sortedPosts = useMemo(
+    () => sortTimelinePosts(value.posts, value.sortOrder),
+    [value.posts, value.sortOrder],
+  );
   const detailRef = useRef<HTMLElement>(null);
   const authorInputRef = useRef<HTMLInputElement>(null);
   const previousActivePostId = useRef(activePost.id);
@@ -212,10 +226,7 @@ export function PhotoPostEditor({
           <h3>{t("project.settings")}</h3>
           <p>{t("project.settingsDescription")}</p>
         </header>
-        <EditorDisclosure
-          description={t("photo.appearanceDescription")}
-          title={t("common.appearance")}
-        >
+        <div className="editor-master-section__content">
           <ThemeSelector
             onChange={(theme) => onChange((current) => ({ ...current, theme }))}
             value={value.theme}
@@ -235,7 +246,7 @@ export function PhotoPostEditor({
               <option value="oldest">{t("common.oldest")}</option>
             </select>
           </label>
-        </EditorDisclosure>
+        </div>
       </section>
 
       <section className="post-management">
@@ -279,7 +290,6 @@ export function PhotoPostEditor({
       <section className="active-post-editor" ref={detailRef}>
         <header className="active-post-editor__header">
           <div>
-            <span className="post-selector__badge">{t("post.active")}</span>
             <h3>{t("post.editSelected")}</h3>
             <p>{t("post.editDescription")}</p>
           </div>
@@ -327,27 +337,12 @@ export function PhotoPostEditor({
             />
           </label>
         </div>
-        <div className="field-row">
-          <label className="field">
-            <span className="field-label">{t("common.date")}</span>
-            <input
-              onChange={(event) => {
-                if (event.target.value) updatePost({ date: event.target.value });
-              }}
-              required
-              type="date"
-              value={activePost.date}
-            />
-          </label>
-          <label className="field">
-            <span className="field-label">{t("common.timeOptional")}</span>
-            <input
-              onChange={(event) => updatePost({ time: event.target.value })}
-              type="time"
-              value={activePost.time}
-            />
-          </label>
-        </div>
+        <StructuredTimestampFields
+          date={activePost.date}
+          onDateChange={(date) => updatePost({ date })}
+          onTimeChange={(time) => updatePost({ time })}
+          time={activePost.time}
+        />
         <label className="field">
           <span className="field-label">{t("common.viewMode")}</span>
           <select
@@ -530,10 +525,12 @@ export function PhotoPostEditor({
           <label className="field">
             <span className="field-label">Likes</span>
             <input
+              max={fieldLimits.common.metric}
               min={0}
               onChange={(event) =>
-                updatePost({ likes: Math.max(0, Number(event.target.value)) })
+                updatePost({ likes: parseMetricInput(event.target.value) })
               }
+              step={1}
               type="number"
               value={activePost.likes}
             />
@@ -541,12 +538,14 @@ export function PhotoPostEditor({
           <label className="field">
             <span className="field-label">{t("photo.commentCount")}</span>
             <input
+              max={fieldLimits.common.metric}
               min={0}
               onChange={(event) =>
                 updatePost({
-                  commentCount: Math.max(0, Number(event.target.value)),
+                  commentCount: parseMetricInput(event.target.value),
                 })
               }
+              step={1}
               type="number"
               value={activePost.commentCount}
             />

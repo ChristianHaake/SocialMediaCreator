@@ -34,8 +34,13 @@ export const en: Record<TranslationKey, string> = {
   "app.clearSavedConfirm":
     "Delete everything saved locally on this device and start fresh?",
   "app.clearedSaved": "Local data cleared.",
-  "app.imageExportError": "The image could not be created. Please try again.",
-  "app.pdfExportError": "The PDF could not be created. Please try again.",
+  "app.updateAvailable": "A new version is available.",
+  "app.updateNow": "Update",
+  "app.refreshApp": "Update app",
+  "app.imageExportError":
+    "The image export could not be started. Update the app or open it in the browser.",
+  "app.pdfExportError":
+    "The PDF export could not be started. Update the app or open it in the browser.",
   "app.notFound": "Page not found",
   "app.notFoundText":
     "The requested page does not exist. Return to the app or use a footer link.",
@@ -70,6 +75,10 @@ export const en: Record<TranslationKey, string> = {
   "common.timestamp": "Timestamp",
   "common.date": "Date",
   "common.timeOptional": "Time (optional)",
+  "common.dateFormatHint": "Format: YYYY-MM-DD",
+  "common.dateInvalid": "Enter a valid date in YYYY-MM-DD format.",
+  "common.timeFormatHint": "Format: HH:MM",
+  "common.timeInvalid": "Enter a valid time in HH:MM format.",
   "common.post": "Post",
   "common.posts": "Posts",
   "common.comment": "Comment",
@@ -215,7 +224,7 @@ export const en: Record<TranslationKey, string> = {
   "messenger.emptyMessage": "Empty message",
   "messenger.today": "TODAY",
   "messenger.previewEmpty": "Messages appear here.",
-  "footer.local": "SocialMediaCreator · Content stays on your device",
+  "footer.local": "SocialMediaCreator",
   "footer.navigation": "Footer navigation",
   "footer.help": "Help",
   "footer.about": "About the project",

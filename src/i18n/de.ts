@@ -32,10 +32,13 @@ export const de = {
   "app.clearSavedConfirm":
     "Alle lokal auf diesem Gerät gespeicherten Eingaben und Bilder löschen und neu beginnen?",
   "app.clearedSaved": "Lokale Daten gelöscht.",
+  "app.updateAvailable": "Eine neue Version ist verfügbar.",
+  "app.updateNow": "Aktualisieren",
+  "app.refreshApp": "App aktualisieren",
   "app.imageExportError":
-    "Das Bild konnte nicht erstellt werden. Bitte versuche es erneut.",
+    "Das Bild konnte nicht gestartet werden. Bitte aktualisiere die App oder öffne sie im Browser.",
   "app.pdfExportError":
-    "Das PDF konnte nicht erstellt werden. Bitte versuche es erneut.",
+    "Das PDF konnte nicht gestartet werden. Bitte aktualisiere die App oder öffne sie im Browser.",
   "app.notFound": "Seite nicht gefunden",
   "app.notFoundText":
     "Die angeforderte Seite existiert nicht. Kehre zur App zurück oder verwende einen Link aus der Fußnavigation.",
@@ -70,6 +73,10 @@ export const de = {
   "common.timestamp": "Zeitstempel",
   "common.date": "Datum",
   "common.timeOptional": "Uhrzeit (optional)",
+  "common.dateFormatHint": "Format: JJJJ-MM-TT",
+  "common.dateInvalid": "Gib ein gültiges Datum im Format JJJJ-MM-TT ein.",
+  "common.timeFormatHint": "Format: SS:MM",
+  "common.timeInvalid": "Gib eine gültige Uhrzeit im Format SS:MM ein.",
   "common.post": "Beitrag",
   "common.posts": "Beiträge",
   "common.comment": "Kommentar",
@@ -225,7 +232,7 @@ export const de = {
   "messenger.emptyMessage": "Leere Nachricht",
   "messenger.today": "HEUTE",
   "messenger.previewEmpty": "Nachrichten erscheinen hier.",
-  "footer.local": "SocialMediaCreator · Inhalte bleiben auf deinem Gerät",
+  "footer.local": "SocialMediaCreator",
   "footer.navigation": "Fußnavigation",
   "footer.help": "Hilfe",
   "footer.about": "Über das Projekt",

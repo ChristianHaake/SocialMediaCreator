@@ -43,6 +43,17 @@
   background: #edfbf2;
 }
 
+.status--action {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.status--action .button {
+  flex: 0 0 auto;
+}
+
 .preview-panel > .status {
   margin: 0;
   border-width: 1px 0 0;
@@ -50,32 +61,51 @@
 }
 
 .app-footer {
+  position: fixed;
+  z-index: 40;
+  right: 0;
+  bottom: 0;
+  left: 0;
   display: flex;
-  gap: 20px;
+  min-height: var(--footer-height);
+  gap: 18px;
   align-items: center;
   justify-content: space-between;
-  padding: 24px clamp(20px, 4vw, 64px);
+  padding: 8px clamp(20px, 4vw, 64px);
   border-top: 1px solid var(--border-soft);
   color: var(--text-muted);
-  background: white;
-  font-size: 0.78rem;
+  background: rgb(255 255 255 / 94%);
+  box-shadow: 0 -10px 28px rgb(15 23 42 / 7%);
+  backdrop-filter: blur(14px);
+  font-size: 0.74rem;
 }
 
 .app-footer > span {
-  flex: 0 1 auto;
+  flex: 0 0 auto;
+  color: #344054;
+  font-weight: 800;
 }
 
 .app-footer__right {
   display: flex;
-  gap: 20px;
+  min-width: 0;
+  flex: 1;
+  gap: 10px;
   align-items: center;
+  justify-content: flex-end;
 }
 
 .app-footer nav {
   display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
+  min-width: 0;
+  max-width: min(760px, 58vw);
+  gap: 12px;
+  flex: 1 1 auto;
+  flex-wrap: nowrap;
   justify-content: flex-end;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  white-space: nowrap;
 }
 
 .app-footer a {
@@ -87,18 +117,38 @@
   gap: 6px;
   align-items: center;
   flex-shrink: 0;
-  padding: 6px 12px;
+  min-height: 36px;
+  padding: 6px 11px;
   border: 1px solid #000;
   border-radius: 999px;
   background: #ffdd00;
   color: #000;
-  font-weight: 700;
+  font-size: 0.74rem;
+  font-weight: 800;
   text-decoration: none;
   white-space: nowrap;
 }
 
 .app-footer__coffee:hover {
   background: #ffe838;
+}
+
+.app-footer__github {
+  display: inline-grid;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  color: #344054;
+  background: white;
+  text-decoration: none;
+}
+
+.app-footer__github:hover {
+  border-color: #9da7b5;
+  background: #f8fafc;
 }
 
 .content-shell {
@@ -330,4 +380,3 @@
   justify-content: flex-end;
   margin-top: 24px;
 }
-

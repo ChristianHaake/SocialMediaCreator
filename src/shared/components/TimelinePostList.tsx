@@ -44,12 +44,9 @@ export function TimelinePostList({
           >
             <span className="post-selector__heading">
               <strong>{post.author}</strong>
-              {post.id === activeId && (
-                <span className="post-selector__badge">{t("post.active")}</span>
-              )}
             </span>
-            <span>{post.summary}</span>
-            <small>
+            <span className="post-selector__summary">{post.summary}</span>
+            <small className="post-selector__meta">
               {post.timestamp} · {t("post.timelinePosition", {
                 position: index + 1,
                 count: posts.length,
