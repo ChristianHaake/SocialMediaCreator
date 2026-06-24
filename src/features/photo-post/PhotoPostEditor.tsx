@@ -25,6 +25,7 @@ import { CommentEditor } from "../../shared/components/CommentEditor";
 import { EmojiTextarea } from "../../shared/components/EmojiTextarea";
 import { EditorDisclosure } from "../../shared/components/EditorDisclosure";
 import { ImageUploadField } from "../../shared/components/ImageUploadField";
+import { StructuredTimestampFields } from "../../shared/components/StructuredTimestampFields";
 import { TimelinePostList } from "../../shared/components/TimelinePostList";
 import { ThemeSelector } from "../../shared/components/ThemeSelector";
 
@@ -340,27 +341,12 @@ export function PhotoPostEditor({
             />
           </label>
         </div>
-        <div className="field-row">
-          <label className="field">
-            <span className="field-label">{t("common.date")}</span>
-            <input
-              onChange={(event) => {
-                if (event.target.value) updatePost({ date: event.target.value });
-              }}
-              required
-              type="date"
-              value={activePost.date}
-            />
-          </label>
-          <label className="field">
-            <span className="field-label">{t("common.timeOptional")}</span>
-            <input
-              onChange={(event) => updatePost({ time: event.target.value })}
-              type="time"
-              value={activePost.time}
-            />
-          </label>
-        </div>
+        <StructuredTimestampFields
+          date={activePost.date}
+          onDateChange={(date) => updatePost({ date })}
+          onTimeChange={(time) => updatePost({ time })}
+          time={activePost.time}
+        />
         <label className="field">
           <span className="field-label">{t("common.viewMode")}</span>
           <select

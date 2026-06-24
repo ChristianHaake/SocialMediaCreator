@@ -25,7 +25,7 @@ async function openSection(page: Page, title: string) {
   const details = page
     .locator("details.editor-disclosure")
     .filter({ has: page.getByRole("heading", { name: title, exact: true }) });
-  if (!(await details.getAttribute("open"))) {
+  if ((await details.getAttribute("open")) === null) {
     await details.locator("summary").click();
   }
 }
@@ -518,6 +518,14 @@ test("photo posts follow date, optional time and timeline order", async ({
   await page.getByLabel("Beschreibung").fill("Chronologisch neuer");
   await page.getByLabel("Datum").fill("2026-06-12");
   await page.getByLabel("Uhrzeit (optional)").fill("08:30");
+  await expect(page.getByLabel("Datum")).toHaveAttribute(
+    "aria-invalid",
+    "false",
+  );
+  await expect(page.getByLabel("Uhrzeit (optional)")).toHaveAttribute(
+    "aria-invalid",
+    "false",
+  );
   await expect(page.locator(".photo-post").nth(0)).toContainText(
     "Chronologisch neuer",
   );
@@ -711,7 +719,10 @@ test("microblog feed and thread layouts follow the selected order", async ({
     /microblog-feed--feed/,
   );
 
-  await openSection(page, "Darstellung");
+  const appearance = page
+    .locator("details.editor-disclosure")
+    .filter({ has: page.getByRole("heading", { name: "Darstellung", exact: true }) });
+  await expect(appearance).toHaveAttribute("open", "");
   await page.getByLabel("Timeline-Darstellung").selectOption("thread");
   await expect(page.locator(".microblog-feed")).toHaveClass(
     /microblog-feed--thread/,
@@ -721,9 +732,23 @@ test("microblog feed and thread layouts follow the selected order", async ({
     .getByRole("button", { name: "Neuen Beitrag hinzufügen" })
     .click();
   await page.getByLabel("Beitragstext").fill("Zweiter Thread-Beitrag");
-  await page.getByLabel("Datum").fill("2026-06-12");
+  await page.getByLabel("Datum").focus();
+  await page.keyboard.press(process.platform === "darwin" ? "Meta+A" : "Control+A");
+  await page.keyboard.type("2026-06-12");
+  await page.getByLabel("Uhrzeit (optional)").fill("15:00");
+  await expect(page.getByLabel("Datum")).toHaveAttribute(
+    "aria-invalid",
+    "false",
+  );
+  await expect(page.getByLabel("Uhrzeit (optional)")).toHaveAttribute(
+    "aria-invalid",
+    "false",
+  );
   await expect(page.locator(".microblog-preview").nth(0)).toContainText(
     "Zweiter Thread-Beitrag",
+  );
+  await expect(page.locator(".microblog-preview").nth(0)).toContainText(
+    "12.06.2026 · 15:00",
   );
   await page.getByLabel("Timeline-Reihenfolge").selectOption("oldest");
   await expect(page.locator(".microblog-preview").nth(1)).toContainText(

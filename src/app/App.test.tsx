@@ -763,6 +763,11 @@ describe("App", () => {
     render(<App />);
 
     await user.click(screen.getByRole("tab", { name: "Mikroblog" }));
+    expect(
+      document
+        .querySelector("details.editor-disclosure")
+        ?.hasAttribute("open"),
+    ).toBe(true);
     expect(document.querySelector(".microblog-feed")).toHaveClass(
       "microblog-feed--feed",
     );
@@ -822,14 +827,16 @@ describe("App", () => {
       within(preview as HTMLElement).getByText("11.06.2026 · 10:15"),
     ).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText("Datum"), {
-      target: { value: "2026-06-12" },
-    });
-    fireEvent.change(screen.getByLabelText("Uhrzeit (optional)"), {
-      target: { value: "" },
-    });
+    await user.clear(screen.getByLabelText("Datum"));
+    await user.type(screen.getByLabelText("Datum"), "2026-06-12");
+    await user.clear(screen.getByLabelText("Uhrzeit (optional)"));
     expect(
       within(preview as HTMLElement).getByText("12.06.2026"),
+    ).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText("Uhrzeit (optional)"), "15:00");
+    expect(
+      within(preview as HTMLElement).getByText("12.06.2026 · 15:00"),
     ).toBeInTheDocument();
   });
 

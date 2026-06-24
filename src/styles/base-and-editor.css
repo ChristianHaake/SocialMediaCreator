@@ -659,6 +659,11 @@ main {
   border-color: #9da7b5;
 }
 
+.field input[aria-invalid="true"] {
+  border-color: #d48a00;
+  box-shadow: 0 0 0 3px rgb(212 138 0 / 16%);
+}
+
 .field-hint {
   color: var(--text-muted);
   font-size: 0.72rem;

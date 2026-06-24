@@ -15,7 +15,7 @@ async function openSection(page: Page, title: string) {
   const details = page
     .locator("details.editor-disclosure")
     .filter({ has: page.getByRole("heading", { name: title, exact: true }) });
-  if (!(await details.getAttribute("open"))) {
+  if ((await details.getAttribute("open")) === null) {
     await details.locator("summary").click();
   }
 }
