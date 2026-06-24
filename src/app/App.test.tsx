@@ -155,7 +155,7 @@ describe("App", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", {
-        name: "Ausgewählten Beitrag bearbeiten",
+        name: "Ausgewählter Beitrag",
       }),
     ).toBeInTheDocument();
     expect(
