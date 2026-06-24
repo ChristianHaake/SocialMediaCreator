@@ -19,7 +19,9 @@ export function AppFooter() {
             {t("footer.terms")}
           </a>
           <a href="/verifizieren">{t("footer.verify")}</a>
-          <a href="/datenschutz">{t("footer.privacy")}</a>
+          <a className="app-footer__narrow-link" href="/datenschutz">
+            {t("footer.privacy")}
+          </a>
           <a href="/impressum">{t("footer.legal")}</a>
         </nav>
         <a

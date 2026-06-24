@@ -12,23 +12,42 @@ const icon = (src: string, sizes: string, type: string, purpose: string) => ({
   purpose,
 });
 
-// The production Content-Security-Policy lives in public/_headers, applied by
-// the host at deploy time. `vite preview` — which the Playwright E2E suite runs
-// against — does not read that file, so without this the suite runs with no CSP
-// and misses regressions like connect-src dropping blob: (breaks image export).
-// Derive the header from the same file so the policy can never drift.
-function productionContentSecurityPolicy(): string {
+// Production security headers live in public/_headers, applied by the host at
+// deploy time. `vite preview` — which the Playwright E2E suite runs against —
+// does not read that file, so mirror the global header block here to keep local
+// release checks aligned with production.
+function productionPreviewHeaders(): Record<string, string> {
   const headersPath = resolve(
     dirname(fileURLToPath(import.meta.url)),
     "public/_headers",
   );
   const match = readFileSync(headersPath, "utf8").match(
-    /^\s*Content-Security-Policy:\s*(.+)$/m,
+    /^\/\*\n(?<headers>(?:\s{2}.+\n)+)/m,
   );
-  if (!match) {
-    throw new Error(`Content-Security-Policy not found in ${headersPath}`);
+  const headerLines = match?.groups?.headers;
+  if (!headerLines) {
+    throw new Error(`Global security headers not found in ${headersPath}`);
   }
-  return match[1].trim();
+
+  return Object.fromEntries(
+    headerLines
+      .trim()
+      .split("\n")
+      .map((line) => {
+        const separator = line.indexOf(":");
+        if (separator <= 0) {
+          throw new Error(`Invalid header line in ${headersPath}: ${line}`);
+        }
+        const name = line.slice(0, separator).trim();
+        const value = line.slice(separator + 1).trim();
+        return [
+          name,
+          name.toLowerCase() === "content-security-policy"
+            ? value.replace(/;\s*upgrade-insecure-requests\s*/i, "")
+            : value,
+        ];
+      }),
+  );
 }
 
 export default defineConfig({
@@ -79,12 +98,7 @@ export default defineConfig({
     // http://127.0.0.1 to https for that directive, which fails the TLS
     // handshake and breaks the app — so it would block all WebKit E2E. The
     // directive stays in public/_headers, where production is served over https.
-    headers: {
-      "Content-Security-Policy": productionContentSecurityPolicy().replace(
-        /;\s*upgrade-insecure-requests\s*/i,
-        "",
-      ),
-    },
+    headers: productionPreviewHeaders(),
   },
   test: {
     environment: "jsdom",
