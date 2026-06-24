@@ -291,17 +291,17 @@ export function PhotoPostEditor({
         <header className="active-post-editor__header">
           <div>
             <h3>{t("post.editSelected")}</h3>
-            <p>{t("post.editDescription")}</p>
           </div>
           <div className="active-post-editor__context">
             <strong>{activePost.username || t("photo.username")}</strong>
-            <span>{formatTimelineDate(activePost.date, activePost.time, locale)}</span>
-            <small>
+            <span>
+              {formatTimelineDate(activePost.date, activePost.time, locale)}
+              {" · "}
               {t("post.timelinePosition", {
                 position: activePosition,
                 count: sortedPosts.length,
               })}
-            </small>
+            </span>
           </div>
         </header>
 

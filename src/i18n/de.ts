@@ -103,7 +103,7 @@ export const de = {
   "post.add": "Neuen Beitrag hinzufügen",
   "post.active": "Aktiv",
   "post.edit": "Beitrag bearbeiten",
-  "post.editSelected": "Ausgewählten Beitrag bearbeiten",
+  "post.editSelected": "Ausgewählter Beitrag",
   "post.editDescription":
     "Alle folgenden Einstellungen gehören zu diesem Beitrag.",
   "post.select": "Beitrag von {author} vom {date} auswählen",
@@ -177,8 +177,8 @@ export const de = {
   "photo.viewComments": "{count} Kommentare ansehen",
   "microblog.appearanceDescription": "Farbschema, Layout und Reihenfolge",
   "microblog.timelineLayout": "Timeline-Darstellung",
-  "microblog.feed": "Feed mit getrennten Beiträgen",
-  "microblog.thread": "Verbundener Thread",
+  "microblog.feed": "Feed",
+  "microblog.thread": "Thread",
   "microblog.postsDescription.one":
     "{count} Beitrag, automatisch chronologisch sortiert",
   "microblog.postsDescription.other":

@@ -105,7 +105,7 @@ export const en: Record<TranslationKey, string> = {
   "post.add": "Add new post",
   "post.active": "Active",
   "post.edit": "Edit post",
-  "post.editSelected": "Edit selected post",
+  "post.editSelected": "Selected post",
   "post.editDescription": "All settings below belong to this post.",
   "post.select": "Select post by {author} from {date}",
   "post.delete": "Delete post by {author} from {date}",
@@ -174,8 +174,8 @@ export const en: Record<TranslationKey, string> = {
   "photo.viewComments": "View {count} comments",
   "microblog.appearanceDescription": "Color scheme, layout, and order",
   "microblog.timelineLayout": "Timeline layout",
-  "microblog.feed": "Feed with separate posts",
-  "microblog.thread": "Connected thread",
+  "microblog.feed": "Feed",
+  "microblog.thread": "Thread",
   "microblog.postsDescription.one":
     "{count} post, automatically sorted chronologically",
   "microblog.postsDescription.other":

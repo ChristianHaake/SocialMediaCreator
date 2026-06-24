@@ -59,11 +59,11 @@
   }
 
   .intro {
-    padding: 38px 4px 26px;
+    padding: 22px 4px 18px;
   }
 
   .intro h1 {
-    font-size: clamp(2.3rem, 13vw, 3.5rem);
+    font-size: clamp(2rem, 11vw, 3rem);
   }
 
   .module-tabs {
@@ -142,7 +142,7 @@
 
   .app-footer {
     gap: 8px;
-    padding: 7px 12px;
+    padding: 5px 12px;
   }
 
   .app-footer > span {
@@ -165,13 +165,23 @@
   }
 
   .app-footer__coffee {
-    width: 36px;
+    width: 32px;
     padding-inline: 0;
     justify-content: center;
   }
 
   .app-footer__coffee span {
     display: none;
+  }
+
+  @media (max-width: 360px) {
+    .app-footer nav {
+      gap: 9px;
+    }
+
+    .app-footer__narrow-link {
+      display: none;
+    }
   }
 
   .content-shell {
@@ -252,6 +262,10 @@
     padding: 12px;
   }
 
+  .editor-master-section__content {
+    grid-template-columns: 1fr;
+  }
+
   .post-management__header {
     align-items: stretch;
     flex-direction: column;
@@ -274,16 +288,15 @@
   }
 
   .active-post-editor__header {
-    align-items: flex-start;
-    padding: 12px;
+    padding: 9px 10px;
   }
 
   .active-post-editor__context {
-    min-width: 92px;
+    max-width: 58%;
   }
 
   .active-post-editor__context strong {
-    max-width: 100px;
+    max-width: 100%;
   }
 
   .editor-disclosure__content {
