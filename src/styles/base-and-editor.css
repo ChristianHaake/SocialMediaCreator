@@ -19,7 +19,7 @@
   --radius-lg: 20px;
   --radius-md: 12px;
   --shadow-soft: 0 18px 45px rgb(15 23 42 / 8%);
-  --footer-height: 58px;
+  --footer-height: 46px;
 }
 
 * {
@@ -227,7 +227,7 @@ main {
   display: flex;
   align-items: end;
   justify-content: space-between;
-  padding: 34px 0 24px;
+  padding: 22px 0 18px;
 }
 
 .intro > div {
@@ -246,7 +246,7 @@ main {
 .intro h1 {
   max-width: 650px;
   margin: 8px 0 10px;
-  font-size: clamp(2.15rem, 4.2vw, 3.7rem);
+  font-size: clamp(2rem, 3.6vw, 3.1rem);
   line-height: 0.98;
   letter-spacing: -0.055em;
 }
@@ -255,8 +255,8 @@ main {
   max-width: 620px;
   margin: 0;
   color: var(--text-muted);
-  font-size: clamp(1rem, 1.6vw, 1.1rem);
-  line-height: 1.65;
+  font-size: clamp(0.95rem, 1.35vw, 1.02rem);
+  line-height: 1.5;
 }
 
 .module-tabs {
@@ -320,13 +320,13 @@ main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 22px 24px;
+  padding: 16px 18px;
   border-bottom: 1px solid var(--border-soft);
 }
 
 .panel-heading h2 {
   margin: 4px 0 0;
-  font-size: 1.15rem;
+  font-size: 1.05rem;
 }
 
 .icon-button {
@@ -348,7 +348,7 @@ main {
 .editor-form {
   display: grid;
   gap: 14px;
-  padding: 18px 22px 24px;
+  padding: 14px 22px 24px;
 }
 
 .editor-form > * {
@@ -403,6 +403,11 @@ main {
 
 .editor-master-section__content .segmented-field {
   grid-column: 1 / -1;
+}
+
+.editor-master-section__content .segmented-control span,
+.editor-master-section__content .field select {
+  min-height: 36px;
 }
 
 .post-management {

@@ -59,11 +59,11 @@
   }
 
   .intro {
-    padding: 28px 4px 22px;
+    padding: 22px 4px 18px;
   }
 
   .intro h1 {
-    font-size: clamp(2.2rem, 12vw, 3.2rem);
+    font-size: clamp(2rem, 11vw, 3rem);
   }
 
   .module-tabs {
@@ -142,7 +142,7 @@
 
   .app-footer {
     gap: 8px;
-    padding: 7px 12px;
+    padding: 5px 12px;
   }
 
   .app-footer > span {
@@ -165,7 +165,7 @@
   }
 
   .app-footer__coffee {
-    width: 36px;
+    width: 32px;
     padding-inline: 0;
     justify-content: center;
   }
