@@ -32,13 +32,21 @@
     padding: 10px 18px;
   }
 
-  .brand small,
+  .brand__logo {
+    height: 46px;
+  }
+
   .privacy-badge {
-    display: none;
+    padding: 5px 9px;
+    font-size: 0.7rem;
   }
 
   .header-meta {
-    gap: 10px;
+    gap: 5px;
+  }
+
+  .header-meta__controls {
+    gap: 8px;
   }
 
   main {
@@ -124,8 +132,8 @@
   }
 
   .preview-stage {
-    min-height: 520px;
-    padding: 28px 12px;
+    min-height: 460px;
+    padding: 22px 12px;
   }
 
   .photo-post {
@@ -133,17 +141,37 @@
   }
 
   .app-footer {
-    align-items: flex-start;
-    flex-direction: column;
+    gap: 8px;
+    padding: 7px 12px;
+  }
+
+  .app-footer > span {
+    display: none;
   }
 
   .app-footer__right {
-    align-items: flex-start;
-    flex-direction: column;
+    width: 100%;
+    gap: 8px;
   }
 
   .app-footer nav {
+    max-width: none;
     justify-content: flex-start;
+    overflow: visible;
+  }
+
+  .app-footer__optional-link {
+    display: none;
+  }
+
+  .app-footer__coffee {
+    width: 36px;
+    padding-inline: 0;
+    justify-content: center;
+  }
+
+  .app-footer__coffee span {
+    display: none;
   }
 
   .content-shell {
@@ -159,6 +187,21 @@
 @media (max-width: 420px) {
   .brand__text {
     display: none;
+  }
+
+  .brand__logo {
+    height: 38px;
+  }
+
+  .header-meta {
+    align-items: flex-end;
+  }
+
+  .privacy-badge {
+    max-width: 154px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .text-button {
@@ -201,12 +244,12 @@
   }
 
   .editor-form {
-    gap: 14px;
-    padding: 16px 12px 22px;
+    gap: 12px;
+    padding: 14px 10px 20px;
   }
 
   .post-management {
-    padding: 14px;
+    padding: 12px;
   }
 
   .post-management__header {
@@ -232,7 +275,7 @@
 
   .active-post-editor__header {
     align-items: flex-start;
-    padding: 14px;
+    padding: 12px;
   }
 
   .active-post-editor__context {
@@ -257,9 +300,19 @@
     gap: 0;
   }
 
-  .message-add-row {
+  .message-editor-card--profile,
+  .message-composer__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .message-composer__heading,
+  .message-composer__actions {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .message-composer__actions .button {
+    width: 100%;
   }
 
   .field--compact {

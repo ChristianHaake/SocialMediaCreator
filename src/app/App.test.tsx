@@ -158,7 +158,9 @@ describe("App", () => {
         name: "Ausgewählten Beitrag bearbeiten",
       }),
     ).toBeInTheDocument();
-    expect(screen.getAllByText("Aktiv").length).toBeGreaterThan(0);
+    expect(
+      document.querySelectorAll(".post-management .post-selector--active"),
+    ).toHaveLength(1);
   });
 
   it("activates a new post and focuses its author field", async () => {

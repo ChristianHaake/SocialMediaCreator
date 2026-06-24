@@ -226,10 +226,7 @@ export function PhotoPostEditor({
           <h3>{t("project.settings")}</h3>
           <p>{t("project.settingsDescription")}</p>
         </header>
-        <EditorDisclosure
-          description={t("photo.appearanceDescription")}
-          title={t("common.appearance")}
-        >
+        <div className="editor-master-section__content">
           <ThemeSelector
             onChange={(theme) => onChange((current) => ({ ...current, theme }))}
             value={value.theme}
@@ -249,7 +246,7 @@ export function PhotoPostEditor({
               <option value="oldest">{t("common.oldest")}</option>
             </select>
           </label>
-        </EditorDisclosure>
+        </div>
       </section>
 
       <section className="post-management">
@@ -293,7 +290,6 @@ export function PhotoPostEditor({
       <section className="active-post-editor" ref={detailRef}>
         <header className="active-post-editor__header">
           <div>
-            <span className="post-selector__badge">{t("post.active")}</span>
             <h3>{t("post.editSelected")}</h3>
             <p>{t("post.editDescription")}</p>
           </div>

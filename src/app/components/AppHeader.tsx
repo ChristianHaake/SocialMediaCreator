@@ -15,38 +15,37 @@ export function AppHeader({ onOpenTeacherInfo }: AppHeaderProps) {
           className="brand__logo"
           src="/brand/smc-logo-blue-wide.png"
         />
-        <span className="brand__text">
-          <small>{t("app.tagline")}</small>
-        </span>
       </a>
       <div className="header-meta">
         <span className="privacy-badge">
           <Check aria-hidden="true" size={15} />
           {t("app.local")}
         </span>
-        <div aria-label={t("app.language")} className="language-switch">
-          {(["de", "en"] as const).map((option) => (
-            <button
-              aria-pressed={locale === option}
-              key={option}
-              onClick={() => setLocale(option)}
-              type="button"
-            >
-              {option.toUpperCase()}
-            </button>
-          ))}
+        <div className="header-meta__controls">
+          <div aria-label={t("app.language")} className="language-switch">
+            {(["de", "en"] as const).map((option) => (
+              <button
+                aria-pressed={locale === option}
+                key={option}
+                onClick={() => setLocale(option)}
+                type="button"
+              >
+                {option.toUpperCase()}
+              </button>
+            ))}
+          </div>
+          <button
+            className="text-button"
+            onClick={(event) => {
+              event.currentTarget.focus();
+              onOpenTeacherInfo();
+            }}
+            type="button"
+          >
+            <GraduationCap aria-hidden="true" size={18} />
+            {t("app.teacher")}
+          </button>
         </div>
-        <button
-          className="text-button"
-          onClick={(event) => {
-            event.currentTarget.focus();
-            onOpenTeacherInfo();
-          }}
-          type="button"
-        >
-          <GraduationCap aria-hidden="true" size={18} />
-          {t("app.teacher")}
-        </button>
       </div>
     </header>
   );

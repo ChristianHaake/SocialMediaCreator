@@ -232,7 +232,7 @@ export const de = {
   "messenger.emptyMessage": "Leere Nachricht",
   "messenger.today": "HEUTE",
   "messenger.previewEmpty": "Nachrichten erscheinen hier.",
-  "footer.local": "SocialMediaCreator · Inhalte bleiben auf deinem Gerät",
+  "footer.local": "SocialMediaCreator",
   "footer.navigation": "Fußnavigation",
   "footer.help": "Hilfe",
   "footer.about": "Über das Projekt",

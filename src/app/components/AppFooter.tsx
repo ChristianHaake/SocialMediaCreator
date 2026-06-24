@@ -1,4 +1,4 @@
-import { Coffee } from "lucide-react";
+import { Coffee, Github } from "lucide-react";
 import { useTranslation } from "../../i18n";
 
 export function AppFooter() {
@@ -9,20 +9,18 @@ export function AppFooter() {
       <div className="app-footer__right">
         <nav aria-label={t("footer.navigation")}>
           <a href="/hilfe">{t("footer.help")}</a>
-          <a href="/ueber">{t("footer.about")}</a>
-          <a href="/lehrkraefte">{t("footer.educators")}</a>
-          <a href="/verantwortungsvoll">{t("footer.responsible")}</a>
-          <a href="/nutzungsbedingungen">{t("footer.terms")}</a>
+          <a className="app-footer__optional-link" href="/ueber">
+            {t("footer.about")}
+          </a>
+          <a className="app-footer__optional-link" href="/verantwortungsvoll">
+            {t("footer.responsible")}
+          </a>
+          <a className="app-footer__optional-link" href="/nutzungsbedingungen">
+            {t("footer.terms")}
+          </a>
           <a href="/verifizieren">{t("footer.verify")}</a>
           <a href="/datenschutz">{t("footer.privacy")}</a>
           <a href="/impressum">{t("footer.legal")}</a>
-          <a
-            href="https://github.com/ChristianHaake/SocialMediaCreator"
-            rel="noreferrer"
-            target="_blank"
-          >
-            GitHub
-          </a>
         </nav>
         <a
           className="app-footer__coffee"
@@ -31,7 +29,16 @@ export function AppFooter() {
           target="_blank"
         >
           <Coffee aria-hidden="true" size={16} />
-          {t("footer.coffee")}
+          <span>{t("footer.coffee")}</span>
+        </a>
+        <a
+          aria-label="GitHub"
+          className="app-footer__github"
+          href="https://github.com/ChristianHaake/SocialMediaCreator"
+          rel="noreferrer"
+          target="_blank"
+        >
+          <Github aria-hidden="true" size={20} />
         </a>
       </div>
     </footer>

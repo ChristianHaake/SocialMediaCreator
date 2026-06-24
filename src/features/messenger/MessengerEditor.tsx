@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronDown, Plus, Trash2 } from "lucide-react";
 import { useState, type Dispatch, type SetStateAction } from "react";
 import { fieldLimits } from "../../domain/constraints";
 import type {
@@ -10,6 +10,7 @@ import type {
 } from "../../domain/types";
 import { createId } from "../../shared/lib/ids";
 import { useTranslation } from "../../i18n";
+import { EditorDisclosure } from "../../shared/components/EditorDisclosure";
 import { EmojiTextarea } from "../../shared/components/EmojiTextarea";
 import { ImageUploadField } from "../../shared/components/ImageUploadField";
 import { ThemeSelector } from "../../shared/components/ThemeSelector";
@@ -93,6 +94,11 @@ export function MessengerEditor({
     });
   }
 
+  function profileName(id: string) {
+    const profile = value.profiles.find((item) => item.id === id);
+    return profile?.name || profile?.side || t("common.author");
+  }
+
   return (
     <form className="editor-form" onSubmit={(event) => event.preventDefault()}>
       <section className="editor-section">
@@ -109,20 +115,20 @@ export function MessengerEditor({
         />
       </section>
 
-      <section className="editor-section">
-        <div className="section-heading">
-          <span>02</span>
-          <div>
-            <h2>{t("messenger.profiles")}</h2>
-            <p>{t("messenger.profilesDescription")}</p>
-          </div>
-        </div>
+      <EditorDisclosure
+        description={t("messenger.profilesDescription")}
+        number="02"
+        title={t("messenger.profiles")}
+      >
         <p className="editor-notice">
           {t("messenger.notice")}
         </p>
         <div className="profile-editor-list">
           {value.profiles.map((profile) => (
-            <div className="message-editor-card" key={profile.id}>
+            <div
+              className="message-editor-card message-editor-card--profile"
+              key={profile.id}
+            >
               <strong>
                 {profile.side === "left"
                   ? t("messenger.leftProfile")
@@ -158,217 +164,243 @@ export function MessengerEditor({
             </div>
           ))}
         </div>
-      </section>
+      </EditorDisclosure>
 
-      <section className="editor-section">
-        <div className="section-heading">
-          <span>03</span>
-          <div>
-            <h2>{t("messenger.newMessage")}</h2>
+      <EditorDisclosure
+        defaultOpen
+        description={t("messenger.messagesDescription", {
+          count: value.messages.length,
+        })}
+        number="03"
+        title={t("messenger.messages")}
+      >
+        <div className="message-composer">
+          <div className="message-composer__heading">
+            <h3>{t("messenger.newMessage")}</h3>
             <p>{t("messenger.newMessageDescription")}</p>
           </div>
-        </div>
-        <label className="field">
-          <span className="field-label">{t("messenger.sender")}</span>
-          <select
-            onChange={(event) =>
-              setDraft((current) => ({
-                ...current,
-                senderId: event.target.value,
-              }))
-            }
-            value={draft.senderId}
-          >
-            {value.profiles.map((profile) => (
-              <option key={profile.id} value={profile.id}>
-                {profile.name || profile.side}
-              </option>
-            ))}
-          </select>
-        </label>
-        <div className="field">
-          <span className="field-label">{t("messenger.messageText")}</span>
-          <EmojiTextarea
-            aria-label={t("messenger.messageText")}
-            maxLength={fieldLimits.messenger.messageText}
-            onChange={(text) =>
-              setDraft((current) => ({
-                ...current,
-                text,
-              }))
-            }
-            placeholder={t("messenger.placeholder")}
-            rows={3}
-            value={draft.text}
-          />
-        </div>
-        <label className="field">
-          <span className="field-label">{t("common.timestamp")}</span>
-          <input
-            maxLength={fieldLimits.common.timestamp}
-            onChange={(event) =>
-              setDraft((current) => ({
-                ...current,
-                timestamp: event.target.value,
-              }))
-            }
-            value={draft.timestamp}
-          />
-        </label>
-        <label className="toggle-field">
-          <input
-            checked={draft.seen}
-            onChange={(event) =>
-              setDraft((current) => ({
-                ...current,
-                seen: event.target.checked,
-              }))
-            }
-            type="checkbox"
-          />
-          <span>{t("messenger.markSeen")}</span>
-        </label>
-        <button
-          className="button button--primary full-width-button"
-          disabled={
-            !draft.text.trim() ||
-            value.messages.length >= fieldLimits.messenger.messages
-          }
-          onClick={addMessage}
-          type="button"
-        >
-          <Plus aria-hidden="true" size={18} />
-          {t("common.add")}
-        </button>
-        {value.messages.length >= fieldLimits.messenger.messages && (
-          <span className="field-hint field-hint--warning">
-            {t("messenger.limitReached")}
-          </span>
-        )}
-      </section>
-
-      <section className="editor-section">
-        <div className="section-heading">
-          <span>04</span>
-          <div>
-            <h2>{t("messenger.messages")}</h2>
-            <p>{t("messenger.messagesDescription", { count: value.messages.length })}</p>
+          <div className="message-composer__grid">
+            <label className="field">
+              <span className="field-label">{t("messenger.sender")}</span>
+              <select
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    senderId: event.target.value,
+                  }))
+                }
+                value={draft.senderId}
+              >
+                {value.profiles.map((profile) => (
+                  <option key={profile.id} value={profile.id}>
+                    {profile.name || profile.side}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="field">
+              <span className="field-label">{t("common.timestamp")}</span>
+              <input
+                maxLength={fieldLimits.common.timestamp}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    timestamp: event.target.value,
+                  }))
+                }
+                value={draft.timestamp}
+              />
+            </label>
           </div>
+          <div className="field">
+            <span className="field-label">{t("messenger.messageText")}</span>
+            <EmojiTextarea
+              aria-label={t("messenger.messageText")}
+              maxLength={fieldLimits.messenger.messageText}
+              onChange={(text) =>
+                setDraft((current) => ({
+                  ...current,
+                  text,
+                }))
+              }
+              placeholder={t("messenger.placeholder")}
+              rows={3}
+              value={draft.text}
+            />
+          </div>
+          <div className="message-composer__actions">
+            <label className="toggle-field">
+              <input
+                checked={draft.seen}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    seen: event.target.checked,
+                  }))
+                }
+                type="checkbox"
+              />
+              <span>{t("messenger.markSeen")}</span>
+            </label>
+            <button
+              className="button button--primary"
+              disabled={
+                !draft.text.trim() ||
+                value.messages.length >= fieldLimits.messenger.messages
+              }
+              onClick={addMessage}
+              type="button"
+            >
+              <Plus aria-hidden="true" size={18} />
+              {t("common.add")}
+            </button>
+          </div>
+          {value.messages.length >= fieldLimits.messenger.messages && (
+            <span className="field-hint field-hint--warning">
+              {t("messenger.limitReached")}
+            </span>
+          )}
         </div>
         {value.messages.length === 0 ? (
           <p className="empty-state">{t("messenger.empty")}</p>
         ) : (
           <ol className="message-editor-list">
             {value.messages.map((message, index) => (
-              <li className="message-editor-card" key={message.id}>
-                <div className="message-editor-card__header">
-                  <strong>{t("messenger.message")} {index + 1}</strong>
-                  <div className="message-editor-card__actions">
-                    <button
-                      aria-label={`${t("messenger.message")} ${index + 1} ${t("common.moveUp")}`}
-                      className="compact-icon-button"
-                      disabled={index === 0}
-                      onClick={() => moveMessage(index, -1)}
-                      type="button"
-                    >
-                      <ArrowUp aria-hidden="true" size={16} />
-                    </button>
-                    <button
-                      aria-label={`${t("messenger.message")} ${index + 1} ${t("common.moveDown")}`}
-                      className="compact-icon-button"
-                      disabled={index === value.messages.length - 1}
-                      onClick={() => moveMessage(index, 1)}
-                      type="button"
-                    >
-                      <ArrowDown aria-hidden="true" size={16} />
-                    </button>
-                    <button
-                      aria-label={`${t("messenger.message")} ${index + 1} ${t("common.delete")}`}
-                      className="compact-icon-button compact-icon-button--danger"
-                      onClick={() =>
-                        onChange((current) => ({
-                          ...current,
-                          messages: current.messages.filter(
-                            (item) => item.id !== message.id,
-                          ),
-                        }))
-                      }
-                      type="button"
-                    >
-                      <Trash2 aria-hidden="true" size={16} />
-                    </button>
+              <li key={message.id}>
+                <details className="message-editor-card message-editor-card--disclosure">
+                  <summary className="message-editor-card__summary">
+                    <div className="message-editor-card__summary-text">
+                      <strong>{t("messenger.message")} {index + 1}</strong>
+                      <span>
+                        {profileName(message.senderId)}
+                        {message.timestamp ? ` · ${message.timestamp}` : ""}
+                      </span>
+                      <small>{message.text || t("messenger.emptyMessage")}</small>
+                    </div>
+                    <div className="message-editor-card__actions">
+                      <button
+                        aria-label={`${t("messenger.message")} ${index + 1} ${t("common.moveUp")}`}
+                        className="compact-icon-button"
+                        disabled={index === 0}
+                        onClick={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          moveMessage(index, -1);
+                        }}
+                        type="button"
+                      >
+                        <ArrowUp aria-hidden="true" size={16} />
+                      </button>
+                      <button
+                        aria-label={`${t("messenger.message")} ${index + 1} ${t("common.moveDown")}`}
+                        className="compact-icon-button"
+                        disabled={index === value.messages.length - 1}
+                        onClick={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          moveMessage(index, 1);
+                        }}
+                        type="button"
+                      >
+                        <ArrowDown aria-hidden="true" size={16} />
+                      </button>
+                      <button
+                        aria-label={`${t("messenger.message")} ${index + 1} ${t("common.delete")}`}
+                        className="compact-icon-button compact-icon-button--danger"
+                        onClick={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          onChange((current) => ({
+                            ...current,
+                            messages: current.messages.filter(
+                              (item) => item.id !== message.id,
+                            ),
+                          }));
+                        }}
+                        type="button"
+                      >
+                        <Trash2 aria-hidden="true" size={16} />
+                      </button>
+                    </div>
+                    <ChevronDown
+                      aria-hidden="true"
+                      className="message-editor-card__chevron"
+                      size={18}
+                    />
+                  </summary>
+                  <div className="message-editor-card__content">
+                    <label className="field">
+                      <span className="field-label">{t("messenger.sender")}</span>
+                      <select
+                        aria-label={
+                          locale === "de"
+                            ? `Absender von Nachricht ${index + 1}`
+                            : `Sender of message ${index + 1}`
+                        }
+                        onChange={(event) =>
+                          updateMessage(message.id, {
+                            senderId: event.target.value,
+                          })
+                        }
+                        value={message.senderId}
+                      >
+                        {value.profiles.map((profile) => (
+                          <option key={profile.id} value={profile.id}>
+                            {profile.name || profile.side}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <div className="field">
+                      <span className="field-label">{t("messenger.text")}</span>
+                      <EmojiTextarea
+                        aria-label={
+                          locale === "de"
+                            ? `Text von Nachricht ${index + 1}`
+                            : `Text of message ${index + 1}`
+                        }
+                        maxLength={fieldLimits.messenger.messageText}
+                        onChange={(text) =>
+                          updateMessage(message.id, { text })
+                        }
+                        rows={3}
+                        value={message.text}
+                      />
+                    </div>
+                    <label className="field">
+                      <span className="field-label">{t("common.timestamp")}</span>
+                      <input
+                        aria-label={
+                          locale === "de"
+                            ? `Zeitstempel von Nachricht ${index + 1}`
+                            : `Timestamp of message ${index + 1}`
+                        }
+                        maxLength={fieldLimits.common.timestamp}
+                        onChange={(event) =>
+                          updateMessage(message.id, {
+                            timestamp: event.target.value,
+                          })
+                        }
+                        value={message.timestamp}
+                      />
+                    </label>
+                    <label className="toggle-field">
+                      <input
+                        checked={message.seen}
+                        onChange={(event) =>
+                          updateMessage(message.id, { seen: event.target.checked })
+                        }
+                        type="checkbox"
+                      />
+                      <span>{t("messenger.seen")}</span>
+                    </label>
                   </div>
-                </div>
-                <label className="field">
-                  <span className="field-label">{t("messenger.sender")}</span>
-                  <select
-                    aria-label={
-                      locale === "de"
-                        ? `Absender von Nachricht ${index + 1}`
-                        : `Sender of message ${index + 1}`
-                    }
-                    onChange={(event) =>
-                      updateMessage(message.id, {
-                        senderId: event.target.value,
-                      })
-                    }
-                    value={message.senderId}
-                  >
-                    {value.profiles.map((profile) => (
-                      <option key={profile.id} value={profile.id}>
-                        {profile.name || profile.side}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <div className="field">
-                  <span className="field-label">{t("messenger.text")}</span>
-                  <EmojiTextarea
-                    aria-label={
-                      locale === "de"
-                        ? `Text von Nachricht ${index + 1}`
-                        : `Text of message ${index + 1}`
-                    }
-                    maxLength={fieldLimits.messenger.messageText}
-                    onChange={(text) =>
-                      updateMessage(message.id, { text })
-                    }
-                    rows={3}
-                    value={message.text}
-                  />
-                </div>
-                <label className="field">
-                  <span className="field-label">{t("common.timestamp")}</span>
-                  <input
-                    aria-label={
-                      locale === "de"
-                        ? `Zeitstempel von Nachricht ${index + 1}`
-                        : `Timestamp of message ${index + 1}`
-                    }
-                    maxLength={fieldLimits.common.timestamp}
-                    onChange={(event) =>
-                      updateMessage(message.id, {
-                        timestamp: event.target.value,
-                      })
-                    }
-                    value={message.timestamp}
-                  />
-                </label>
-                <label className="toggle-field">
-                  <input
-                    checked={message.seen}
-                    onChange={(event) =>
-                      updateMessage(message.id, { seen: event.target.checked })
-                    }
-                    type="checkbox"
-                  />
-                  <span>{t("messenger.seen")}</span>
-                </label>
+                </details>
               </li>
             ))}
           </ol>
         )}
-      </section>
+      </EditorDisclosure>
     </form>
   );
 }

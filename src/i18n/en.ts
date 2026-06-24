@@ -224,7 +224,7 @@ export const en: Record<TranslationKey, string> = {
   "messenger.emptyMessage": "Empty message",
   "messenger.today": "TODAY",
   "messenger.previewEmpty": "Messages appear here.",
-  "footer.local": "SocialMediaCreator · Content stays on your device",
+  "footer.local": "SocialMediaCreator",
   "footer.navigation": "Footer navigation",
   "footer.help": "Help",
   "footer.about": "About the project",
