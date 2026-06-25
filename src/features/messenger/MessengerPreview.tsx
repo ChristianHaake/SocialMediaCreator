@@ -1,6 +1,7 @@
 import { ArrowLeft, CheckCheck, MoreVertical, Phone, Video } from "lucide-react";
 
 import type { MessengerImages, MessengerState } from "../../domain/types";
+import { exportBadgeText } from "../../shared/lib/exportLabels";
 import { useTranslation } from "../../i18n";
 
 type MessengerPreviewProps = {
@@ -37,6 +38,9 @@ export function MessengerPreview({ value, images }: MessengerPreviewProps) {
           <strong>{leftProfile.name.trim() || t("messenger.contact")}</strong>
           <span>{leftProfile.status.trim() || t("messenger.lastOnline")}</span>
         </div>
+        <span className="export-badge" data-export-badge="true">
+          {exportBadgeText}
+        </span>
         <Video aria-hidden="true" size={20} />
         <Phone aria-hidden="true" size={19} />
         <MoreVertical aria-hidden="true" size={20} />

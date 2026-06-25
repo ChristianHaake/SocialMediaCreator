@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { type KeyboardEvent, useMemo } from "react";
 import type { PhotoPostImages, PhotoPostState } from "../../domain/types";
+import { exportBadgeText } from "../../shared/lib/exportLabels";
 import { formatTimelineDate, sortTimelinePosts } from "../../shared/lib/timeline";
 import { CommentThread } from "../../shared/components/CommentThread";
 import { useTranslation } from "../../i18n";
@@ -95,6 +96,9 @@ export function PhotoPostPreview({
                   <span>{post.location}</span>
                 )}
               </div>
+              <span className="export-badge" data-export-badge="true">
+                {exportBadgeText}
+              </span>
               <span aria-hidden="true" className="photo-post__more">
                 ···
               </span>

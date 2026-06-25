@@ -17,6 +17,15 @@ async function openSection(page: Page, title: string) {
     .filter({ has: page.getByRole("heading", { name: title, exact: true }) });
   if ((await details.count()) === 0) return;
   if ((await details.getAttribute("open")) === null) {
+    await details.locator("summary.section-heading").click();
+  }
+}
+
+async function openProfileCard(page: Page, title: string) {
+  const details = page
+    .locator("details.message-editor-card--profile-disclosure")
+    .filter({ hasText: title });
+  if ((await details.getAttribute("open")) === null) {
     await details.locator("summary").click();
   }
 }
@@ -79,7 +88,7 @@ test("Photo-Post editor detailed interaction flow", async ({ page }) => {
   await page.getByRole("tab", { name: "Foto-Post" }).click();
 
   // 1. Appearance / Darstellung
-  await openSection(page, "Darstellung");
+  await openSection(page, "Projekteinstellungen");
   await page.locator(".segmented-control label").filter({ hasText: "Dim" }).click();
   await expect(page.locator(".photo-feed")).toHaveClass(/theme-dim/);
   await page.locator(".segmented-control label").filter({ hasText: "Dark" }).click();
@@ -190,11 +199,14 @@ test("Messenger-Chat editor detailed interaction flow", async ({ page }) => {
   await page.getByRole("tab", { name: "Messenger-Chat" }).click();
 
   // Theme change
+  await openSection(page, "Darstellung");
   await page.locator(".segmented-control label").filter({ hasText: "Dim" }).click();
   await expect(page.locator(".messenger-preview")).toHaveClass(/theme-dim/);
 
   // Edit profiles
   await openSection(page, "Chat-Profile");
+  await openProfileCard(page, "Profil links");
+  await openProfileCard(page, "Profil rechts");
   await page.getByLabel("Name").nth(0).fill("Alice");
   await page.getByLabel("Name").nth(1).fill("Bob");
   await page.getByLabel("Online-Status").nth(0).fill("online");
@@ -250,7 +262,7 @@ test("Mikroblog editor detailed interaction flow", async ({ page }) => {
   await page.getByRole("tab", { name: "Mikroblog" }).click();
 
   // 1. Appearance / Darstellung
-  await openSection(page, "Darstellung");
+  await openSection(page, "Projekteinstellungen");
   await page.locator(".segmented-control label").filter({ hasText: "Dim" }).click();
   await expect(page.locator(".microblog-feed")).toHaveClass(/theme-dim/);
   await page.getByLabel("Timeline-Darstellung").selectOption("thread");

@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { type KeyboardEvent, useMemo } from "react";
 import type { MicroblogImages, MicroblogState } from "../../domain/types";
+import { exportBadgeText } from "../../shared/lib/exportLabels";
 import { formatTimelineDate, sortTimelinePosts } from "../../shared/lib/timeline";
 import { CommentThread } from "../../shared/components/CommentThread";
 import { useTranslation } from "../../i18n";
@@ -97,6 +98,9 @@ export function MicroblogPreview({ value, images, onPostSelect }: MicroblogPrevi
                 <strong>{displayName}</strong>
                 <span>{formatHandle(post.handle)}</span>
               </div>
+              <span className="export-badge" data-export-badge="true">
+                {exportBadgeText}
+              </span>
               <MoreHorizontal aria-hidden="true" size={21} />
             </div>
 

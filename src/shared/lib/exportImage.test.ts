@@ -118,18 +118,19 @@ describe("image export", () => {
     );
   });
 
-  it("renders the visible simulation badge before adding the marker", async () => {
+  it("exports the visible simulation badge before adding the marker", async () => {
     vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(
       () => undefined,
     );
     const element = document.createElement("div");
+    element.innerHTML = `<div data-export-badge="true">${exportBadgeText}</div>`;
     document.body.append(element);
     Object.defineProperty(element, "offsetWidth", { value: 540 });
     toCanvas.mockImplementationOnce(async (renderedElement: HTMLElement) => {
       expect(renderedElement.classList.contains("export-frame")).toBe(true);
-      expect(
-        renderedElement.querySelector("[data-export-badge]")?.textContent,
-      ).toBe(exportBadgeText);
+      const badges = renderedElement.querySelectorAll("[data-export-badge]");
+      expect(badges).toHaveLength(1);
+      expect(badges[0]).toHaveTextContent(exportBadgeText);
       expect(renderedElement.dataset.imageExporting).toBe("true");
       expect(renderedElement.dataset.exporting).toBeUndefined();
       return encoded.canvas;
@@ -137,7 +138,7 @@ describe("image export", () => {
 
     await exportElementAsImage(element, "png", "test", "photoPost");
 
-    expect(element.querySelector("[data-export-badge]")).toBeNull();
+    expect(element.querySelector("[data-export-badge]")).not.toBeNull();
     expect(document.querySelector(".export-frame")).toBeNull();
     element.remove();
   });

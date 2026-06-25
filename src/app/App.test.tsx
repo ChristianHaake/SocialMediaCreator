@@ -9,6 +9,7 @@ import {
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "./App";
+import { exportBadgeText } from "../shared/lib/exportLabels";
 
 beforeEach(() => {
   window.localStorage.setItem("social-media-creator-locale", "de");
@@ -161,6 +162,16 @@ describe("App", () => {
     expect(
       document.querySelectorAll(".post-management .post-selector--active"),
     ).toHaveLength(1);
+  });
+
+  it("shows the export simulation badge in the live preview", () => {
+    render(<App />);
+
+    const preview = document.querySelector(".export-wrapper");
+    expect(preview).not.toBeNull();
+    expect(
+      within(preview as HTMLElement).getByText(exportBadgeText),
+    ).toBeInTheDocument();
   });
 
   it("activates a new post and focuses its author field", async () => {
@@ -325,6 +336,7 @@ describe("App", () => {
     expect(previews).toHaveLength(2);
     expect(previews[0]).toHaveTextContent("Neuerer Beitrag");
 
+    await user.click(screen.getByRole("heading", { name: "Projekteinstellungen" }));
     await user.selectOptions(
       screen.getByLabelText("Timeline-Reihenfolge"),
       "oldest",
@@ -765,15 +777,17 @@ describe("App", () => {
     render(<App />);
 
     await user.click(screen.getByRole("tab", { name: "Mikroblog" }));
+    const settingsHeading = screen.getByRole("heading", {
+      name: "Projekteinstellungen",
+    });
     expect(
-      document
-        .querySelector("details.editor-disclosure")
-        ?.hasAttribute("open"),
-    ).toBe(true);
+      settingsHeading.closest("details.editor-disclosure"),
+    ).not.toHaveAttribute("open");
     expect(document.querySelector(".microblog-feed")).toHaveClass(
       "microblog-feed--feed",
     );
 
+    await user.click(settingsHeading);
     await user.selectOptions(
       screen.getByLabelText("Timeline-Darstellung"),
       "thread",
@@ -846,6 +860,7 @@ describe("App", () => {
     const user = userEvent.setup();
     render(<App />);
 
+    await user.click(screen.getByRole("heading", { name: "Projekteinstellungen" }));
     await user.click(screen.getByLabelText("Dark"));
     expect(document.querySelector(".photo-feed")).toHaveClass("theme-dark");
 

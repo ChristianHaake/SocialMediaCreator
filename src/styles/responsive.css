@@ -314,6 +314,7 @@
   }
 
   .message-editor-card--profile,
+  .message-editor-card__content--profile,
   .message-composer__grid {
     grid-template-columns: 1fr;
   }

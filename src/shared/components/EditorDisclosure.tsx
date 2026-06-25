@@ -4,6 +4,8 @@ import { useState, type ReactNode } from "react";
 type EditorDisclosureProps = {
   actions?: ReactNode;
   children: ReactNode;
+  className?: string;
+  contentClassName?: string;
   defaultOpen?: boolean;
   description: string;
   number?: string;
@@ -13,6 +15,8 @@ type EditorDisclosureProps = {
 export function EditorDisclosure({
   actions,
   children,
+  className,
+  contentClassName,
   defaultOpen = false,
   description,
   number,
@@ -22,7 +26,9 @@ export function EditorDisclosure({
 
   return (
     <details
-      className="editor-disclosure"
+      className={
+        className ? `editor-disclosure ${className}` : "editor-disclosure"
+      }
       onToggle={(event) => setIsOpen(event.currentTarget.open)}
       open={isOpen}
     >
@@ -41,7 +47,15 @@ export function EditorDisclosure({
           size={18}
         />
       </summary>
-      <div className="editor-disclosure__content">{children}</div>
+      <div
+        className={
+          contentClassName
+            ? `editor-disclosure__content ${contentClassName}`
+            : "editor-disclosure__content"
+        }
+      >
+        {children}
+      </div>
     </details>
   );
 }
