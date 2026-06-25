@@ -45,6 +45,13 @@ export const de = {
   "education.notice":
     "Diese Simulation dient ausschließlich dem Bildungszweck.",
   "education.learnMore": "Verantwortungsvoller Einsatz",
+  "orientation.label": "Kurze Orientierung",
+  "orientation.title": "So funktioniert's:",
+  "orientation.step1": "Format wählen",
+  "orientation.step2": "Inhalte bearbeiten",
+  "orientation.step3": "Vorschau prüfen",
+  "orientation.step4": "Exportieren oder speichern",
+  "orientation.dismiss": "Orientierung ausblenden",
   "module.photo": "Foto-Post",
   "module.messenger": "Messenger-Chat",
   "module.microblog": "Mikroblog",

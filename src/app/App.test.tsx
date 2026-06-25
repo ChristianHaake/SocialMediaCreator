@@ -53,6 +53,31 @@ describe("App", () => {
     ).toHaveAttribute("href", "/verantwortungsvoll");
   });
 
+  it("shows and dismisses the orientation strip", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const orientation = screen.getByLabelText("Kurze Orientierung");
+    expect(
+      within(orientation).getByText("So funktioniert's:"),
+    ).toBeInTheDocument();
+    expect(within(orientation).getByText("Format wählen")).toBeInTheDocument();
+    expect(
+      within(orientation).getByText("Exportieren oder speichern"),
+    ).toBeInTheDocument();
+
+    await user.click(
+      within(orientation).getByRole("button", {
+        name: "Orientierung ausblenden",
+      }),
+    );
+
+    expect(screen.queryByLabelText("Kurze Orientierung")).not.toBeInTheDocument();
+    expect(
+      window.localStorage.getItem("social-media-creator-orientation-dismissed"),
+    ).toBe("true");
+  });
+
   it("requires active consent before the first export", async () => {
     window.localStorage.removeItem("social-media-creator-export-consent");
     const user = userEvent.setup();

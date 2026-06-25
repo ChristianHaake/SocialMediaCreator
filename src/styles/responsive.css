@@ -66,6 +66,43 @@
     font-size: clamp(2rem, 11vw, 3rem);
   }
 
+  .orientation-strip {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 9px 12px;
+    padding: 11px 12px;
+    margin-bottom: 12px;
+  }
+
+  .orientation-strip strong {
+    flex: 1 1 auto;
+  }
+
+  .orientation-strip ol {
+    display: grid;
+    flex-basis: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 10px;
+    order: 3;
+  }
+
+  .orientation-strip li {
+    gap: 7px;
+    font-size: 0.8rem;
+    white-space: normal;
+  }
+
+  .orientation-strip li span {
+    width: 26px;
+    height: 26px;
+    font-size: 0.78rem;
+  }
+
+  .orientation-strip__close {
+    width: 36px;
+    height: 36px;
+  }
+
   .module-tabs {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -241,6 +278,10 @@
 
   .education-notice a {
     grid-column: 2;
+  }
+
+  .orientation-strip ol {
+    grid-template-columns: 1fr;
   }
 
   .dialog-actions {

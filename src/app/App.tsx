@@ -7,6 +7,7 @@ import {
   PenLine,
   RotateCcw,
   Trash2,
+  X,
 } from "lucide-react";
 import {
   type KeyboardEvent,
@@ -52,6 +53,16 @@ const VerificationPage = lazy(() =>
   ),
 );
 
+const orientationStorageKey = "social-media-creator-orientation-dismissed";
+
+function readOrientationDismissed() {
+  try {
+    return window.localStorage.getItem(orientationStorageKey) === "true";
+  } catch {
+    return false;
+  }
+}
+
 function AppContent() {
   const { locale, setLocale, t } = useTranslation();
   const initialPhotoPost = useRef(getDefaultPhotoPost(locale));
@@ -80,6 +91,9 @@ function AppContent() {
   const [mobileView, setMobileView] = useState<MobileView>("editor");
   const [imageError, setImageError] = useState<string | null>(null);
   const [teacherInfoOpen, setTeacherInfoOpen] = useState(false);
+  const [orientationDismissed, setOrientationDismissed] = useState(
+    readOrientationDismissed,
+  );
   const previewRef = useRef<HTMLDivElement>(null);
   const configInputRef = useRef<HTMLInputElement>(null);
   const {
@@ -292,6 +306,15 @@ function AppContent() {
     setConfigStatus({ type: "success", message: t("app.clearedSaved") });
   }
 
+  function dismissOrientation() {
+    setOrientationDismissed(true);
+    try {
+      window.localStorage.setItem(orientationStorageKey, "true");
+    } catch {
+      // The hint is dismissible for this render even if persistence is blocked.
+    }
+  }
+
 
   function renderEditor() {
     if (activeModule === "photoPost") {
@@ -421,6 +444,41 @@ function AppContent() {
               <p>{activeCopy.description}</p>
             </div>
           </section>
+
+          {!orientationDismissed && (
+            <aside
+              aria-label={t("orientation.label")}
+              className="orientation-strip"
+            >
+              <strong>{t("orientation.title")}</strong>
+              <ol>
+                <li>
+                  <span>1</span>
+                  {t("orientation.step1")}
+                </li>
+                <li>
+                  <span>2</span>
+                  {t("orientation.step2")}
+                </li>
+                <li>
+                  <span>3</span>
+                  {t("orientation.step3")}
+                </li>
+                <li>
+                  <span>4</span>
+                  {t("orientation.step4")}
+                </li>
+              </ol>
+              <button
+                aria-label={t("orientation.dismiss")}
+                className="orientation-strip__close"
+                onClick={dismissOrientation}
+                type="button"
+              >
+                <X aria-hidden="true" size={22} />
+              </button>
+            </aside>
+          )}
 
           <nav
             aria-label={t("app.format")}
