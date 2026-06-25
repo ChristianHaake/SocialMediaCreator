@@ -47,6 +47,13 @@ export const en: Record<TranslationKey, string> = {
   "education.notice":
     "This simulation is intended exclusively for educational purposes.",
   "education.learnMore": "Responsible use",
+  "orientation.label": "Quick orientation",
+  "orientation.title": "How it works:",
+  "orientation.step1": "Choose format",
+  "orientation.step2": "Edit content",
+  "orientation.step3": "Check preview",
+  "orientation.step4": "Export or save",
+  "orientation.dismiss": "Hide orientation",
   "module.photo": "Photo post",
   "module.messenger": "Messenger chat",
   "module.microblog": "Microblog",

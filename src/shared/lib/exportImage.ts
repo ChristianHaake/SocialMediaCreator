@@ -1,19 +1,20 @@
 import { toCanvas } from "html-to-image";
 import type { Locale, ModuleType } from "../../domain/types";
 import { downloadBlob } from "./downloads";
+import { exportBadgeText } from "./exportLabels";
 import { addImageMarker } from "./imageMarkers";
 export {
   addImageMarker,
   maxVerificationImageSize,
   verifyImageMarker,
 } from "./imageMarkers";
+export { exportBadgeText } from "./exportLabels";
 export type { ImageMarker, VerificationResult } from "./imageMarkers";
 
 export type ImageExportFormat = "png" | "jpg";
 export type ExportFormat = ImageExportFormat | "pdf";
 
 const exportWidth = 1080;
-export const exportBadgeText = "SocialMediaCreator · Simulation";
 
 export function calculatePageSlices(
   imageHeight: number,
@@ -322,27 +323,6 @@ async function renderElementBlob(
   module: ModuleType,
 ) {
   const { frame, cleanup } = await createExportFrame(element, module, "image");
-  const badge = document.createElement("div");
-  badge.dataset.exportBadge = "true";
-  badge.textContent = exportBadgeText;
-  Object.assign(badge.style, {
-    position: "absolute",
-    right: "12px",
-    bottom: "12px",
-    zIndex: "2147483647",
-    padding: "7px 10px",
-    border: "1px solid rgba(255, 255, 255, 0.45)",
-    borderRadius: "7px",
-    color: "#ffffff",
-    background: "rgba(17, 24, 39, 0.88)",
-    fontFamily: "Arial, sans-serif",
-    fontSize: "12px",
-    fontWeight: "700",
-    lineHeight: "1",
-    letterSpacing: "0.01em",
-    pointerEvents: "none",
-  });
-  frame.append(badge);
   try {
     const canvas = await renderElementCanvas(frame);
     return canvasToImageBlob(

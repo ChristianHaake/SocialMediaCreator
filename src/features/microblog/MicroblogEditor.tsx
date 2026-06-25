@@ -156,48 +156,47 @@ export function MicroblogEditor({
 
   return (
     <form className="editor-form" onSubmit={(event) => event.preventDefault()}>
-      <section className="editor-master-section">
-        <header className="editor-master-section__header">
-          <h3>{t("project.settings")}</h3>
-          <p>{t("project.settingsDescription")}</p>
-        </header>
-        <div className="editor-master-section__content">
-          <ThemeSelector
-            onChange={(theme) => onChange((current) => ({ ...current, theme }))}
-            value={value.theme}
-          />
-          <label className="field">
-            <span className="field-label">{t("microblog.timelineLayout")}</span>
-            <select
-              onChange={(event) =>
-                onChange((current) => ({
-                  ...current,
-                  layoutMode: event.target.value as MicroblogState["layoutMode"],
-                }))
-              }
-              value={value.layoutMode}
-            >
-              <option value="feed">{t("microblog.feed")}</option>
-              <option value="thread">{t("microblog.thread")}</option>
-            </select>
-          </label>
-          <label className="field">
-            <span className="field-label">{t("common.timelineOrder")}</span>
-            <select
-              onChange={(event) =>
-                onChange((current) => ({
-                  ...current,
-                  sortOrder: event.target.value as MicroblogState["sortOrder"],
-                }))
-              }
-              value={value.sortOrder}
-            >
-              <option value="newest">{t("common.newest")}</option>
-              <option value="oldest">{t("common.oldest")}</option>
-            </select>
-          </label>
-        </div>
-      </section>
+      <EditorDisclosure
+        className="editor-master-section editor-master-section--disclosure"
+        contentClassName="editor-master-section__content"
+        description={t("project.settingsDescription")}
+        title={t("project.settings")}
+      >
+        <ThemeSelector
+          onChange={(theme) => onChange((current) => ({ ...current, theme }))}
+          value={value.theme}
+        />
+        <label className="field">
+          <span className="field-label">{t("microblog.timelineLayout")}</span>
+          <select
+            onChange={(event) =>
+              onChange((current) => ({
+                ...current,
+                layoutMode: event.target.value as MicroblogState["layoutMode"],
+              }))
+            }
+            value={value.layoutMode}
+          >
+            <option value="feed">{t("microblog.feed")}</option>
+            <option value="thread">{t("microblog.thread")}</option>
+          </select>
+        </label>
+        <label className="field">
+          <span className="field-label">{t("common.timelineOrder")}</span>
+          <select
+            onChange={(event) =>
+              onChange((current) => ({
+                ...current,
+                sortOrder: event.target.value as MicroblogState["sortOrder"],
+              }))
+            }
+            value={value.sortOrder}
+          >
+            <option value="newest">{t("common.newest")}</option>
+            <option value="oldest">{t("common.oldest")}</option>
+          </select>
+        </label>
+      </EditorDisclosure>
 
       <section className="post-management">
         <header className="post-management__header">

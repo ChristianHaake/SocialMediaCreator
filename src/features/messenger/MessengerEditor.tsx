@@ -101,19 +101,16 @@ export function MessengerEditor({
 
   return (
     <form className="editor-form" onSubmit={(event) => event.preventDefault()}>
-      <section className="editor-section">
-        <div className="section-heading">
-          <span>01</span>
-          <div>
-            <h2>{t("common.appearance")}</h2>
-            <p>{t("messenger.themeDescription")}</p>
-          </div>
-        </div>
+      <EditorDisclosure
+        description={t("messenger.themeDescription")}
+        number="01"
+        title={t("common.appearance")}
+      >
         <ThemeSelector
           onChange={(theme) => onChange((current) => ({ ...current, theme }))}
           value={value.theme}
         />
-      </section>
+      </EditorDisclosure>
 
       <EditorDisclosure
         description={t("messenger.profilesDescription")}
@@ -125,43 +122,56 @@ export function MessengerEditor({
         </p>
         <div className="profile-editor-list">
           {value.profiles.map((profile) => (
-            <div
-              className="message-editor-card message-editor-card--profile"
+            <details
+              className="message-editor-card message-editor-card--disclosure message-editor-card--profile-disclosure"
               key={profile.id}
             >
-              <strong>
-                {profile.side === "left"
-                  ? t("messenger.leftProfile")
-                  : t("messenger.rightProfile")}
-              </strong>
-              <ImageUploadField
-                id={`messenger-profile-image-${profile.side}`}
-                image={images[profile.id] ?? null}
-                label={t("common.profileImage")}
-                onChange={(image) => onProfileImageChange(profile.id, image)}
-                onError={onImageError}
-              />
-              <label className="field">
-                <span className="field-label">{t("messenger.name")}</span>
-                <input
-                  maxLength={fieldLimits.messenger.contactName}
-                  onChange={(event) =>
-                    updateProfile(profile.id, { name: event.target.value })
-                  }
-                  value={profile.name}
+              <summary className="message-editor-card__summary">
+                <div className="message-editor-card__summary-text">
+                  <strong>
+                    {profile.side === "left"
+                      ? t("messenger.leftProfile")
+                      : t("messenger.rightProfile")}
+                  </strong>
+                  <span>{profile.name || t("messenger.name")}</span>
+                  <small>{profile.status || t("messenger.status")}</small>
+                </div>
+                <ChevronDown
+                  aria-hidden="true"
+                  className="message-editor-card__chevron"
+                  size={18}
                 />
-              </label>
-              <label className="field">
-                <span className="field-label">{t("messenger.status")}</span>
-                <input
-                  maxLength={fieldLimits.messenger.status}
-                  onChange={(event) =>
-                    updateProfile(profile.id, { status: event.target.value })
-                  }
-                  value={profile.status}
+              </summary>
+              <div className="message-editor-card__content message-editor-card__content--profile">
+                <ImageUploadField
+                  id={`messenger-profile-image-${profile.side}`}
+                  image={images[profile.id] ?? null}
+                  label={t("common.profileImage")}
+                  onChange={(image) => onProfileImageChange(profile.id, image)}
+                  onError={onImageError}
                 />
-              </label>
-            </div>
+                <label className="field">
+                  <span className="field-label">{t("messenger.name")}</span>
+                  <input
+                    maxLength={fieldLimits.messenger.contactName}
+                    onChange={(event) =>
+                      updateProfile(profile.id, { name: event.target.value })
+                    }
+                    value={profile.name}
+                  />
+                </label>
+                <label className="field">
+                  <span className="field-label">{t("messenger.status")}</span>
+                  <input
+                    maxLength={fieldLimits.messenger.status}
+                    onChange={(event) =>
+                      updateProfile(profile.id, { status: event.target.value })
+                    }
+                    value={profile.status}
+                  />
+                </label>
+              </div>
+            </details>
           ))}
         </div>
       </EditorDisclosure>
