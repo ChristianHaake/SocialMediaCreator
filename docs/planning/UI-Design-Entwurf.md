@@ -35,8 +35,8 @@ Arbeitsbereich
 
 Aktionsleiste
   Zurücksetzen
-  Konfiguration laden
-  Konfiguration speichern
+  Projekt laden
+  Projekt speichern
   PNG speichern
   JPG speichern
   PDF speichern
@@ -51,11 +51,12 @@ Footer
 
 Exportaktionen werden nach Zweck gruppiert:
 
-- **Projekt:** Konfiguration laden, Konfiguration speichern
-- **Bild:** PNG speichern, JPG speichern
+- **Projekt:** Projekt laden, Projekt speichern, gespeicherte lokale Daten
+  löschen
+- **Bild:** PNG speichern, JPG speichern, PDF speichern
 
-Dadurch wird klar, dass die JSON-Konfiguration der späteren Bearbeitung dient,
-während PNG und JPG fertige Ergebnisse sind.
+Dadurch wird klar, dass `.smc`-Projektarchive der späteren Bearbeitung dienen,
+während PNG, JPG und PDF fertige Ergebnisse sind.
 
 ## 3. Hauptlayout
 
@@ -119,50 +120,48 @@ angeboten werden.
 
 Ein Zeichenzähler informiert, blockiert die Eingabe in Version 0.1 aber nicht.
 
-## 6. Projektkonfiguration
+## 6. Projektdateien und lokale Speicherung
 
-### Konfiguration speichern
+### Projekt speichern
 
-Die Aktion **Konfiguration speichern** lädt eine JSON-Datei herunter.
+Die Aktion **Projekt speichern** lädt ein `.smc`-Projektarchiv herunter. Das
+Archiv enthält die Konfiguration des aktiven Moduls und optimierte Kopien der
+zugehörigen Bilder. Der Speichervorgang läuft vollständig lokal im Browser.
 
-Wenn Bilder ausgewählt sind, erscheint ein Dialog:
+Während der Archivierung zeigt die Schaltfläche einen Beschäftigungszustand.
+Fehler werden direkt an der Aktionsleiste angezeigt.
 
-**Konfiguration ohne Bilder speichern?**
+### Projekt laden
 
-> Bilder sind nicht Teil der Konfigurationsdatei und müssen nach dem Laden
-> erneut ausgewählt werden.
-
-Aktionen:
-
-- Abbrechen
-- Trotzdem speichern
-
-Ohne ausgewählte Bilder beginnt der Download direkt.
-
-### Konfiguration laden
-
-Die Aktion **Konfiguration laden** öffnet den lokalen Dateidialog für
-JSON-Dateien. Vor dem Ersetzen eines veränderten Zustands erscheint:
+Die Aktion **Projekt laden** öffnet den lokalen Dateidialog für `.smc`-Archive
+und weiterhin unterstützte JSON-Konfigurationen. Vor dem Ersetzen eines
+veränderten Zustands erscheint:
 
 **Aktuelle Eingaben ersetzen?**
 
-> Beim Laden werden die aktuellen Eingaben ersetzt. Ausgewählte Bilder werden
-> entfernt, da Konfigurationsdateien keine Bilder enthalten.
+> Beim Laden werden die aktuellen Eingaben und Bilder dieses Moduls ersetzt.
 
 Aktionen:
 
 - Abbrechen
-- Konfiguration laden
+- Projekt laden
 
 Die Bestätigung erscheint erst nach erfolgreicher Validierung. Eine ungültige
 Datei darf den aktuellen Zustand nicht verändern.
 
 Nach erfolgreichem Laden erscheint eine kurze Statusmeldung:
 
-> Konfiguration geladen. Bilder müssen erneut ausgewählt werden.
+> Projekt geladen.
 
-Fehlermeldungen benennen das Problem, beispielsweise ungültiges Dateiformat
-oder nicht unterstützte Version.
+Fehlermeldungen benennen das Problem, beispielsweise ungültiges Dateiformat,
+nicht unterstützte Version, beschädigtes Archiv, widersprüchliches Manifest
+oder ungültige Medien.
+
+### Lokale Sitzung löschen
+
+Die Aktion **Gespeicherte Daten löschen** entfernt die lokal in IndexedDB
+gesicherte Sitzung und die zugehörigen Bilder nach Bestätigung. Sie betrifft
+nur dieses Gerät und keine bereits heruntergeladenen Projektarchive.
 
 ## 7. Bildexport
 

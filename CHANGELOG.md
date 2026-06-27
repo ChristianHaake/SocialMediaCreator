@@ -11,17 +11,35 @@ Das Projekt verwendet [Semantic Versioning](https://semver.org/lang/de/).
 Neue Änderungen werden zuerst in diesem Abschnitt eingetragen und bei einer
 Veröffentlichung in eine versionierte Sektion verschoben.
 
+### Release-Schwerpunkte
+
+- SocialMediaCreator speichert Projekte jetzt als `.smc`-Archiv inklusive
+  Konfiguration und optimierter Bilder des aktiven Moduls.
+- Die App ist als PWA installierbar, offline nutzbar und informiert über
+  verfügbare Aktualisierungen.
+- Aktuelle Arbeit wird lokal automatisch gesichert und kann bewusst aus dem
+  Browser gelöscht werden.
+- PNG-, JPG- und PDF-Exporte sind stärker auf den Bildungskontext ausgerichtet:
+  sichtbare Simulationskennzeichnung, Exporthinweis, Produktmarke und lokale
+  Verifikation für PNG/JPG.
+- Bildimporte sind robuster: Dateien werden nach tatsächlichem Inhalt geprüft,
+  große Bilder werden nach Möglichkeit reduziert, und problematische Quellen
+  mit falschem MIME-Typ werden zuverlässiger verarbeitet.
+- Safari/WebKit- und PWA-Exportpfade wurden gezielt stabilisiert.
+
 ### Hinzugefügt
 
 - ZIP-kompatible `.smc`-Projektarchive speichern die Konfiguration und
   optimierte Bilder des aktiven Moduls gemeinsam.
 - Dokumentiertes, versioniertes Archivformat mit strikter Pfad-, Größen-,
   Manifest- und Medienvalidierung.
-- **Progressive Web App (PWA):** Unterstützung für Offline-Nutzung, Installation als App und Updates per Service Worker.
-- **Auto-Save:** Die aktuelle Sitzung wird automatisch lokal in der IndexedDB gesichert, um Datenverlust zu vermeiden.
-- **Datenschutz:** Neue Schaltfläche "Gespeicherte Daten löschen", um die Auto-Save-Daten und Session manuell zu entfernen.
-- **Bildexport:** Markenlogo zu den Bildexporten hinzugefügt.
-- **Bild-Upload:** Zu große Bilder werden nun automatisch vor dem Import verkleinert, anstatt sie direkt abzuweisen.
+- Progressive Web App mit Offline-Nutzung, Installation und Updates per
+  Service Worker.
+- Auto-Save der aktuellen Sitzung in der lokalen IndexedDB.
+- Schaltfläche zum Löschen lokal gespeicherter Sitzungs- und Bilddaten.
+- Produktmarke in Bildexporten.
+- Automatische Reduktion großer Bilddateien vor dem Import, sofern sie
+  innerhalb der technischen Verarbeitungsgrenzen liegen.
 
 ### Geändert
 
@@ -38,17 +56,30 @@ Veröffentlichung in eine versionierte Sektion verschoben.
   einen dedizierten Hook ausgelagert.
 - Monolithische Style- und Übersetzungsdateien in geordnete Layer und
   sprachspezifische Wörterbücher aufgeteilt.
-- **Bild-Upload:** Dateien werden nun anhand ihres tatsächlichen Inhalts statt des deklarierten MIME-Typs validiert (behebt Import-Probleme von bestimmten Quellen wie fobizz).
-- **Benennung:** Die deutschen Begriffe "Karussell" und "Medium" wurden zu "Beitragsbild" und "Bild" geändert.
-- **Styling:** Die gedeckte Farbpalette ("muted") wurde optisch verfeinert.
-- **Export-Logik:** Verbesserungen beim Klonen von Knoten für den Bildexport.
+- Bilddateien werden anhand ihres tatsächlichen Inhalts statt des deklarierten
+  MIME-Typs validiert.
+- Deutsche Begriffe in der Foto-Post-Oberfläche vereinheitlicht:
+  "Karussell" und "Medium" wurden zu "Beitragsbild" und "Bild".
+- Gedeckte Farbpalette optisch verfeinert.
+- Export-Logik beim Klonen von Vorschauknoten verbessert.
 
 ### Behoben
 
-- **Safari-Export:** Fehler mit fehlenden oder fehlerhaft decodierten Bildern in Safari-Exporten behoben (Proxying via Blob-URLs).
-- **Export:** Einfrieren von Bild- und PDF-Exporten verhindert, wenn der Tab während des Vorgangs ausgeblendet (hidden) wird.
-- **Bild-Upload:** Genauere Fehlermeldungen für Bilder, die auch nach Skalierung das absolute Größenlimit überschreiten.
-- **Downloads:** Probleme mit PWA-Downloads in bestimmten Browserkontexten behoben.
+- Fehlende oder fehlerhaft decodierte Bilder in Safari-Exporten behoben.
+- Einfrieren von Bild- und PDF-Exporten verhindert, wenn der Tab während des
+  Vorgangs ausgeblendet wird.
+- Genauere Fehlermeldungen für Bilder ergänzt, die auch nach Skalierung das
+  absolute Größenlimit überschreiten.
+- Download-Probleme in bestimmten PWA-Browserkontexten behoben.
+
+### Sicherheit
+
+- Projektarchive werden vor der Übernahme auf Struktur, Pfade, Größen,
+  Manifestkonsistenz, Medienreferenzen und Bilddekodierbarkeit geprüft.
+- Importierte Bilddateien werden anhand von Dateisignatur und realer
+  Browser-Dekodierbarkeit validiert.
+- `.smc`-Archive begrenzen die unkomprimierte Projektgröße, damit beschädigte
+  oder absichtlich übergroße Dateien bestehende Arbeit nicht ersetzen.
 
 ## [1.0.0] - 2026-06-12
 

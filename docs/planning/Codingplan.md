@@ -25,7 +25,8 @@ Kommunikationsmustern, bilden bestehende Plattformen aber nicht pixelgenau nach.
 - Lucide Icons
 - `html-to-image` für PNG- und JPG-Export
 - Statisches Deployment über Cloudflare Workers
-- Keine dauerhafte Speicherung im Browser in Version 0.1
+- Lokale Sitzungswiederherstellung per IndexedDB
+- Installierbare PWA mit Service Worker und Offline-Unterstützung
 
 ## 3. Module
 
@@ -70,50 +71,51 @@ Bildplatzhaltern.
 - Bilder werden über die File API ausschließlich lokal geladen.
 - Unterstützte Formate: PNG, JPG/JPEG und WebP.
 - SVG-Dateien werden nicht als Upload akzeptiert.
-- Maximale Dateigröße: 10 MB pro Bild.
+- Maximale Dateigröße: 5 MB pro Bild; Breite und Höhe sind auf jeweils 4096
+  Pixel begrenzt.
 - Nicht unterstützte oder zu große Dateien erzeugen eine verständliche
   Fehlermeldung.
 - Nicht mehr verwendete Object URLs werden mit `URL.revokeObjectURL()` entfernt.
-- Bilder werden weder dauerhaft gespeichert noch in Konfigurationsdateien
-  aufgenommen.
+- Projektarchive speichern optimierte Kopien der zum aktiven Modul gehörenden
+  Bilder.
+- Die aktive Sitzung wird lokal in IndexedDB gesichert und kann über die
+  Oberfläche gelöscht werden.
 
-### Konfiguration herunterladen
+### Projekt herunterladen
 
-Der aktuelle Inhalt kann als versionierte JSON-Datei heruntergeladen werden.
-Die Datei enthält:
+Der aktuelle Inhalt kann als `.smc`-Projektarchiv heruntergeladen werden. Das
+Archiv enthält:
 
-- Konfigurationsformat und Versionsnummer
+- Archivformat und Versionsnummer
 - aktives Modul
 - alle Text-, Zahlen- und Anzeigeeinstellungen
 - Nachrichten und deren Reihenfolge im Messenger-Modul
+- optimierte Bilder des aktiven Moduls
 
-Die Datei enthält keine Bilder, Object URLs, Binärdaten oder Data URLs.
+Die Datei enthält keine Object URLs oder Data URLs. Bilder werden vor dem
+Schreiben in das Archiv geprüft und auf die dokumentierten Archivgrenzen
+reduziert.
 
-Sind beim Download Bilder ausgewählt, zeigt die App vor dem Export folgenden
-Hinweis:
+### Projekt hochladen
 
-> Bilder sind nicht Teil der Konfigurationsdatei und müssen nach dem Laden
-> erneut ausgewählt werden.
+Ein zuvor exportiertes `.smc`-Projektarchiv kann lokal ausgewählt und geladen
+werden. Unterstützte imagefreie JSON-Konfigurationen bleiben aus
+Kompatibilitätsgründen importierbar.
 
-Der Download kann nach diesem Hinweis fortgesetzt oder abgebrochen werden.
-
-### Konfiguration hochladen
-
-Eine zuvor exportierte JSON-Konfiguration kann lokal ausgewählt und geladen
-werden.
-
-- Die Datei wird vor der Übernahme gegen das erwartete Schema geprüft.
+- Die Datei wird vor der Übernahme gegen das erwartete Archiv- und
+  Konfigurationsschema geprüft.
 - Unbekannte, beschädigte oder nicht unterstützte Versionen werden abgelehnt.
+- Archivpfade, Manifest, Medienreferenzen, Größenlimits und Bilddaten werden
+  validiert.
 - Die App zeigt eine verständliche Fehlermeldung und verändert den aktuellen
   Zustand bei einem Fehler nicht.
 - Ein erfolgreicher Import ersetzt die Inhalte und Einstellungen des
   enthaltenen Moduls.
-- Bilder sind nach dem Import leer und müssen erneut ausgewählt werden.
 - Sind aktuell Bilder ausgewählt oder ungespeicherte Eingaben vorhanden, muss
   der Nutzer das Ersetzen des aktuellen Zustands bestätigen.
 
-Konfigurationsdateien dürfen keine externen Ressourcen nachladen und ihr Inhalt
-wird ausschließlich als Daten behandelt.
+Projektdateien dürfen keine externen Ressourcen nachladen und ihr Inhalt wird
+ausschließlich als Daten behandelt.
 
 ### Bildexport
 
@@ -193,18 +195,20 @@ die serialisierbaren Konfigurationstypen.
 - Cloudflare Workers und Cloudflare Web Analytics sind in der
   Datenschutzerklärung dokumentiert.
 
-### Konfigurationsdateien
+### Projektdateien
 
-- Ein Export mit anschließendem Import stellt alle serialisierbaren Werte und
-  die Nachrichtenreihenfolge wieder her.
-- Bilddaten und lokale Bildreferenzen kommen in der JSON-Datei nicht vor.
-- Export mit ausgewählten Bildern zeigt den definierten Hinweis.
+- Ein Export mit anschließendem Import stellt Konfiguration, Bilder und die
+  Nachrichtenreihenfolge des aktiven Moduls wieder her.
+- `.smc`-Archive enthalten keine Object URLs, Data URLs oder externen
+  Ressourcen.
+- Archivpfade, Manifest, Medienreferenzen, Größenlimits und Bilddekodierung
+  werden vor der Übernahme geprüft.
 - Fehlerhafte Dateien verändern den bestehenden Zustand nicht.
 - Der Import von Text als HTML oder Script führt keine Inhalte aus.
 
 ### Bildexport
 
-- Jedes Modul kann als PNG und JPG exportiert werden.
+- Jedes Modul kann als PNG, JPG und PDF exportiert werden.
 - Der Export entspricht der vollständigen Vorschau in der festgelegten Größe.
 - Ein langer Chat wird vollständig ausgegeben.
 - Während des Exports entstehen keine Netzwerkrequests.
@@ -228,13 +232,14 @@ die serialisierbaren Konfigurationstypen.
 - PNG- und JPG-Export zuverlässig umsetzen
 - Unit- und Browser-Tests für den vollständigen Ablauf ergänzen
 
-### Phase 2: Konfigurationsdateien
+### Phase 2: Projektdateien und Kompatibilität
 
 - serialisierbare, versionierte Config-Typen definieren
 - Schema-Validierung implementieren
-- JSON-Download mit Bildhinweis implementieren
-- sicheren JSON-Import mit Bestätigung und Fehlerzuständen implementieren
-- Roundtrip-, Versions- und Negativtests ergänzen
+- `.smc`-Archivexport mit optimierten Bildern implementieren
+- sicheren Archivimport mit Bestätigung und Fehlerzuständen implementieren
+- Kompatibilitätsimport für unterstützte JSON-Konfigurationen erhalten
+- Roundtrip-, Versions-, Größen- und Negativtests ergänzen
 
 ### Phase 3: Weitere Module
 
