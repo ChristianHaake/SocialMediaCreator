@@ -5,7 +5,7 @@ import {
   Repeat2,
   Share,
 } from "lucide-react";
-import { type KeyboardEvent, useMemo } from "react";
+import { type KeyboardEvent, useEffect, useMemo, useRef } from "react";
 import type { MicroblogImages, MicroblogState } from "../../domain/types";
 import { exportBadgeText } from "../../shared/lib/exportLabels";
 import { formatTimelineDate, sortTimelinePosts } from "../../shared/lib/timeline";
@@ -43,6 +43,18 @@ export function MicroblogPreview({ value, images, onPostSelect }: MicroblogPrevi
     () => sortTimelinePosts(value.posts, value.sortOrder),
     [value.posts, value.sortOrder],
   );
+  const postRefs = useRef<Record<string, HTMLElement | null>>({});
+  const previousActivePostId = useRef(value.activePostId);
+
+  useEffect(() => {
+    if (previousActivePostId.current === value.activePostId) return;
+    previousActivePostId.current = value.activePostId;
+    postRefs.current[value.activePostId]?.scrollIntoView?.({
+      behavior: "smooth",
+      block: "nearest",
+    });
+  }, [value.activePostId]);
+
   return (
     <div
       className={`microblog-feed microblog-feed--${value.layoutMode} simulation-theme theme-${value.theme}`}
@@ -79,6 +91,9 @@ export function MicroblogPreview({ value, images, onPostSelect }: MicroblogPrevi
             onKeyDown={(event) =>
               handlePostKeyDown(event, () => onPostSelect(post.id))
             }
+            ref={(element) => {
+              postRefs.current[post.id] = element;
+            }}
             role="button"
             tabIndex={0}
           >

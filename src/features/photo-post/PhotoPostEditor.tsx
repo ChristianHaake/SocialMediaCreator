@@ -3,6 +3,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
   type Dispatch,
   type SetStateAction,
 } from "react";
@@ -49,6 +50,8 @@ type PhotoPostEditorProps = {
   onImageError: (message: string | null) => void;
 };
 
+type PhotoMetricKey = "likes" | "commentCount";
+
 function createMedia(): PhotoMedia {
   return {
     id: createId("photo-media"),
@@ -89,6 +92,11 @@ function parseMetricInput(value: string) {
   );
 }
 
+function isNegativeMetricInput(value: string) {
+  const next = Number(value);
+  return Number.isFinite(next) && next < 0;
+}
+
 export function PhotoPostEditor({
   value,
   onChange,
@@ -119,6 +127,9 @@ export function PhotoPostEditor({
   const authorInputRef = useRef<HTMLInputElement>(null);
   const previousActivePostId = useRef(activePost.id);
   const focusNewPost = useRef(false);
+  const [metricWarnings, setMetricWarnings] = useState<
+    Partial<Record<PhotoMetricKey, boolean>>
+  >({});
   const activePosition =
     sortedPosts.findIndex((post) => post.id === activePost.id) + 1;
 
@@ -139,6 +150,16 @@ export function PhotoPostEditor({
         post.id === current.activePostId ? { ...post, ...changes } : post,
       ),
     }));
+  }
+
+  function updateMetric(key: PhotoMetricKey, value: string) {
+    setMetricWarnings((current) => ({
+      ...current,
+      [key]: isNegativeMetricInput(value),
+    }));
+    updatePost({
+      [key]: parseMetricInput(value),
+    } as Partial<Omit<PhotoPost, "id">>);
   }
 
   function updateMedia(id: string, changes: Partial<Omit<PhotoMedia, "id">>) {
@@ -524,30 +545,52 @@ export function PhotoPostEditor({
           <label className="field">
             <span className="field-label">Likes</span>
             <input
+              aria-describedby={
+                metricWarnings.likes ? "photo-likes-metric-hint" : undefined
+              }
+              aria-invalid={metricWarnings.likes === true}
               max={fieldLimits.common.metric}
               min={0}
-              onChange={(event) =>
-                updatePost({ likes: parseMetricInput(event.target.value) })
-              }
+              onChange={(event) => updateMetric("likes", event.target.value)}
               step={1}
               type="number"
               value={activePost.likes}
             />
+            {metricWarnings.likes && (
+              <span
+                className="field-hint field-hint--warning"
+                id="photo-likes-metric-hint"
+              >
+                {t("common.metricNonNegative")}
+              </span>
+            )}
           </label>
           <label className="field">
             <span className="field-label">{t("photo.commentCount")}</span>
             <input
+              aria-describedby={
+                metricWarnings.commentCount
+                  ? "photo-comment-count-metric-hint"
+                  : undefined
+              }
+              aria-invalid={metricWarnings.commentCount === true}
               max={fieldLimits.common.metric}
               min={0}
               onChange={(event) =>
-                updatePost({
-                  commentCount: parseMetricInput(event.target.value),
-                })
+                updateMetric("commentCount", event.target.value)
               }
               step={1}
               type="number"
               value={activePost.commentCount}
             />
+            {metricWarnings.commentCount && (
+              <span
+                className="field-hint field-hint--warning"
+                id="photo-comment-count-metric-hint"
+              >
+                {t("common.metricNonNegative")}
+              </span>
+            )}
           </label>
         </div>
         <label className="toggle-field">

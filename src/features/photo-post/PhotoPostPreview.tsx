@@ -6,7 +6,7 @@ import {
   Play,
   Send,
 } from "lucide-react";
-import { type KeyboardEvent, useMemo } from "react";
+import { type KeyboardEvent, useEffect, useMemo, useRef } from "react";
 import type { PhotoPostImages, PhotoPostState } from "../../domain/types";
 import { exportBadgeText } from "../../shared/lib/exportLabels";
 import { formatTimelineDate, sortTimelinePosts } from "../../shared/lib/timeline";
@@ -45,6 +45,18 @@ export function PhotoPostPreview({
     () => sortTimelinePosts(value.posts, value.sortOrder),
     [value.posts, value.sortOrder],
   );
+  const postRefs = useRef<Record<string, HTMLElement | null>>({});
+  const previousActivePostId = useRef(value.activePostId);
+
+  useEffect(() => {
+    if (previousActivePostId.current === value.activePostId) return;
+    previousActivePostId.current = value.activePostId;
+    postRefs.current[value.activePostId]?.scrollIntoView?.({
+      behavior: "smooth",
+      block: "nearest",
+    });
+  }, [value.activePostId]);
+
   return (
     <div className={`photo-feed simulation-theme theme-${value.theme}`}>
       {sortedPosts.map((post) => {
@@ -75,6 +87,9 @@ export function PhotoPostPreview({
             onKeyDown={(event) =>
               handlePostKeyDown(event, () => onPostSelect(post.id))
             }
+            ref={(element) => {
+              postRefs.current[post.id] = element;
+            }}
             role="button"
             tabIndex={0}
           >

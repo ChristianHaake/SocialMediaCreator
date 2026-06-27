@@ -36,15 +36,23 @@ describe("MessengerEditor", () => {
     const onChange = renderEditor(value);
 
     fireEvent.change(
-      screen.getByPlaceholderText("What should the message say?"),
+      screen.getByRole("textbox", {
+        name: /message text|nachrichtentext/i,
+      }),
       {
-        target: { value: "Noch eine Nachricht" },
+      target: { value: "Noch eine Nachricht" },
       },
     );
-    fireEvent.click(screen.getByRole("button", { name: "Add" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /add|hinzufügen/i }),
+    );
 
-    expect(screen.getByRole("button", { name: "Add" })).toBeDisabled();
-    expect(screen.getByText("Maximum of 200 messages reached.")).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: /add|hinzufügen/i }),
+    ).toBeDisabled();
+    expect(
+      screen.getByText(/maximum of 200 messages|maximal 200 nachrichten/i),
+    ).toBeVisible();
     expect(onChange).not.toHaveBeenCalled();
   });
 });

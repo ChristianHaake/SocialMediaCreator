@@ -442,7 +442,8 @@ test("project archives restore optimized images", async ({ page }) => {
   );
   expect(archiveManifest.media).toHaveLength(1);
 
-  await page.reload();
+  await page.goto("/", { waitUntil: "commit" });
+  await expect(page.getByLabel("Beschreibung")).toBeVisible();
   await expect(page.locator("img.photo-post__avatar")).toHaveCount(0);
   await page
     .locator('input[type="file"][accept*=".smc"]')

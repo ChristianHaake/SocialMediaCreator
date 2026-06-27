@@ -84,6 +84,7 @@ export const de = {
   "common.dateInvalid": "Gib ein gültiges Datum im Format JJJJ-MM-TT ein.",
   "common.timeFormatHint": "Format: SS:MM",
   "common.timeInvalid": "Gib eine gültige Uhrzeit im Format SS:MM ein.",
+  "common.metricNonNegative": "Gib eine Zahl ab 0 ein.",
   "common.post": "Beitrag",
   "common.posts": "Beiträge",
   "common.comment": "Kommentar",

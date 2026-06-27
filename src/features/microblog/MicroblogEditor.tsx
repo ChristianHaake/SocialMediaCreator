@@ -3,6 +3,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
   type Dispatch,
   type SetStateAction,
 } from "react";
@@ -43,6 +44,8 @@ type MicroblogEditorProps = {
   onImageError: (message: string | null) => void;
 };
 
+type MicroblogMetricKey = "replies" | "reposts" | "likes";
+
 function createMicroblogPost(locale: "de" | "en"): MicroblogPost {
   return {
     id: createId("microblog-post"),
@@ -66,6 +69,11 @@ function parseMetricInput(value: string) {
     fieldLimits.common.metric,
     Math.max(0, Math.floor(next)),
   );
+}
+
+function isNegativeMetricInput(value: string) {
+  const next = Number(value);
+  return Number.isFinite(next) && next < 0;
 }
 
 export function MicroblogEditor({
@@ -93,6 +101,9 @@ export function MicroblogEditor({
   const authorInputRef = useRef<HTMLInputElement>(null);
   const previousActivePostId = useRef(activePost.id);
   const focusNewPost = useRef(false);
+  const [metricWarnings, setMetricWarnings] = useState<
+    Partial<Record<MicroblogMetricKey, boolean>>
+  >({});
   const activePosition =
     sortedPosts.findIndex((post) => post.id === activePost.id) + 1;
 
@@ -113,6 +124,16 @@ export function MicroblogEditor({
         post.id === current.activePostId ? { ...post, ...changes } : post,
       ),
     }));
+  }
+
+  function updateMetric(key: MicroblogMetricKey, value: string) {
+    setMetricWarnings((current) => ({
+      ...current,
+      [key]: isNegativeMetricInput(value),
+    }));
+    updatePost({
+      [key]: parseMetricInput(value),
+    } as Partial<Omit<MicroblogPost, "id">>);
   }
 
   function addPost() {
@@ -353,21 +374,36 @@ export function MicroblogEditor({
             [t("microblog.reposts"), "reposts"],
             [t("microblog.likes"), "likes"],
           ].map(([label, key]) => (
-            <label className="field" key={key}>
-              <span className="field-label">{label}</span>
-              <input
-                max={fieldLimits.common.metric}
-                min={0}
-                onChange={(event) =>
-                  updatePost({
-                    [key]: parseMetricInput(event.target.value),
-                  })
-                }
-                step={1}
-                type="number"
-                value={activePost[key as "replies" | "reposts" | "likes"]}
-              />
-            </label>
+            (() => {
+              const metricKey = key as MicroblogMetricKey;
+              const invalid = metricWarnings[metricKey] === true;
+              const hintId = `microblog-${metricKey}-metric-hint`;
+              return (
+                <label className="field" key={metricKey}>
+                  <span className="field-label">{label}</span>
+                  <input
+                    aria-describedby={invalid ? hintId : undefined}
+                    aria-invalid={invalid}
+                    max={fieldLimits.common.metric}
+                    min={0}
+                    onChange={(event) =>
+                      updateMetric(metricKey, event.target.value)
+                    }
+                    step={1}
+                    type="number"
+                    value={activePost[metricKey]}
+                  />
+                  {invalid && (
+                    <span
+                      className="field-hint field-hint--warning"
+                      id={hintId}
+                    >
+                      {t("common.metricNonNegative")}
+                    </span>
+                  )}
+                </label>
+              );
+            })()
           ))}
         </div>
       </EditorDisclosure>
