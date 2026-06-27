@@ -36,11 +36,27 @@ describe("export consent", () => {
   });
 
   it("requires consent again when local storage is unavailable", () => {
-    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
-      throw new DOMException("blocked");
+    const availableStorage = window.localStorage;
+    const blockedStorage = {
+      getItem() {
+        throw new DOMException("blocked");
+      },
+      setItem() {
+        throw new DOMException("blocked");
+      },
+    };
+
+    Object.defineProperty(window, "localStorage", {
+      configurable: true,
+      value: blockedStorage,
     });
 
     expect(storeExportConsent()).toBe(false);
     expect(hasExportConsent()).toBe(false);
+
+    Object.defineProperty(window, "localStorage", {
+      configurable: true,
+      value: availableStorage,
+    });
   });
 });

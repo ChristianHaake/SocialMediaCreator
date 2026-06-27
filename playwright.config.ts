@@ -1,10 +1,15 @@
 import { defineConfig } from "@playwright/test";
 
+const workerOverride = Number(process.env.PLAYWRIGHT_WORKERS);
+
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: true,
   forbidOnly: true,
   reporter: "line",
+  workers: Number.isFinite(workerOverride) && workerOverride > 0
+    ? workerOverride
+    : 1,
   use: {
     baseURL: "http://127.0.0.1:4173",
     screenshot: "only-on-failure",

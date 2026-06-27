@@ -86,6 +86,7 @@ export const en: Record<TranslationKey, string> = {
   "common.dateInvalid": "Enter a valid date in YYYY-MM-DD format.",
   "common.timeFormatHint": "Format: HH:MM",
   "common.timeInvalid": "Enter a valid time in HH:MM format.",
+  "common.metricNonNegative": "Enter a number of 0 or higher.",
   "common.post": "Post",
   "common.posts": "Posts",
   "common.comment": "Comment",

@@ -201,6 +201,11 @@ describe("App", () => {
 
   it("activates a new post and focuses its author field", async () => {
     const user = userEvent.setup();
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      configurable: true,
+      value: scrollIntoView,
+    });
     render(<App />);
 
     await user.click(
@@ -213,6 +218,12 @@ describe("App", () => {
     expect(screen.getByLabelText("Benutzername")).toHaveValue(
       "neuer_account",
     );
+    await waitFor(() => {
+      expect(scrollIntoView).toHaveBeenCalledWith({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    });
   });
 
   it("selects a post from the preview without changing its content", async () => {
@@ -855,6 +866,27 @@ describe("App", () => {
 
     expect(screen.getByText("281 Zeichen · länger als 280 Zeichen")).toBeInTheDocument();
     expect(text).toHaveValue("a".repeat(281));
+  });
+
+  it("explains negative microblog metrics instead of silently clamping them", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("tab", { name: "Mikroblog" }));
+    await user.click(screen.getByRole("heading", { name: "Reaktionen" }));
+
+    const likes = screen.getByLabelText("Likes");
+    fireEvent.change(likes, { target: { value: "-5" } });
+
+    expect(likes).toHaveValue(0);
+    expect(likes).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByText("Gib eine Zahl ab 0 ein.")).toBeVisible();
+
+    fireEvent.change(likes, { target: { value: "7" } });
+
+    expect(likes).toHaveValue(7);
+    expect(likes).toHaveAttribute("aria-invalid", "false");
+    expect(screen.queryByText("Gib eine Zahl ab 0 ein.")).not.toBeInTheDocument();
   });
 
   it("updates the structured microblog date and optional time", async () => {
