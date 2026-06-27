@@ -33,7 +33,13 @@ Bildungskontexten.
 ## Entwicklungsstand
 
 Foto-Post, Messenger-Chat und Mikroblog unterstützen Live-Vorschau, lokale
-Bilder, Konfigurationsdateien sowie PNG-, JPG- und PDF-Export.
+Bilder, `.smc`-Projektarchive mit optimierten Bildern sowie PNG-, JPG- und
+PDF-Export.
+
+Zur aktuellen Release-Funktionalität gehören außerdem automatische lokale
+Sitzungswiederherstellung, PWA-Installation mit Offline-Unterstützung,
+verpflichtende Simulationskennzeichnung in Exporten und eine lokale
+Verifikationsseite für PNG- und JPG-Herkunftsmarker.
 
 ## Quellcode
 

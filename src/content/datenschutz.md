@@ -9,9 +9,10 @@ E-Mail: [christianhaake@gmail.com](mailto:christianhaake@gmail.com)
 
 ## 2. Lokale Verarbeitung von Nutzinhalten
 
-Texte, Kennzahlen, ausgewählte Bilder und importierte Konfigurationsdateien
-werden lokal im Browser verarbeitet. Die Anwendung besitzt keine Anmeldung,
-keine Datenbank und keine serverseitige Speicherung dieser Nutzinhalte.
+Texte, Kennzahlen, ausgewählte Bilder, importierte Projektarchive und
+unterstützte Konfigurationsdateien werden lokal im Browser verarbeitet. Die
+Anwendung besitzt keine Anmeldung, keine Datenbank und keine serverseitige
+Speicherung dieser Nutzinhalte.
 
 Bild-, PDF- und Projektexporte werden lokal erzeugt. `.smc`-Projektarchive
 enthalten optimierte Kopien der ausgewählten Bilder. Die Archive werden nur auf
@@ -20,9 +21,11 @@ dem Gerät erstellt oder gelesen und nicht an den Betreiber übertragen.
 ## 3. Lokale Speicherung
 
 Die Anwendung verwendet `localStorage`, um die gewählte Sprache und die
-Bestätigung des Exporthinweises auf dem Gerät zu speichern. Diese Angaben
-werden nicht durch die Anwendung an den Betreiber übertragen. Sie können über
-die Browserfunktionen gelöscht werden.
+Bestätigung des Exporthinweises auf dem Gerät zu speichern. Die aktuelle
+Arbeitssitzung inklusive lokaler Bilddaten wird in IndexedDB gespeichert, damit
+sie nach einem Neuladen wiederhergestellt werden kann. Diese Angaben werden
+nicht durch die Anwendung an den Betreiber übertragen. Sie können über die
+Schaltfläche **Daten löschen** oder über die Browserfunktionen gelöscht werden.
 
 ## 4. Bereitstellung über Cloudflare
 

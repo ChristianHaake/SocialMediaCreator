@@ -16,30 +16,56 @@ discussion about manipulated digital content.
 
 ![SocialMediaCreator mobile editor](docs/assets/social-media-creator-mobile.png)
 
-The application currently provides three simulation modules:
+SocialMediaCreator ships three editable simulation modules:
 
-- **Photo Post** creates chronological feeds with profiles, captions,
-  reactions, comments, replies, image carousels, and simulated video
-  thumbnails.
-- **Messenger Chat** creates two-sided conversations with two fictional
-  profiles, custom timestamps, online states, and seen indicators.
-- **Microblog** creates independent feeds or connected threads with profiles,
-  reactions, comments, and replies.
+| Module | Release features |
+| --- | --- |
+| **Photo Post** | Chronological feeds with multiple posts, profile images, captions, reactions, comment threads, replies, image carousels, simulated video thumbnails, alt text, and comment-focused views. |
+| **Messenger Chat** | Two-sided fictional conversations with editable profiles, profile images, free timestamps, online states, seen indicators, message assignment, and keyboard-friendly message ordering. |
+| **Microblog** | Independent feeds or connected threads with display names, handles, timestamps, reactions, reposts, likes, comment threads, replies, and long-text indicators. |
 
-Shared capabilities include:
+Release-level capabilities:
 
-- Light, Dim, and Dark themes
-- German and English interfaces
-- responsive live previews
-- chronological timelines with newest-first or oldest-first ordering
-- dedicated comment views
-- PNG, JPG, and A4 PDF export
-- mandatory visible simulation labels on every exported result
-- local project archive import and export, including optimized images
-- **Progressive Web App (PWA)** support for installation and offline use
-- **Auto-saving** of the active working session to the browser
-- Intelligent image handling with automatic reduction of oversized uploads
-- accessible keyboard navigation and mobile editor/preview switching
+- **Local-first workflow:** no account, no upload endpoint, no server-side
+  content storage.
+- **German and English UI:** localized editor, previews, dialogs, verification,
+  and content pages.
+- **Responsive editing:** desktop split workspace plus mobile editor/preview
+  switching.
+- **Live preview:** the same preview components are used for editing and export
+  rendering.
+- **Themes:** Light, Dim, and Dark appearance per simulation module.
+- **Timeline control:** automatic chronological sorting with newest-first or
+  oldest-first ordering where timelines apply.
+- **Exports:** PNG, JPG, and A4 PDF export for every module.
+- **Visible simulation labels:** every exported image and PDF page carries a
+  non-removable educational simulation label.
+- **Image provenance marker:** PNG and JPG exports include a locally
+  verifiable SocialMediaCreator origin marker.
+- **Project archives:** `.smc` import and export stores the active module,
+  configuration, and optimized images together.
+- **Auto-save:** the active working session is saved locally in IndexedDB and
+  can be cleared from the app.
+- **PWA support:** installable app shell, offline support, and update prompts
+  via service worker.
+- **Image handling:** oversized uploads are validated by file content and
+  reduced automatically before project storage where possible.
+- **Accessibility:** semantic tabs, keyboard navigation, focus handling in
+  dialogs, and mobile-safe controls.
+
+## Current release focus
+
+The current release line turns SocialMediaCreator from separate mockup modules
+into a complete classroom workshop:
+
+- project files now preserve images, not only text configuration
+- sessions recover automatically after reloads or accidental tab closure
+- large classroom images are reduced instead of being rejected immediately
+- image/PDF exports are labeled, consent-gated, and include the product mark
+- exported PNG/JPG files can be checked on the local verification page
+- installation and offline use are supported through the PWA build
+- import paths are bounded by archive, manifest, media, size, and schema
+  validation before existing work is replaced
 
 ## Educational and safety model
 
