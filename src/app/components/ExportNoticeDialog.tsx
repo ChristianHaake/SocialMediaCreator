@@ -66,7 +66,9 @@ export function ExportNoticeDialog({
       document.activeElement as HTMLElement,
     );
     const nextIndex = event.shiftKey
-      ? (currentIndex - 1 + focusable.length) % focusable.length
+      ? currentIndex === -1
+        ? focusable.length - 1
+        : (currentIndex - 1 + focusable.length) % focusable.length
       : (currentIndex + 1) % focusable.length;
     focusable[nextIndex].focus();
   }
