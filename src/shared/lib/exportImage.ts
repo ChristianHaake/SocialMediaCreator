@@ -180,15 +180,36 @@ function getImageSource(image: HTMLImageElement) {
   return image.getAttribute("src") || image.currentSrc || image.src;
 }
 
+function blobToDataUrl(blob: Blob) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+      } else {
+        reject(new Error("Image could not be converted to a data URL."));
+      }
+    };
+    reader.onerror = () => reject(new Error("Image could not be read."));
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function inlineImageSource(source: string) {
+  const response = await fetch(source);
+  if (!response.ok) {
+    throw new Error(`Image request failed with status ${response.status}.`);
+  }
+  return blobToDataUrl(await response.blob());
+}
+
 async function prepareExportImages(element: HTMLElement) {
   const images = Array.from(element.querySelectorAll<HTMLImageElement>("img"));
 
-  // Wait for each image to decode so the offscreen <foreignObject> rasterization
-  // captures it. We deliberately keep blob:/http srcs untouched: html-to-image
-  // re-fetches and awaits those during embedImages, which is what makes images
-  // appear (notably on WebKit). Rewriting them to data: URLs makes html-to-image
-  // skip that decode-await and renders blank on Safari — and the blob: fetch it
-  // performs needs `connect-src 'self' blob:` in the CSP (see public/_headers).
+  // Inline images before html-to-image serializes the frame. Safari/WebKit can
+  // render the surrounding foreignObject while dropping blob: image sources,
+  // producing exports with blank media areas. Decoding the inlined data URL here
+  // makes the frame self-contained before html-to-image clones it again.
   // Best-effort and isolated per image: a single failed image must never abort
   // the whole export.
   await Promise.all(
@@ -197,6 +218,9 @@ async function prepareExportImages(element: HTMLElement) {
       const source = getImageSource(image);
       if (!source) return;
       try {
+        if (!source.startsWith("data:")) {
+          image.src = await inlineImageSource(source);
+        }
         await waitForImageWithTimeout(image);
       } catch (error) {
         console.warn("[Export] Skipped an image that failed to load", error);

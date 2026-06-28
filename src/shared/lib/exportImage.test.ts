@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { jsPDF, pdfInstance, toCanvas } = vi.hoisted(() => {
   const pdfInstance = {
@@ -62,6 +62,10 @@ describe("image export", () => {
     document.body.innerHTML = "";
     encoded = createEncodingCanvas();
     toCanvas.mockResolvedValue(encoded.canvas);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it("exports PNG from a padded module export frame", async () => {
@@ -143,10 +147,16 @@ describe("image export", () => {
     element.remove();
   });
 
-  it("keeps blob image sources so html-to-image embeds and awaits them", async () => {
+  it("inlines blob image sources before html-to-image renders them", async () => {
     vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(
       () => undefined,
     );
+    const fetch = vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      blob: async () => new Blob(["profile"], { type: "image/png" }),
+    }));
+    vi.stubGlobal("fetch", fetch);
     Object.defineProperty(HTMLImageElement.prototype, "decode", {
       configurable: true,
       value: vi.fn(() => Promise.resolve()),
@@ -160,15 +170,15 @@ describe("image export", () => {
 
     toCanvas.mockImplementationOnce(async (renderedElement: HTMLElement) => {
       const image = renderedElement.querySelector("img");
-      // Source stays a blob: URL. html-to-image fetches + awaits decode for
-      // blob:/http srcs; rewriting to a data: URL makes it skip the await and
-      // renders blank on WebKit. srcset is dropped to avoid a re-pick.
-      expect(image?.getAttribute("src")).toBe("blob:hidden-profile");
+      expect(image?.getAttribute("src")).toBe(
+        "data:image/png;base64,cHJvZmlsZQ==",
+      );
       expect(image?.getAttribute("srcset")).toBeNull();
       return encoded.canvas;
     });
 
     await exportElementAsImage(element, "png", "test", "photoPost");
+    expect(fetch).toHaveBeenCalledWith("blob:hidden-profile");
   });
 
   it("completes the export when an image fails to decode", async () => {

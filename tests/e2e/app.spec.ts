@@ -1,8 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
-import { strFromU8, unzipSync } from "fflate";
+import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { fieldLimits } from "../../src/domain/constraints";
-import { defaultMessenger } from "../../src/domain/types";
+import { defaultMessenger, defaultPhotoPost } from "../../src/domain/types";
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -452,6 +452,100 @@ test("project archives restore optimized images", async ({ page }) => {
   await expect(page.getByLabel("Beschreibung")).toHaveValue("Archiv 🙂");
   await expect(page.locator(".photo-post")).toContainText("Archiv 🙂");
   await expect(page.getByText("profil-ä.png")).toBeVisible();
+});
+
+test("photo image exports include media restored from project archives", async ({
+  browserName,
+  page,
+}) => {
+  test.skip(
+    browserName === "firefox",
+    "Firefox download events are covered by lighter export tests; Safari PNG coverage runs in WebKit.",
+  );
+
+  await page.goto("/");
+  const redPng = await createSolidColorPng(
+    page,
+    { red: 255, green: 0, blue: 0 },
+    128,
+  );
+  const greenPng = await createSolidColorPng(
+    page,
+    { red: 0, green: 255, blue: 0 },
+    128,
+  );
+  const photoPost = structuredClone(defaultPhotoPost);
+  const post = photoPost.posts[0];
+  const manifest = {
+    format: "social-media-creator-project",
+    version: 1,
+    config: {
+      format: "social-media-creator-config",
+      version: 6,
+      locale: "de",
+      module: "photoPost",
+      data: photoPost,
+    },
+    media: [
+      {
+        path: "media/0001.png",
+        originalFileName: "green-profile.png",
+        reference: { kind: "photo-profile", postId: post.id },
+      },
+      {
+        path: "media/0002.png",
+        originalFileName: "red-media.png",
+        reference: {
+          kind: "photo-media",
+          postId: post.id,
+          mediaId: post.media[0].id,
+        },
+      },
+    ],
+  };
+  const archive = Buffer.from(
+    zipSync({
+      "project.json": strToU8(JSON.stringify(manifest)),
+      "media/0001.png": greenPng,
+      "media/0002.png": redPng,
+    }),
+  );
+
+  await page.locator('input[type="file"][accept*=".smc"]').setInputFiles({
+    name: "archive-images.smc",
+    mimeType: "application/zip",
+    buffer: archive,
+  });
+  await expect(page.locator("img.photo-post__avatar")).toBeVisible();
+  await expect(page.locator(".photo-post__media img")).toBeVisible();
+
+  const imageDownload = page.waitForEvent("download");
+  await page.getByRole("button", { name: "PNG" }).click();
+  await continueExport(page);
+  const image = await imageDownload;
+  const path = await image.path();
+  expect(path).not.toBeNull();
+  const bytes = new Uint8Array(await readFile(path!));
+
+  const mediaPixelResult = await imageHasPixelNearColor(page, bytes, {
+    red: 255,
+    green: 0,
+    blue: 0,
+  });
+  expect(
+    mediaPixelResult.matchedPixels,
+    `PNG export did not contain archived red media pixels. Result: ${JSON.stringify(mediaPixelResult)}`,
+  ).toBeGreaterThan(0);
+
+  const profilePixelResult = await imageHasPixelNearColor(page, bytes, {
+    red: 0,
+    green: 255,
+    blue: 0,
+  });
+  expect(
+    profilePixelResult.matchedPixels,
+    `PNG export did not contain archived green profile pixels. Result: ${JSON.stringify(profilePixelResult)}`,
+  ).toBeGreaterThan(0);
 });
 
 test("photo and microblog feeds support multiple posts with comments", async ({
