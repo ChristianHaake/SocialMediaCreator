@@ -190,8 +190,8 @@ export async function prepareImageForUpload(
   const needsReencode = !canonicalImageTypes.has(detected);
   const oversized =
     file.size > maxImageSize ||
-    dimensions.width > maxImageDimension ||
-    dimensions.height > maxImageDimension;
+    dimensions.width > optimizedImageDimension ||
+    dimensions.height > optimizedImageDimension;
   if (!needsReencode && !oversized) {
     return { image: createImageState(file) };
   }

@@ -301,10 +301,23 @@ async function createExportFrame(
 
 function getRenderOptions(element: HTMLElement) {
   const renderWidth = element.offsetWidth || Number.parseFloat(element.style.width) || 1;
+  const renderHeight = element.offsetHeight || Number.parseFloat(element.style.height) || 1;
+  let pixelRatio = exportWidth / renderWidth;
+
+  // Safari/WebKit caps canvas area at roughly 16 megapixels. Exceeding the
+  // limit makes html-to-image render blank image slots — most visible for PNG
+  // exports where there is no lossy encoding fallback. Clamp the pixel ratio
+  // so the final canvas stays within safe bounds, with a small margin.
+  const maxCanvasArea = 16_000_000;
+  const canvasArea = renderWidth * pixelRatio * renderHeight * pixelRatio;
+  if (canvasArea > maxCanvasArea) {
+    pixelRatio = Math.sqrt(maxCanvasArea / (renderWidth * renderHeight));
+  }
+
   return {
     backgroundColor: getExportBackground(element),
     cacheBust: false,
-    pixelRatio: exportWidth / renderWidth,
+    pixelRatio,
   };
 }
 

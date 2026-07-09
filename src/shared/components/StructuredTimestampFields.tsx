@@ -79,7 +79,6 @@ export function StructuredTimestampFields({
           aria-invalid={dateInvalid}
           autoComplete="off"
           id={`${id}-date`}
-          inputMode="numeric"
           onChange={(event) => updateDateDraft(event.target.value)}
           pattern="\d{4}-\d{2}-\d{2}"
           placeholder="YYYY-MM-DD"
@@ -105,7 +104,6 @@ export function StructuredTimestampFields({
           aria-invalid={timeInvalid}
           autoComplete="off"
           id={`${id}-time`}
-          inputMode="numeric"
           onChange={(event) => updateTimeDraft(event.target.value)}
           pattern="([01]\d|2[0-3]):[0-5]\d"
           placeholder="HH:MM"
