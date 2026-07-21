@@ -5,7 +5,7 @@
   justify-content: space-between;
   padding: 18px 22px;
   border-top: 1px solid var(--border-soft);
-  background: var(--panel-bg);
+  background: white;
 }
 
 .action-group {
@@ -74,7 +74,7 @@
   padding: 5px clamp(20px, 4vw, 64px);
   border-top: 1px solid var(--border-soft);
   color: var(--text-muted);
-  background: var(--surface-overlay);
+  background: rgb(255 255 255 / 94%);
   box-shadow: 0 -10px 28px rgb(15 23 42 / 7%);
   backdrop-filter: blur(14px);
   font-size: 0.74rem;
@@ -142,13 +142,13 @@
   border: 1px solid var(--border-soft);
   border-radius: 10px;
   color: #344054;
-  background: var(--panel-bg);
+  background: white;
   text-decoration: none;
 }
 
 .app-footer__github:hover {
   border-color: #9da7b5;
-  background: var(--surface-subtle);
+  background: #f8fafc;
 }
 
 .content-shell {
@@ -236,7 +236,7 @@
   margin-top: 24px;
   border: 1px solid var(--border-soft);
   border-radius: 14px;
-  background: var(--surface-subtle);
+  background: #f8fafc;
 }
 
 .verification-result--valid {
@@ -361,7 +361,7 @@
   border: 1px solid var(--border-soft);
   border-radius: 10px;
   color: #344054;
-  background: var(--surface-subtle);
+  background: #f8fafc;
   font-size: 0.9rem;
   line-height: 1.5;
 }

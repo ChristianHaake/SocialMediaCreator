@@ -33,8 +33,7 @@
   }
 
   .brand__logo {
-    width: 38px;
-    height: 38px;
+    height: 46px;
   }
 
   .privacy-badge {
@@ -147,7 +146,7 @@
 
   .mobile-view-toggle button[aria-pressed="true"] {
     color: var(--accent);
-    background: var(--panel-bg);
+    background: white;
     box-shadow: 0 2px 8px rgb(15 23 42 / 8%);
   }
 
@@ -238,8 +237,7 @@
   }
 
   .brand__logo {
-    width: 34px;
-    height: 34px;
+    height: 38px;
   }
 
   .header-meta {
