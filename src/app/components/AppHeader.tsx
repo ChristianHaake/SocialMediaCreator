@@ -11,10 +11,15 @@ export function AppHeader({ onOpenTeacherInfo }: AppHeaderProps) {
     <header className="app-header">
       <a className="brand" href="/">
         <img
-          alt="SocialMediaCreator"
+          alt=""
+          aria-hidden="true"
           className="brand__logo"
-          src="/brand/smc-logo-blue-wide.png"
+          src="/favicon.svg"
         />
+        <span className="brand__text">
+          <strong>SocialMediaCreator</strong>
+          <small>{t("app.tagline")}</small>
+        </span>
       </a>
       <div className="header-meta">
         <span className="privacy-badge">

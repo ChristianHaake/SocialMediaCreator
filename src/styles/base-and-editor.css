@@ -8,6 +8,8 @@
   text-rendering: optimizeLegibility;
   --app-bg: #f3f5f8;
   --panel-bg: #ffffff;
+  --surface-subtle: #f8fafc;
+  --surface-overlay: rgb(255 255 255 / 90%);
   --text-main: #111827;
   --text-muted: #475467;
   --border-soft: #dfe3e8;
@@ -86,7 +88,7 @@ a {
   min-height: 76px;
   padding: 10px clamp(20px, 4vw, 64px);
   border-bottom: 1px solid var(--border-soft);
-  background: rgb(255 255 255 / 90%);
+  background: var(--surface-overlay);
   backdrop-filter: blur(14px);
 }
 
@@ -99,8 +101,9 @@ a {
 
 .brand__logo {
   display: block;
-  height: 58px;
-  width: auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   object-fit: contain;
 }
 
@@ -137,7 +140,7 @@ a {
   padding: 3px;
   border: 1px solid var(--border-soft);
   border-radius: 9px;
-  background: #f8fafc;
+  background: var(--surface-subtle);
 }
 
 .language-switch button {
@@ -268,7 +271,7 @@ main {
   margin: 0 0 14px;
   border: 1px solid var(--border-soft);
   border-radius: 16px;
-  background: rgb(255 255 255 / 92%);
+  background: var(--surface-overlay);
   box-shadow: 0 12px 30px rgb(15 23 42 / 8%);
 }
 
@@ -360,7 +363,7 @@ main {
 
 .module-tab--active {
   color: var(--accent);
-  background: white;
+  background: var(--panel-bg);
   box-shadow: 0 3px 12px rgb(15 23 42 / 8%);
 }
 
@@ -410,12 +413,12 @@ main {
   place-items: center;
   border: 1px solid var(--border-soft);
   border-radius: 11px;
-  background: white;
+  background: var(--panel-bg);
 }
 
 .icon-button:hover {
   border-color: #aeb6c2;
-  background: #f8fafc;
+  background: var(--surface-subtle);
 }
 
 .editor-form {
@@ -434,7 +437,7 @@ main {
   overflow: hidden;
   border: 1px solid var(--border-soft);
   border-radius: 12px;
-  background: white;
+  background: var(--panel-bg);
 }
 
 .editor-master-section__header,
@@ -444,7 +447,7 @@ main {
 
 .editor-master-section__header {
   border-bottom: 1px solid var(--border-soft);
-  background: #f8fafc;
+  background: var(--surface-subtle);
 }
 
 .editor-master-section--disclosure {
@@ -454,7 +457,7 @@ main {
 .editor-disclosure.editor-master-section--disclosure > summary {
   padding: 18px 22px;
   border-bottom: 0;
-  background: #f8fafc;
+  background: var(--surface-subtle);
 }
 
 .editor-disclosure.editor-master-section--disclosure[open] > summary {
@@ -705,7 +708,7 @@ main {
   border: 1px solid #cfd5dd;
   border-radius: 10px;
   color: var(--text-main);
-  background: #fff;
+  background: var(--panel-bg);
   transition:
     border-color 140ms ease,
     box-shadow 140ms ease;
@@ -751,14 +754,14 @@ main {
   border: 1px solid #cfd5dd;
   border-radius: 8px;
   color: #344054;
-  background: #fff;
+  background: var(--panel-bg);
   cursor: pointer;
 }
 
 .emoji-textarea__button:hover,
 .emoji-textarea__option:hover {
   border-color: #9da7b5;
-  background: #f8fafc;
+  background: var(--surface-subtle);
 }
 
 .emoji-textarea__button:focus-visible,
@@ -779,7 +782,7 @@ main {
   padding: 9px;
   border: 1px solid #cfd5dd;
   border-radius: 12px;
-  background: #fff;
+  background: var(--panel-bg);
   box-shadow: 0 14px 35px rgb(15 23 42 / 16%);
 }
 
@@ -890,7 +893,7 @@ main {
 
 .segmented-control input:checked + span {
   color: var(--accent);
-  background: white;
+  background: var(--panel-bg);
   box-shadow: 0 2px 8px rgb(15 23 42 / 8%);
 }
 
@@ -917,7 +920,7 @@ main {
   padding: 13px;
   border: 1px solid var(--border-soft);
   border-radius: 12px;
-  background: #f8fafc;
+  background: var(--surface-subtle);
 }
 
 .message-editor-card--profile,
@@ -935,7 +938,7 @@ main {
 }
 
 .message-editor-card--profile-disclosure {
-  background: #f8fafc;
+  background: var(--surface-subtle);
 }
 
 .message-composer {
@@ -944,7 +947,7 @@ main {
   padding: 12px;
   border: 1px solid var(--border-soft);
   border-radius: 10px;
-  background: #f8fafc;
+  background: var(--surface-subtle);
 }
 
 .message-composer__heading {
@@ -1038,7 +1041,7 @@ main {
   gap: 10px;
   padding: 10px 12px 12px;
   border-top: 1px solid var(--border-soft);
-  background: white;
+  background: var(--panel-bg);
 }
 
 .message-editor-card__chevron {
@@ -1101,7 +1104,7 @@ main {
   margin-top: 10px;
   border: 1px solid var(--border-soft);
   border-radius: 11px;
-  background: white;
+  background: var(--panel-bg);
 }
 
 .full-width-button {
@@ -1131,7 +1134,7 @@ main {
   padding: 5px;
   border: 1px solid var(--border-soft);
   border-radius: 10px;
-  background: #f8fafc;
+  background: var(--surface-subtle);
 }
 
 .post-selector--dragging {
@@ -1230,7 +1233,7 @@ main {
   place-items: center;
   border: 1px solid #cfd5dd;
   border-radius: 8px;
-  background: white;
+  background: var(--panel-bg);
 }
 
 .compact-icon-button:disabled {
@@ -1293,7 +1296,7 @@ main {
 .button--secondary {
   border-color: #cfd5dd;
   color: #344054;
-  background: white;
+  background: var(--panel-bg);
 }
 
 .button--primary {
@@ -1307,7 +1310,7 @@ main {
 
 .button--secondary:hover {
   border-color: #9da7b5;
-  background: #f8fafc;
+  background: var(--surface-subtle);
 }
 
 .button:disabled {
