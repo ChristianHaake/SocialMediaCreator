@@ -5,7 +5,7 @@ Alte Ziegelei 7
 26197 Großenkneten  
 Deutschland
 
-E-Mail: [christianhaake@gmail.com](mailto:christianhaake@gmail.com)
+E-Mail: apps@haak3.de
 
 ## Inhaltlich verantwortlich gemäß § 18 Abs. 2 MStV
 
