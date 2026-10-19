@@ -8,6 +8,11 @@ import type {
 } from "../domain/types";
 import type { ProjectImageMaps } from "../shared/lib/projectArchives";
 
+// Own-property read so ids like "__proto__" never resolve to Object.prototype.
+function own<T>(map: Record<string, T>, key: string): T | undefined {
+  return Object.hasOwn(map, key) ? map[key] : undefined;
+}
+
 function revokeImage(image: ImageState | null | undefined) {
   if (image) URL.revokeObjectURL(image.url);
 }
@@ -80,9 +85,9 @@ export function useProjectImages() {
 
   function setPhotoImage(postId: string, image: ImageState | null) {
     setPhotoImages((current) => {
-      const previous = current[postId]?.profileImage;
+      const previous = own(current, postId)?.profileImage;
       if (previous?.url !== image?.url) revokeImage(previous);
-      const currentPostImages = current[postId] ?? {
+      const currentPostImages = own(current, postId) ?? {
         profileImage: null,
         media: {},
         commentImages: {},
@@ -102,7 +107,7 @@ export function useProjectImages() {
 
   function removePhotoPostImages(postId: string) {
     setPhotoImages((current) => {
-      const postImages = current[postId];
+      const postImages = own(current, postId);
       if (!postImages) return current;
       revokeImage(postImages.profileImage);
       Object.values(postImages.media).forEach(revokeImage);
@@ -120,7 +125,7 @@ export function useProjectImages() {
     image: ImageState | null,
   ) {
     setPhotoImages((current) => {
-      const postImages = current[postId] ?? {
+      const postImages = own(current, postId) ?? {
         profileImage: null,
         media: {},
         commentImages: {},
@@ -145,7 +150,7 @@ export function useProjectImages() {
 
   function removePhotoImages(postId: string, ids: string[]) {
     setPhotoImages((current) => {
-      const postImages = current[postId];
+      const postImages = own(current, postId);
       if (!postImages) return current;
       const media = { ...postImages.media };
       const commentImages = { ...postImages.commentImages };
@@ -170,7 +175,7 @@ export function useProjectImages() {
 
   function setMessengerImage(profileId: string, image: ImageState | null) {
     setMessengerImages((current) => {
-      const previous = current[profileId];
+      const previous = own(current, profileId);
       if (previous?.url !== image?.url) revokeImage(previous);
       const next = { ...current };
       if (image) next[profileId] = image;
@@ -184,7 +189,7 @@ export function useProjectImages() {
     image: ImageState | null,
   ) {
     setMicroblogImages((current) => {
-      const currentPostImages = current[postId] ?? {
+      const currentPostImages = own(current, postId) ?? {
         profileImage: null,
         commentImages: {},
       };
@@ -205,7 +210,7 @@ export function useProjectImages() {
     image: ImageState | null,
   ) {
     setMicroblogImages((current) => {
-      const postImages = current[postId] ?? {
+      const postImages = own(current, postId) ?? {
         profileImage: null,
         commentImages: {},
       };
@@ -228,7 +233,7 @@ export function useProjectImages() {
 
   function removeMicroblogImages(postId: string, ids: string[]) {
     setMicroblogImages((current) => {
-      const postImages = current[postId];
+      const postImages = own(current, postId);
       if (!postImages) return current;
       const commentImages = { ...postImages.commentImages };
       ids.forEach((id) => {
@@ -249,7 +254,7 @@ export function useProjectImages() {
 
   function removeMicroblogPostImage(postId: string) {
     setMicroblogImages((current) => {
-      const postImages = current[postId];
+      const postImages = own(current, postId);
       if (postImages) {
         revokeImage(postImages.profileImage);
         Object.values(postImages.commentImages).forEach(revokeImage);

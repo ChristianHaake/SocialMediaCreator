@@ -256,4 +256,22 @@ describe("project archives", () => {
       code: "project.unsupportedVersion",
     });
   });
+
+  it.each(["__proto__", "constructor", "prototype"])(
+    "rejects the reserved post id %s without polluting prototypes",
+    async (id) => {
+      const post = { ...defaultPhotoPost.posts[0], id };
+      const config = createPhotoPostConfig({
+        ...defaultPhotoPost,
+        activePostId: id,
+        posts: [post],
+      });
+      await expect(
+        readProjectArchive(
+          makeArchive(config, [{ kind: "photo-profile", postId: id }]),
+        ),
+      ).rejects.toBeInstanceOf(Error);
+      expect(({} as Record<string, unknown>).profileImage).toBeUndefined();
+    },
+  );
 });

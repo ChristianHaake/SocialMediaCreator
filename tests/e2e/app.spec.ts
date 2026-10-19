@@ -158,6 +158,29 @@ test("education notice and public guidance pages are visible and bilingual", asy
   await expect(page.getByText("Scenario 5: Platform mechanics")).toBeVisible();
 });
 
+test("export toolbar stays inside the preview panel on narrow desktops", async ({
+  page,
+}) => {
+  await page.goto("/");
+  for (const locale of ["DE", "EN"]) {
+    await page.getByRole("button", { name: locale, exact: true }).click();
+    for (const width of [1024, 1280]) {
+      await page.setViewportSize({ width, height: 800 });
+      const panel = (await page.locator(".preview-panel").boundingBox())!;
+      const buttons = page.locator(".action-bar button");
+      for (let index = 0; index < (await buttons.count()); index += 1) {
+        const box = (await buttons.nth(index).boundingBox())!;
+        expect(box.x).toBeGreaterThanOrEqual(panel.x);
+        expect(box.x + box.width).toBeLessThanOrEqual(panel.x + panel.width);
+        expect(box.y + box.height).toBeLessThanOrEqual(panel.y + panel.height);
+      }
+      const pdf = page.getByRole("button", { name: "PDF" });
+      await pdf.scrollIntoViewIfNeeded();
+      await expect(pdf).toBeInViewport({ ratio: 1 });
+    }
+  }
+});
+
 test("first export requires consent and every export shows the notice", async ({
   page,
 }) => {

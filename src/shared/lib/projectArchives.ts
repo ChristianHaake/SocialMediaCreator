@@ -430,7 +430,12 @@ function parseManifest(bytes: Uint8Array): ProjectArchiveManifest {
 }
 
 function emptyImageMaps(): ProjectImageMaps {
-  return { photoPost: {}, messenger: {}, microblog: {} };
+  // Null-prototype maps: archive ids become keys here.
+  return {
+    photoPost: Object.create(null),
+    messenger: Object.create(null),
+    microblog: Object.create(null),
+  };
 }
 
 function installImage(
@@ -451,8 +456,8 @@ function installImage(
     if (!post) throw new ProjectArchiveError("project.invalidManifest");
     const postImages = result.photoPost[post.id] ?? {
       profileImage: null,
-      media: {},
-      commentImages: {},
+      media: Object.create(null),
+      commentImages: Object.create(null),
     };
     if (reference.kind === "photo-profile") {
       postImages.profileImage = image;
@@ -492,7 +497,7 @@ function installImage(
   if (!post) throw new ProjectArchiveError("project.invalidManifest");
   const postImages = result.microblog[post.id] ?? {
     profileImage: null,
-    commentImages: {},
+    commentImages: Object.create(null),
   };
   if (reference.kind === "microblog-profile") {
     postImages.profileImage = image;
