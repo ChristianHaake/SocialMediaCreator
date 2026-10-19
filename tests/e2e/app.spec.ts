@@ -158,6 +158,29 @@ test("education notice and public guidance pages are visible and bilingual", asy
   await expect(page.getByText("Scenario 5: Platform mechanics")).toBeVisible();
 });
 
+test("export toolbar stays inside the preview panel on narrow desktops", async ({
+  page,
+}) => {
+  await page.goto("/");
+  for (const locale of ["DE", "EN"]) {
+    await page.getByRole("button", { name: locale, exact: true }).click();
+    for (const width of [1024, 1280]) {
+      await page.setViewportSize({ width, height: 800 });
+      const panel = (await page.locator(".preview-panel").boundingBox())!;
+      const buttons = page.locator(".action-bar button");
+      for (let index = 0; index < (await buttons.count()); index += 1) {
+        const box = (await buttons.nth(index).boundingBox())!;
+        expect(box.x).toBeGreaterThanOrEqual(panel.x);
+        expect(box.x + box.width).toBeLessThanOrEqual(panel.x + panel.width);
+        expect(box.y + box.height).toBeLessThanOrEqual(panel.y + panel.height);
+      }
+      const pdf = page.getByRole("button", { name: "PDF" });
+      await pdf.scrollIntoViewIfNeeded();
+      await expect(pdf).toBeInViewport({ ratio: 1 });
+    }
+  }
+});
+
 test("first export requires consent and every export shows the notice", async ({
   page,
 }) => {
@@ -1034,7 +1057,47 @@ test("PDF export and local image verification are available", async ({
   await expect(
     page.getByRole("heading", { name: "Gültiger Herkunftsmarker" }),
   ).toBeVisible();
+  await expect(page.getByText(/Modul: Foto-Post\./)).toBeVisible();
   await expect(page.getByText("kein fälschungssicherer Echtheitsbeweis")).toBeVisible();
+});
+
+test("PDF export keeps working offline after its first use", async ({
+  browserName,
+  context,
+  page,
+}) => {
+  test.skip(
+    browserName !== "chromium",
+    "Playwright only routes offline requests through service workers in Chromium",
+  );
+  await page.goto("/");
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  if (!(await page.evaluate(() => !!navigator.serviceWorker.controller))) {
+    await page.reload();
+  }
+
+  const onlineDownload = page.waitForEvent("download");
+  await page.getByRole("button", { name: "PDF" }).click();
+  await continueExport(page);
+  await onlineDownload;
+  // The browser's HTTP cache would also mask a missing rule offline, so check
+  // the service-worker cache itself.
+  await expect
+    .poll(() =>
+      page.evaluate(async () =>
+        (await (await caches.open("pdf-libs")).keys()).map(
+          (request) => new URL(request.url).pathname,
+        ),
+      ),
+    )
+    .toContainEqual(expect.stringMatching(/\/assets\/jspdf[^/]*\.js$/));
+
+  await context.setOffline(true);
+  await page.reload();
+  const offlineDownload = page.waitForEvent("download");
+  await page.getByRole("button", { name: "PDF" }).click();
+  await continueExport(page);
+  expect((await offlineDownload).suggestedFilename()).toMatch(/\.pdf$/);
 });
 
 test("image uploads reject invalid files and accept decodable images", async ({

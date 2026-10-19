@@ -1,4 +1,4 @@
-import { useState, type RefObject } from "react";
+import { useRef, useState, type RefObject } from "react";
 import { isStandaloneMode } from "../shared/lib/downloads";
 import { hasExportConsent, storeExportConsent } from "../shared/lib/exportConsent";
 import type { ExportFormat, ImageExportFormat } from "../shared/lib/exportImage";
@@ -22,6 +22,7 @@ export function useExportController({
   const [exportError, setExportError] = useState<string | null>(null);
   const [pendingExport, setPendingExport] = useState<ExportFormat | null>(null);
   const [exportConsentRequired, setExportConsentRequired] = useState(false);
+  const inFlightExport = useRef<Promise<void>>(Promise.resolve());
 
   function requestExport(format: ExportFormat) {
     if (exporting) return;
@@ -35,11 +36,8 @@ export function useExportController({
 
     const format = pendingExport;
     setPendingExport(null);
-    if (format === "pdf") {
-      void performPdfExport();
-    } else {
-      void performImageExport(format);
-    }
+    inFlightExport.current =
+      format === "pdf" ? performPdfExport() : performImageExport(format);
   }
 
   function cancelExport() {
@@ -47,14 +45,17 @@ export function useExportController({
   }
 
   async function performImageExport(format: ImageExportFormat) {
-    if (!previewRef.current || exporting) return;
+    // Capture the element now: the user may switch module while the export
+    // chunk loads, and the old module's name and marker must match its DOM.
+    const element = previewRef.current;
+    if (!element || exporting) return;
 
     setExportError(null);
     setExporting(format);
     try {
       const { exportElementAsImage } = await import("../shared/lib/exportImage");
       await exportElementAsImage(
-        previewRef.current,
+        element,
         format,
         activeModule === "photoPost"
           ? "social-media-creator-foto-post"
@@ -78,13 +79,16 @@ export function useExportController({
   }
 
   async function performPdfExport() {
-    if (!previewRef.current || exporting) return;
+    // Capture the element now: the user may switch module while the export
+    // chunk loads, and the old module's name and marker must match its DOM.
+    const element = previewRef.current;
+    if (!element || exporting) return;
     setExportError(null);
     setExporting("pdf");
     try {
       const { exportElementAsPdf } = await import("../shared/lib/exportImage");
       await exportElementAsPdf(
-        previewRef.current,
+        element,
         activeModule === "photoPost"
           ? "social-media-creator-foto-post"
           : activeModule === "messenger"
@@ -115,5 +119,6 @@ export function useExportController({
     requestExport,
     confirmExport,
     cancelExport,
+    waitForExport: () => inFlightExport.current,
   };
 }

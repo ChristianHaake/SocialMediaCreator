@@ -1,14 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import { registerSW } from "virtual:pwa-register";
 
+// Upper bound for pending saves/exports before a new version reloads the page.
+const BEFORE_RELOAD_TIMEOUT_MS = 10_000;
+
 type UsePwaUpdateOptions = {
+  beforeReload?: () => Promise<void>;
   register?: typeof registerSW;
   reload?: () => void;
   serviceWorker?: ServiceWorkerContainer;
 };
 
 export function usePwaUpdate(options: UsePwaUpdateOptions = {}) {
-  const { register = registerSW, reload, serviceWorker } = options;
+  const { beforeReload, register = registerSW, reload, serviceWorker } = options;
+  const beforeReloadRef = useRef(beforeReload);
+  beforeReloadRef.current = beforeReload;
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const refreshing = useRef(false);
   const hadController = useRef(false);
@@ -27,7 +33,17 @@ export function usePwaUpdate(options: UsePwaUpdateOptions = {}) {
     const onControllerChange = () => {
       if (!hadController.current || refreshing.current) return;
       refreshing.current = true;
-      reloadPage();
+      const pendingWork = beforeReloadRef.current?.();
+      if (!pendingWork) {
+        reloadPage();
+        return;
+      }
+      void Promise.race([
+        pendingWork.catch(() => undefined),
+        new Promise((resolve) =>
+          window.setTimeout(resolve, BEFORE_RELOAD_TIMEOUT_MS),
+        ),
+      ]).then(reloadPage);
     };
 
     activeServiceWorker.addEventListener("controllerchange", onControllerChange);

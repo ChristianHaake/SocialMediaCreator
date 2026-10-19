@@ -1,5 +1,6 @@
 .action-bar {
   display: flex;
+  flex-wrap: wrap;
   gap: 24px;
   align-items: end;
   justify-content: space-between;
@@ -10,6 +11,7 @@
 
 .action-group {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   align-items: center;
 }

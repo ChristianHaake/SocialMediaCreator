@@ -66,6 +66,17 @@ function isStringWithin(value: unknown, maxLength: number): value is string {
   return typeof value === "string" && value.length <= maxLength;
 }
 
+const reservedIds = new Set(["__proto__", "constructor", "prototype"]);
+
+// Ids become object keys (e.g. image maps), so reject prototype-polluting names.
+function isId(value: unknown, maxLength: number): value is string {
+  return (
+    isStringWithin(value, maxLength) &&
+    value.length > 0 &&
+    !reservedIds.has(value)
+  );
+}
+
 function isMetricNumber(value: unknown): value is number {
   return (
     typeof value === "number" &&
@@ -120,8 +131,7 @@ function isReply(value: unknown): value is CommentReply {
   if (!isRecord(value)) return false;
   return (
     hasOnlyKeys(value, ["id", "author", "text", "timestamp"]) &&
-    isStringWithin(value.id, fieldLimits.common.commentId) &&
-    value.id.length > 0 &&
+    isId(value.id, fieldLimits.common.commentId) &&
     isStringWithin(value.author, fieldLimits.common.commentAuthor) &&
     isStringWithin(value.text, fieldLimits.common.commentText) &&
     isStringWithin(value.timestamp, fieldLimits.common.timestamp)
@@ -132,8 +142,7 @@ function isComment(value: unknown): value is PostComment {
   if (!isRecord(value)) return false;
   return (
     hasOnlyKeys(value, ["id", "author", "text", "timestamp", "replies"]) &&
-    isStringWithin(value.id, fieldLimits.common.commentId) &&
-    value.id.length > 0 &&
+    isId(value.id, fieldLimits.common.commentId) &&
     isStringWithin(value.author, fieldLimits.common.commentAuthor) &&
     isStringWithin(value.text, fieldLimits.common.commentText) &&
     isStringWithin(value.timestamp, fieldLimits.common.timestamp) &&
@@ -170,8 +179,7 @@ function isPhotoMedia(value: unknown): value is PhotoMedia {
       "videoDuration",
       "videoViews",
     ]) &&
-    isStringWithin(value.id, fieldLimits.common.postId) &&
-    value.id.length > 0 &&
+    isId(value.id, fieldLimits.common.postId) &&
     isStringWithin(value.imageAlt, fieldLimits.photoPost.imageAlt) &&
     (value.mode === "image" || value.mode === "video") &&
     isStringWithin(value.videoDuration, fieldLimits.photoPost.videoDuration) &&
@@ -198,8 +206,7 @@ function isPhotoPost(value: unknown): value is PhotoPost {
       "media",
       "comments",
     ]) &&
-    isStringWithin(value.id, fieldLimits.common.postId) &&
-    value.id.length > 0 &&
+    isId(value.id, fieldLimits.common.postId) &&
     isStringWithin(value.username, fieldLimits.photoPost.username) &&
     isStringWithin(value.location, fieldLimits.photoPost.location) &&
     isStringWithin(value.caption, fieldLimits.photoPost.caption) &&
@@ -210,7 +217,7 @@ function isPhotoPost(value: unknown): value is PhotoPost {
     isMetricNumber(value.commentCount) &&
     typeof value.showLocation === "boolean" &&
     typeof value.showComments === "boolean" &&
-    isStringWithin(value.activeMediaId, fieldLimits.common.postId) &&
+    isId(value.activeMediaId, fieldLimits.common.postId) &&
     Array.isArray(value.media) &&
     value.media.length > 0 &&
     value.media.length <= fieldLimits.photoPost.media &&
@@ -227,7 +234,7 @@ function isPhotoPostState(value: unknown): value is PhotoPostState {
     hasOnlyKeys(value, ["theme", "sortOrder", "activePostId", "posts"]) &&
     isTheme(value.theme) &&
     isSortOrder(value.sortOrder) &&
-    isStringWithin(value.activePostId, fieldLimits.common.postId) &&
+    isId(value.activePostId, fieldLimits.common.postId) &&
     Array.isArray(value.posts) &&
     value.posts.length > 0 &&
     value.posts.length <= fieldLimits.common.posts &&
@@ -241,8 +248,7 @@ function isMessengerProfile(value: unknown): value is MessengerProfile {
   if (!isRecord(value)) return false;
   return (
     hasOnlyKeys(value, ["id", "name", "status", "side"]) &&
-    isStringWithin(value.id, fieldLimits.messenger.profileId) &&
-    value.id.length > 0 &&
+    isId(value.id, fieldLimits.messenger.profileId) &&
     isStringWithin(value.name, fieldLimits.messenger.contactName) &&
     isStringWithin(value.status, fieldLimits.messenger.status) &&
     (value.side === "left" || value.side === "right")
@@ -253,9 +259,8 @@ function isMessengerMessage(value: unknown): value is MessengerMessage {
   if (!isRecord(value)) return false;
   return (
     hasOnlyKeys(value, ["id", "senderId", "text", "timestamp", "seen"]) &&
-    isStringWithin(value.id, fieldLimits.messenger.messageId) &&
-    value.id.length > 0 &&
-    isStringWithin(value.senderId, fieldLimits.messenger.profileId) &&
+    isId(value.id, fieldLimits.messenger.messageId) &&
+    isId(value.senderId, fieldLimits.messenger.profileId) &&
     isStringWithin(value.text, fieldLimits.messenger.messageText) &&
     isStringWithin(value.timestamp, fieldLimits.common.timestamp) &&
     typeof value.seen === "boolean"
@@ -299,8 +304,7 @@ function isMicroblogPost(value: unknown): value is MicroblogPost {
       "likes",
       "comments",
     ]) &&
-    isStringWithin(value.id, fieldLimits.common.postId) &&
-    value.id.length > 0 &&
+    isId(value.id, fieldLimits.common.postId) &&
     isStringWithin(value.displayName, fieldLimits.microblog.displayName) &&
     isStringWithin(value.handle, fieldLimits.microblog.handle) &&
     isStringWithin(value.text, fieldLimits.microblog.text) &&
@@ -327,7 +331,7 @@ function isMicroblogState(value: unknown): value is MicroblogState {
     isTheme(value.theme) &&
     (value.layoutMode === "feed" || value.layoutMode === "thread") &&
     isSortOrder(value.sortOrder) &&
-    isStringWithin(value.activePostId, fieldLimits.common.postId) &&
+    isId(value.activePostId, fieldLimits.common.postId) &&
     Array.isArray(value.posts) &&
     value.posts.length > 0 &&
     value.posts.length <= fieldLimits.common.posts &&

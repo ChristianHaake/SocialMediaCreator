@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { strToU8, zipSync } from "fflate";
+import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import {
   createMessengerConfig,
   createMicroblogConfig,
@@ -11,6 +11,7 @@ import {
   defaultPhotoPost,
 } from "../../domain/types";
 import {
+  createProjectArchive,
   disposeProjectImages,
   readProjectArchive,
   type MediaReference,
@@ -255,5 +256,96 @@ describe("project archives", () => {
     ).rejects.toMatchObject({
       code: "project.unsupportedVersion",
     });
+  });
+
+  it.each(["__proto__", "constructor", "prototype"])(
+    "rejects the reserved post id %s without polluting prototypes",
+    async (id) => {
+      const post = { ...defaultPhotoPost.posts[0], id };
+      const config = createPhotoPostConfig({
+        ...defaultPhotoPost,
+        activePostId: id,
+        posts: [post],
+      });
+      await expect(
+        readProjectArchive(
+          makeArchive(config, [{ kind: "photo-profile", postId: id }]),
+        ),
+      ).rejects.toBeInstanceOf(Error);
+      expect(({} as Record<string, unknown>).profileImage).toBeUndefined();
+    },
+  );
+});
+
+const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x02, 0xff, 0xd9]);
+
+function singleMediaArchive(path: string, bytes: Uint8Array) {
+  const post = defaultPhotoPost.posts[0];
+  return new File(
+    [
+      zipSync({
+        "project.json": strToU8(
+          JSON.stringify({
+            format: "social-media-creator-project",
+            version: 1,
+            config: createPhotoPostConfig(defaultPhotoPost),
+            media: [
+              {
+                path,
+                originalFileName: "photo.jpg",
+                reference: { kind: "photo-profile", postId: post.id },
+              },
+            ],
+          }),
+        ),
+        [path]: bytes,
+      }),
+    ],
+    "project.smc",
+  );
+}
+
+describe("project archive media formats", () => {
+  it("stores JPEG images (Safari's WebP fallback) as .jpg and reads them back", async () => {
+    const post = defaultPhotoPost.posts[0];
+    const blob = new Blob([jpeg], { type: "image/jpeg" });
+    const archive = await createProjectArchive("photoPost", defaultPhotoPost, "de", {
+      [post.id]: {
+        profileImage: { blob, fileName: "photo.jpg", url: "blob:x", optimized: true },
+        media: {},
+        commentImages: {},
+      },
+    });
+    const entries = unzipSync(new Uint8Array(await archive.arrayBuffer()));
+    expect(Object.keys(entries)).toContain("media/0001.jpg");
+
+    const result = await readProjectArchive(
+      new File([archive], "project.smc"),
+    );
+    expect(result.images.photoPost[post.id].profileImage?.blob.type).toBe(
+      "image/jpeg",
+    );
+    disposeProjectImages(result.images);
+  });
+
+  it("rejects media whose bytes do not match the file extension", async () => {
+    await expect(
+      readProjectArchive(singleMediaArchive("media/0001.png", jpeg)),
+    ).rejects.toMatchObject({ code: "project.invalidMedia" });
+  });
+
+  it("skips images of posts that were deleted instead of failing the save", async () => {
+    const blob = new Blob([webp], { type: "image/webp" });
+    const archive = await createProjectArchive("photoPost", defaultPhotoPost, "de", {
+      "deleted-post": {
+        profileImage: { blob, fileName: "a.webp", url: "blob:x", optimized: true },
+        media: {},
+        commentImages: {},
+      },
+    });
+    const entries = unzipSync(new Uint8Array(await archive.arrayBuffer()));
+    const manifest = JSON.parse(strFromU8(entries["project.json"]));
+    expect(manifest.media).toEqual([]);
+    expect(Object.keys(entries)).toEqual(["project.json"]);
   });
 });

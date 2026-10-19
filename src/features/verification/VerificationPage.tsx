@@ -4,7 +4,15 @@ import {
   verifyImageMarker,
   type VerificationResult,
 } from "../../shared/lib/imageMarkers";
+import type { ModuleType } from "../../domain/types";
 import { useTranslation } from "../../i18n";
+import type { TranslationKey } from "../../i18n/de";
+
+const moduleLabels: Record<ModuleType, TranslationKey> = {
+  photoPost: "module.photo",
+  messenger: "module.messenger",
+  microblog: "module.microblog",
+};
 
 export function VerificationPage() {
   const { numberLocale, t } = useTranslation();
@@ -51,7 +59,7 @@ export function VerificationPage() {
               <h2>{t("verify.valid")}</h2>
               <p>
                 {t("verify.validText", {
-                  module: result.marker.module,
+                  module: t(moduleLabels[result.marker.module]),
                   date: new Date(result.marker.exportedAt).toLocaleString(
                     numberLocale,
                   ),

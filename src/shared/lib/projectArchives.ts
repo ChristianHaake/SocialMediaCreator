@@ -28,6 +28,7 @@ import type {
 import type { TranslationKey } from "../../i18n/de";
 import {
   createImageState,
+  detectImageType,
   maxImageSize,
   optimizeImage,
   validateImageFile,
@@ -37,7 +38,12 @@ import { downloadBlob } from "./downloads";
 export const maxProjectSize = 25 * 1024 * 1024;
 const maxProjectJsonSize = 1024 * 1024;
 const projectFileName = "project.json";
-const mediaPathPattern = /^media\/[0-9]{4}\.(?:webp|png)$/;
+const mediaPathPattern = /^media\/[0-9]{4}\.(?:webp|png|jpg)$/;
+const mediaTypeByExtension: Record<string, string> = {
+  webp: "image/webp",
+  png: "image/png",
+  jpg: "image/jpeg",
+};
 const optimizedArchiveImages = new WeakMap<Blob, Blob>();
 
 type PhotoReference =
@@ -134,13 +140,15 @@ function collectMedia(
   config: ConfigFile,
   images: PhotoPostImages | MessengerImages | MicroblogImages,
 ) {
+  // Images whose post, medium, comment or profile no longer exists (e.g.
+  // deleted while an upload was still processing) are skipped, not fatal.
   const collected: Array<{ image: ImageState; reference: MediaReference }> = [];
 
   if (config.module === "photoPost") {
     const photoImages = images as PhotoPostImages;
     for (const [postId, postImages] of Object.entries(photoImages)) {
       const post = config.data.posts.find((candidate) => candidate.id === postId);
-      if (!post) throw new ProjectArchiveError("project.invalidManifest");
+      if (!post) continue;
       if (postImages.profileImage) {
         collected.push({
           image: postImages.profileImage,
@@ -148,9 +156,7 @@ function collectMedia(
         });
       }
       for (const [mediaId, image] of Object.entries(postImages.media)) {
-        if (!post.media.some((media) => media.id === mediaId)) {
-          throw new ProjectArchiveError("project.invalidManifest");
-        }
+        if (!post.media.some((media) => media.id === mediaId)) continue;
         collected.push({
           image,
           reference: { kind: "photo-media", postId, mediaId },
@@ -158,9 +164,7 @@ function collectMedia(
       }
       const validCommentIds = commentIds(post.comments);
       for (const [itemId, image] of Object.entries(postImages.commentImages)) {
-        if (!validCommentIds.has(itemId)) {
-          throw new ProjectArchiveError("project.invalidManifest");
-        }
+        if (!validCommentIds.has(itemId)) continue;
         collected.push({
           image,
           reference: { kind: "photo-comment", postId, itemId },
@@ -171,7 +175,7 @@ function collectMedia(
     const messengerImages = images as MessengerImages;
     for (const [profileId, image] of Object.entries(messengerImages)) {
       if (!config.data.profiles.some((profile) => profile.id === profileId)) {
-        throw new ProjectArchiveError("project.invalidManifest");
+        continue;
       }
       collected.push({
         image,
@@ -182,7 +186,7 @@ function collectMedia(
     const microblogImages = images as MicroblogImages;
     for (const [postId, postImages] of Object.entries(microblogImages)) {
       const post = config.data.posts.find((candidate) => candidate.id === postId);
-      if (!post) throw new ProjectArchiveError("project.invalidManifest");
+      if (!post) continue;
       if (postImages.profileImage) {
         collected.push({
           image: postImages.profileImage,
@@ -191,9 +195,7 @@ function collectMedia(
       }
       const validCommentIds = commentIds(post.comments);
       for (const [itemId, image] of Object.entries(postImages.commentImages)) {
-        if (!validCommentIds.has(itemId)) {
-          throw new ProjectArchiveError("project.invalidManifest");
-        }
+        if (!validCommentIds.has(itemId)) continue;
         collected.push({
           image,
           reference: { kind: "microblog-comment", postId, itemId },
@@ -235,12 +237,9 @@ export async function createProjectArchive(
     if (totalSize > maxProjectSize) {
       throw new ProjectArchiveError("project.tooLarge");
     }
-    const extension =
-      optimized.type === "image/webp"
-        ? "webp"
-        : optimized.type === "image/png"
-          ? "png"
-          : null;
+    const extension = Object.keys(mediaTypeByExtension).find(
+      (candidate) => mediaTypeByExtension[candidate] === optimized.type,
+    );
     if (!extension) throw new ProjectArchiveError("project.saveFailed");
     const path = `media/${String(index + 1).padStart(4, "0")}.${extension}`;
     entries[path] = [
@@ -430,7 +429,12 @@ function parseManifest(bytes: Uint8Array): ProjectArchiveManifest {
 }
 
 function emptyImageMaps(): ProjectImageMaps {
-  return { photoPost: {}, messenger: {}, microblog: {} };
+  // Null-prototype maps: archive ids become keys here.
+  return {
+    photoPost: Object.create(null),
+    messenger: Object.create(null),
+    microblog: Object.create(null),
+  };
 }
 
 function installImage(
@@ -451,8 +455,8 @@ function installImage(
     if (!post) throw new ProjectArchiveError("project.invalidManifest");
     const postImages = result.photoPost[post.id] ?? {
       profileImage: null,
-      media: {},
-      commentImages: {},
+      media: Object.create(null),
+      commentImages: Object.create(null),
     };
     if (reference.kind === "photo-profile") {
       postImages.profileImage = image;
@@ -492,7 +496,7 @@ function installImage(
   if (!post) throw new ProjectArchiveError("project.invalidManifest");
   const postImages = result.microblog[post.id] ?? {
     profileImage: null,
-    commentImages: {},
+    commentImages: Object.create(null),
   };
   if (reference.kind === "microblog-profile") {
     postImages.profileImage = image;
@@ -582,9 +586,12 @@ export async function readProjectArchive(file: File): Promise<ProjectArchiveResu
       const mediaBytes = extracted[entry.path];
       if (!mediaBytes) throw new ProjectArchiveError("project.invalidManifest");
       const fileName = entry.originalFileName || entry.path.split("/").at(-1)!;
-      const mediaFile = new File([mediaBytes], fileName, {
-        type: entry.path.endsWith(".webp") ? "image/webp" : "image/png",
-      });
+      // Trust the bytes, not the name: the extension must match the content.
+      const type = detectImageType(mediaBytes.subarray(0, 12));
+      if (!type || type !== mediaTypeByExtension[entry.path.split(".").at(-1)!]) {
+        throw new ProjectArchiveError("project.invalidMedia");
+      }
+      const mediaFile = new File([mediaBytes], fileName, { type });
       if (await validateImageFile(mediaFile)) {
         throw new ProjectArchiveError("project.invalidMedia");
       }

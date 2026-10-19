@@ -112,6 +112,7 @@ export function CommentEditor({
                 id={`${idPrefix}-comment-image-${comment.id}`}
                 image={images[comment.id] ?? null}
                 label={t("common.profileImage")}
+                context={`${t("common.comment")} ${commentIndex + 1}`}
                 onChange={(image) => onImageChange(comment.id, image)}
                 onError={onImageError}
               />
@@ -189,6 +190,7 @@ export function CommentEditor({
                       id={`${idPrefix}-reply-image-${reply.id}`}
                       image={images[reply.id] ?? null}
                       label={t("common.profileImage")}
+                      context={`${t("common.comment")} ${commentIndex + 1}, ${t("common.reply")} ${replyIndex + 1}`}
                       onChange={(image) => onImageChange(reply.id, image)}
                       onError={onImageError}
                     />
