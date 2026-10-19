@@ -86,6 +86,18 @@ export default defineConfig({
           "**/jspdf*.js",
           "**/purify*.js",
         ],
+        // PDF libraries stay out of the install cache (size) but are kept
+        // after first use, so PDF export also works offline from then on.
+        runtimeCaching: [
+          {
+            urlPattern: /\/assets\/(?:jspdf|html2canvas|purify)[^/]*\.js$/,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "pdf-libs",
+              expiration: { maxEntries: 10 },
+            },
+          },
+        ],
         navigateFallback: "/index.html",
         cleanupOutdatedCaches: true,
         clientsClaim: true,

@@ -121,9 +121,14 @@ export function useSessionPersistence(config: SessionPersistenceConfig) {
   });
   const timerRef = useRef<number | null>(null);
   const pendingModulesRef = useRef<Set<ModuleType>>(new Set());
-  const persistRef = useRef<(modules: ModuleType[]) => Promise<void>>(
-    async () => undefined,
-  );
+  const persistRef = useRef<
+    (modules: ModuleType[], generation: number) => Promise<void>
+  >(async () => undefined);
+  // Saves run one at a time so an older, slower save can never land after a
+  // newer one. clearSession bumps the generation so in-flight saves stop
+  // before writing anything back.
+  const queueRef = useRef<Promise<void>>(Promise.resolve());
+  const generationRef = useRef(0);
 
   function seedCurrentSignatures() {
     for (const module of MODULES) {
@@ -135,16 +140,32 @@ export function useSessionPersistence(config: SessionPersistenceConfig) {
     }
   }
 
-  const schedulePersist = useCallback((modules: ModuleType[]) => {
-    if (!hydratedRef.current) return;
-    modules.forEach((module) => pendingModulesRef.current.add(module));
+  const flushPendingSave = useCallback(() => {
     if (timerRef.current) window.clearTimeout(timerRef.current);
-    timerRef.current = window.setTimeout(() => {
-      const pending = Array.from(pendingModulesRef.current);
-      pendingModulesRef.current.clear();
-      void persistRef.current(pending);
-    }, SAVE_DEBOUNCE_MS);
+    timerRef.current = null;
+    const pending = Array.from(pendingModulesRef.current);
+    pendingModulesRef.current.clear();
+    if (pending.length > 0) {
+      const generation = generationRef.current;
+      queueRef.current = queueRef.current
+        .then(() => persistRef.current(pending, generation))
+        .catch(() => undefined);
+    }
+    return queueRef.current;
   }, []);
+
+  const schedulePersist = useCallback(
+    (modules: ModuleType[]) => {
+      if (!hydratedRef.current) return;
+      modules.forEach((module) => pendingModulesRef.current.add(module));
+      if (timerRef.current) window.clearTimeout(timerRef.current);
+      timerRef.current = window.setTimeout(
+        () => void flushPendingSave(),
+        SAVE_DEBOUNCE_MS,
+      );
+    },
+    [flushPendingSave],
+  );
 
   function cancelPendingSessionRestore() {
     restoreTokenRef.current += 1;
@@ -184,7 +205,7 @@ export function useSessionPersistence(config: SessionPersistenceConfig) {
               applyModule(configRef.current, module, parsed.data, images);
               lastSigRef.current[module] = signature(
                 parsed.data,
-                imagesFor(configRef.current, module),
+                images[module],
                 parsed.locale,
               );
             } catch {
@@ -259,6 +280,20 @@ export function useSessionPersistence(config: SessionPersistenceConfig) {
     schedulePersist(MODULES);
   }, [config.locale, schedulePersist]);
 
+  // Don't lose the last second of edits when the tab is hidden or closed.
+  useEffect(() => {
+    const flushIfHidden = () => {
+      if (document.visibilityState === "hidden") void flushPendingSave();
+    };
+    const flush = () => void flushPendingSave();
+    document.addEventListener("visibilitychange", flushIfHidden);
+    window.addEventListener("pagehide", flush);
+    return () => {
+      document.removeEventListener("visibilitychange", flushIfHidden);
+      window.removeEventListener("pagehide", flush);
+    };
+  }, [flushPendingSave]);
+
   // Remember the open module so a reload returns to the same tab.
   useEffect(() => {
     if (!hydratedRef.current) return;
@@ -269,10 +304,12 @@ export function useSessionPersistence(config: SessionPersistenceConfig) {
     }
   }, [config.activeModule]);
 
-  async function persist(modules: ModuleType[]) {
+  async function persist(modules: ModuleType[], generation: number) {
     const current = configRef.current;
+    const isCurrent = () => generation === generationRef.current;
     let archiveTools: typeof import("../shared/lib/projectArchives") | null = null;
     for (const module of modules) {
+      if (!isCurrent()) return;
       const state = stateFor(current, module);
       const images = imagesFor(current, module);
       const sig = signature(state, images, current.locale);
@@ -288,9 +325,10 @@ export function useSessionPersistence(config: SessionPersistenceConfig) {
             current.locale,
             images,
           );
+          if (!isCurrent()) return;
           await putSessionSnapshot(module, blob);
         }
-        lastSigRef.current[module] = sig;
+        if (isCurrent()) lastSigRef.current[module] = sig;
       } catch {
         // Save failed (e.g. too large). Leave the signature so we retry on the
         // next change rather than silently giving up.
@@ -300,7 +338,12 @@ export function useSessionPersistence(config: SessionPersistenceConfig) {
   persistRef.current = persist;
 
   async function clearSession() {
+    generationRef.current += 1;
     if (timerRef.current) window.clearTimeout(timerRef.current);
+    timerRef.current = null;
+    pendingModulesRef.current.clear();
+    // Let a save that is already writing finish, then wipe it.
+    await queueRef.current;
     await clearSessionSnapshots().catch(() => undefined);
     try {
       localStorage.removeItem(ACTIVE_MODULE_KEY);
@@ -308,7 +351,7 @@ export function useSessionPersistence(config: SessionPersistenceConfig) {
       // ignore
     }
     lastSigRef.current = { photoPost: "", messenger: "", microblog: "" };
-    }
+  }
 
-  return { cancelPendingSessionRestore, clearSession };
+  return { cancelPendingSessionRestore, clearSession, flushPendingSave };
 }

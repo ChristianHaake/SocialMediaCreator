@@ -2,9 +2,8 @@ name: CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "stage" ]
   pull_request:
-    branches: [ "main" ]
 
 permissions:
   contents: read
@@ -35,10 +34,14 @@ jobs:
       run: npm run build
       
     - name: Install Playwright browsers
-      run: npx playwright install --with-deps chromium
+      run: npx playwright install --with-deps chromium webkit
       
-    - name: Run E2E tests
+    - name: Run E2E tests (Chromium)
       run: npm run test:e2e:chromium
+
+    # Several past export bugs were WebKit-only (Safari, iPad).
+    - name: Run E2E tests (WebKit)
+      run: npx playwright test --project=webkit
       
     - name: Upload Playwright report
       if: always()

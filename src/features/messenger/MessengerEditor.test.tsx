@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { fieldLimits } from "../../domain/constraints";
 import { defaultMessenger, type MessengerState } from "../../domain/types";
@@ -54,5 +54,44 @@ describe("MessengerEditor", () => {
       screen.getByText(/maximum of 200 messages|maximal 200 nachrichten/i),
     ).toBeVisible();
     expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("sends from a current profile after the profiles were replaced", () => {
+    const onChange = vi.fn();
+    const editor = (value: MessengerState) => (
+      <LocaleProvider>
+        <MessengerEditor
+          images={{}}
+          onChange={onChange}
+          onImageError={() => undefined}
+          onProfileImageChange={() => undefined}
+          value={value}
+        />
+      </LocaleProvider>
+    );
+    const { container, rerender } = render(editor(defaultMessenger));
+    // A loaded project brings profiles with other ids.
+    const loaded: MessengerState = {
+      ...defaultMessenger,
+      profiles: defaultMessenger.profiles.map((profile, index) => ({
+        ...profile,
+        id: `loaded-${index}`,
+      })) as MessengerState["profiles"],
+    };
+    rerender(editor(loaded));
+
+    const composer = within(
+      container.querySelector<HTMLElement>(".message-composer")!,
+    );
+    fireEvent.change(
+      composer.getByPlaceholderText(
+        /what should the message say|was soll in der nachricht stehen/i,
+      ),
+      { target: { value: "Hallo" } },
+    );
+    fireEvent.click(composer.getByRole("button", { name: /add|hinzufügen/i }));
+
+    const next = onChange.mock.calls[0][0](loaded) as MessengerState;
+    expect(next.messages.at(-1)?.senderId).toBe("loaded-0");
   });
 });

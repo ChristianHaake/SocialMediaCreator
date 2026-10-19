@@ -36,6 +36,7 @@ function stubBitmap(width: number, height: number) {
 function stubCanvas(blob: Blob) {
   vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
     drawImage: vi.fn(),
+    fillRect: vi.fn(),
   } as unknown as CanvasRenderingContext2D);
   vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation(function (
     this: HTMLCanvasElement,
@@ -255,5 +256,59 @@ describe("prepareImageForUpload", () => {
     await expect(prepareImageForUpload(file)).resolves.toEqual({
       error: "image.tooLarge",
     });
+  });
+});
+
+// Headers that declare 40000x40000 pixels in a few hundred bytes.
+const be32 = (n: number) => [(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255];
+const le16 = (n: number) => [n & 255, (n >>> 8) & 255];
+const le24 = (n: number) => [n & 255, (n >>> 8) & 255, (n >>> 16) & 255];
+const ascii = (text: string) => [...text].map((char) => char.charCodeAt(0));
+const BOMB = 40000;
+const bombHeaders: Record<string, number[]> = {
+  png: [...PNG_SIGNATURE, 0, 0, 0, 13, ...ascii("IHDR"), ...be32(BOMB), ...be32(BOMB), 8, 6, 0, 0, 0],
+  jpeg: [
+    0xff, 0xd8,
+    // APP0 segment the parser has to skip.
+    0xff, 0xe0, 0x00, 0x10, ...new Array(14).fill(0),
+    0xff, 0xc0, 0x00, 0x11, 0x08, BOMB >> 8, BOMB & 255, BOMB >> 8, BOMB & 255, 3,
+    ...new Array(9).fill(0),
+  ],
+  webp: [...ascii("RIFF"), 0, 0, 0, 0, ...ascii("WEBP"), ...ascii("VP8X"), 10, 0, 0, 0, 0, 0, 0, 0, ...le24(BOMB - 1), ...le24(BOMB - 1)],
+  gif: [...ascii("GIF89a"), ...le16(BOMB), ...le16(BOMB), 0, 0, 0],
+};
+
+describe("decompression bombs", () => {
+  for (const [format, header] of Object.entries(bombHeaders)) {
+    it(`rejects a ${format} declaring ${BOMB} px before decoding it`, async () => {
+      // A decode would report a harmless size; the header must win first.
+      stubBitmap(10, 10);
+      const file = new File([new Uint8Array(header)], `bomb.${format}`);
+
+      await expect(prepareImageForUpload(file)).resolves.toEqual({
+        error: "image.tooLargeToProcess",
+      });
+      if (format !== "gif") {
+        await expect(validateImageFile(file)).resolves.toBe("image.tooManyPixels");
+      }
+      expect(globalThis.createImageBitmap).not.toHaveBeenCalled();
+    });
+  }
+});
+
+describe("WebP fallback", () => {
+  it("re-encodes as JPEG when the browser cannot write WebP (Safari)", async () => {
+    stubBitmap(3000, 3000);
+    const png = new Blob([new Uint8Array(10)], { type: "image/png" });
+    const jpeg = new Blob([new Uint8Array(10)], { type: "image/jpeg" });
+    stubCanvas(png);
+    vi.mocked(HTMLCanvasElement.prototype.toBlob).mockImplementation(
+      (callback: BlobCallback, type?: string) =>
+        callback(type === "image/jpeg" ? jpeg : png),
+    );
+
+    const result = await prepareImageForUpload(pngFile("big.png"));
+
+    expect("image" in result && result.image.blob).toBe(jpeg);
   });
 });

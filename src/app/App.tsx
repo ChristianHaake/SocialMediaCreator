@@ -96,30 +96,33 @@ function AppContent() {
   );
   const previewRef = useRef<HTMLDivElement>(null);
   const configInputRef = useRef<HTMLInputElement>(null);
+  // Filled in below once the save and export hooks exist.
+  const beforeAppReload = useRef<() => Promise<void>>(async () => undefined);
   const {
     refreshApp,
     resetAppVersion,
     updateAvailable,
-  } = usePwaUpdate();
+  } = usePwaUpdate({ beforeReload: () => beforeAppReload.current() });
 
-  const { cancelPendingSessionRestore, clearSession } = useSessionPersistence({
-    locale,
-    activeModule,
-    setActiveModule,
-    photoPost,
-    messenger,
-    microblog,
-    setPhotoPost,
-    setMessenger,
-    setMicroblog,
-    initialPhotoPost,
-    initialMessenger,
-    initialMicroblog,
-    photoImages,
-    messengerImages,
-    microblogImages,
-    replaceModuleImages,
-  });
+  const { cancelPendingSessionRestore, clearSession, flushPendingSave } =
+    useSessionPersistence({
+      locale,
+      activeModule,
+      setActiveModule,
+      photoPost,
+      messenger,
+      microblog,
+      setPhotoPost,
+      setMessenger,
+      setMicroblog,
+      initialPhotoPost,
+      initialMessenger,
+      initialMicroblog,
+      photoImages,
+      messengerImages,
+      microblogImages,
+      replaceModuleImages,
+    });
 
   const {
     projectOperation,
@@ -162,12 +165,17 @@ function AppContent() {
     requestExport,
     confirmExport,
     cancelExport,
+    waitForExport,
   } = useExportController({
     previewRef,
     activeModule,
     locale,
     t,
   });
+  beforeAppReload.current = async () => {
+    await waitForExport();
+    await flushPendingSave();
+  };
   const moduleTabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const pathname =
     window.location.pathname.length > 1

@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent, type MutableRefObject } from "react";
+import { useRef, useState, type ChangeEvent, type MutableRefObject } from "react";
 import type { ModuleType, PhotoPostState, MessengerState, MicroblogState, PhotoPostImages, MessengerImages, MicroblogImages } from "../domain/types";
 import { ConfigFileError, readConfigFile } from "../shared/lib/configFiles";
 import type { ProjectArchiveResult, ProjectImageMaps } from "../shared/lib/projectArchives";
@@ -55,6 +55,10 @@ function getProjectErrorCode(error: unknown): TranslationKey | null {
 export function useProjectStorage(config: ProjectStorageConfig) {
   const [projectOperation, setProjectOperation] = useState<ProjectOperation>(null);
   const [configStatus, setConfigStatus] = useState<ConfigStatus | null>(null);
+  // Reading an archive can take seconds; decisions after it must see the
+  // editor state as it is then, not as it was when the file was picked.
+  const latestConfig = useRef(config);
+  latestConfig.current = config;
 
   async function handleProjectDownload() {
     if (projectOperation) return;
@@ -131,7 +135,7 @@ export function useProjectStorage(config: ProjectStorageConfig) {
       const importedConfig = archiveResult?.config ?? (await readConfigFile(file));
       
       if (
-        config.isModuleChanged(importedConfig.module) &&
+        latestConfig.current.isModuleChanged(importedConfig.module) &&
         !window.confirm(config.t("app.loadConfirm"))
       ) {
         if (archiveResult) disposeImportedImages?.(archiveResult.images);

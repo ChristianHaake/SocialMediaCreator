@@ -87,4 +87,48 @@ describe("usePwaUpdate", () => {
 
     expect(reload).not.toHaveBeenCalled();
   });
+
+  it("waits for pending work before reloading for a new version", async () => {
+    const { listeners, serviceWorker } = createServiceWorker();
+    const reload = vi.fn();
+    let finishWork: () => void = () => undefined;
+    const beforeReload = vi.fn(
+      () => new Promise<void>((resolve) => (finishWork = resolve)),
+    );
+
+    renderHook(() =>
+      usePwaUpdate({
+        register: vi.fn(() => vi.fn()) as never,
+        reload,
+        serviceWorker,
+        beforeReload,
+      }),
+    );
+
+    act(() => listeners.get("controllerchange")?.(new Event("controllerchange")));
+    expect(beforeReload).toHaveBeenCalledOnce();
+    expect(reload).not.toHaveBeenCalled();
+
+    await act(async () => finishWork());
+    expect(reload).toHaveBeenCalledOnce();
+  });
+
+  it("still reloads when the pending work fails", async () => {
+    const { listeners, serviceWorker } = createServiceWorker();
+    const reload = vi.fn();
+
+    renderHook(() =>
+      usePwaUpdate({
+        register: vi.fn(() => vi.fn()) as never,
+        reload,
+        serviceWorker,
+        beforeReload: () => Promise.reject(new Error("save failed")),
+      }),
+    );
+
+    await act(async () =>
+      listeners.get("controllerchange")?.(new Event("controllerchange")),
+    );
+    expect(reload).toHaveBeenCalledOnce();
+  });
 });

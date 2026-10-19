@@ -39,6 +39,10 @@ export function MessengerEditor({
     timestamp: "10:00",
     seen: false,
   });
+  // A loaded project can bring profiles with other ids than the draft knows.
+  const senderId = value.profiles.some((profile) => profile.id === draft.senderId)
+    ? draft.senderId
+    : value.profiles[0].id;
 
   function updateProfile(
     id: string,
@@ -75,7 +79,12 @@ export function MessengerEditor({
       ...current,
       messages: [
         ...current.messages,
-        { ...draft, id: createId("message"), text: draft.text.trim() },
+        {
+          ...draft,
+          id: createId("message"),
+          senderId,
+          text: draft.text.trim(),
+        },
       ],
     }));
     setDraft((current) => ({ ...current, text: "" }));
@@ -199,7 +208,7 @@ export function MessengerEditor({
                     senderId: event.target.value,
                   }))
                 }
-                value={draft.senderId}
+                value={senderId}
               >
                 {value.profiles.map((profile) => (
                   <option key={profile.id} value={profile.id}>
