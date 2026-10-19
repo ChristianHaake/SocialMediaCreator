@@ -59,7 +59,8 @@ function write(
           db.close();
           resolve();
         };
-        transaction.onerror = () => {
+        // Aborts (e.g. QuotaExceededError on commit) may fire without onerror.
+        transaction.onerror = transaction.onabort = () => {
           db.close();
           reject(transaction.error ?? new Error("IndexedDB write failed"));
         };
@@ -108,7 +109,7 @@ export async function getSessionSnapshots(): Promise<
           };
         }
         transaction.oncomplete = () => resolve(out);
-        transaction.onerror = () =>
+        transaction.onerror = transaction.onabort = () =>
           reject(transaction.error ?? new Error("IndexedDB read failed"));
       },
     );

@@ -25,6 +25,7 @@ export function AppFooter() {
           <a href="/impressum">{t("footer.legal")}</a>
         </nav>
         <a
+          aria-label={t("footer.coffee")}
           className="app-footer__coffee"
           href="https://buymeacoffee.com/Haake"
           rel="noreferrer"
