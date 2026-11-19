@@ -18,7 +18,25 @@ export function ContentPage({ content, title }: ContentPageProps) {
       </a>
       <article className="markdown-page">
         <h1>{title}</h1>
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          components={{
+            a: ({ children, href, node, ...props }) => {
+              void node;
+              return href?.startsWith("http") ? (
+                <a {...props} href={href} rel="noopener noreferrer" target="_blank">
+                  {children}
+                </a>
+              ) : (
+                <a {...props} href={href}>
+                  {children}
+                </a>
+              );
+            },
+          }}
+        >
+          {content}
+        </ReactMarkdown>
       </article>
     </main>
   );

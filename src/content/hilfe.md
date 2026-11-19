@@ -58,3 +58,7 @@ versuche es erneut. Unterstützt werden aktuelle Versionen moderner Browser.
 Technische Fehler können im
 [GitHub-Repository](https://github.com/ChristianHaake/SocialMediaCreator/issues)
 gemeldet werden.
+
+Für Fehler oder Ideen zu neuen Funktionen kannst du außerdem App, Gerät und den
+letzten Arbeitsschritt an [apps@haak3.de](mailto:apps@haak3.de) senden. Bitte
+schicke keine Projekt- oder Personendaten mit.

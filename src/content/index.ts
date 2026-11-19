@@ -12,6 +12,8 @@ import aboutEn from "./en/about.md?raw";
 import educatorsEn from "./en/educators.md?raw";
 import responsibleEn from "./en/responsible-use.md?raw";
 import termsEn from "./en/terms.md?raw";
+import supportDe from "./unterstuetzung.md?raw";
+import supportEn from "./en/support.md?raw";
 
 export const contentPages = {
   de: {
@@ -26,9 +28,10 @@ export const contentPages = {
       content: verantwortungsvoll,
     },
     "/nutzungsbedingungen": {
-      title: "Nutzungsbedingungen",
+      title: "AGB",
       content: nutzungsbedingungen,
     },
+    "/unterstuetzung": { title: "Unterstützen", content: supportDe },
     "/datenschutz": { title: "Datenschutz", content: datenschutz },
     "/impressum": { title: "Impressum", content: impressum },
   },
@@ -44,6 +47,7 @@ export const contentPages = {
       content: responsibleEn,
     },
     "/nutzungsbedingungen": { title: "Terms of use", content: termsEn },
+    "/unterstuetzung": { title: "Support", content: supportEn },
     "/datenschutz": { title: "Privacy", content: privacyEn },
     "/impressum": { title: "Legal notice", content: legalEn },
   },

@@ -44,3 +44,9 @@ authenticity.
 
 Use fictional names, content, and metrics. Do not upload private chats, photos
 of uninvolved people, or other personal data.
+
+## Report an error or idea
+
+For errors or feature ideas, send the app, device and last step to
+[apps@haak3.de](mailto:apps@haak3.de). Please do not include project or personal
+data.

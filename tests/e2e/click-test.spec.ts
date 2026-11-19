@@ -37,6 +37,7 @@ test("General app controls, translations, and static page navigation", async ({ 
   const enButton = page.getByRole("button", { name: "EN", exact: true });
   await enButton.click();
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await expect(page.getByRole("contentinfo").getByRole("link", { name: "Terms of use", exact: true })).toBeVisible();
 
   // Switch back to German
   const deButton = page.getByRole("button", { name: "DE", exact: true });
@@ -64,7 +65,8 @@ test("General app controls, translations, and static page navigation", async ({ 
     { name: "Hilfe", header: "Hilfe" },
     { name: "Über das Projekt", header: "Über das Projekt" },
     { name: "Verantwortungsvoller Einsatz", header: "Verantwortungsvoller Einsatz" },
-    { name: "Nutzungsbedingungen", header: "Nutzungsbedingungen" },
+    { name: "AGB", header: "AGB" },
+    { name: "Spendier mir einen Kaffee", header: "Unterstützen" },
     { name: "Bild verifizieren", header: "Bild verifizieren" },
     { name: "Datenschutz", header: "Datenschutz" },
     { name: "Impressum", header: "Impressum" },
@@ -80,6 +82,29 @@ test("General app controls, translations, and static page navigation", async ({ 
     await backLink.click();
     await expect(page.locator(".intro h1")).toBeVisible();
   }
+});
+
+test("help and support expose a safe feedback mail link", async ({ page }) => {
+  for (const path of ["/hilfe", "/unterstuetzung"]) {
+    await page.goto(path);
+    await expect(page.getByRole("link", { name: "apps@haak3.de", exact: true })).toHaveAttribute(
+      "href",
+      "mailto:apps@haak3.de",
+    );
+  }
+  await page.goto("/unterstuetzung");
+  await expect(page.getByRole("link", { name: "Kaffee spendieren", exact: true })).toHaveAttribute(
+    "href",
+    "https://buymeacoffee.com/Haake",
+  );
+  await expect(page.getByRole("link", { name: "Kaffee spendieren", exact: true })).toHaveAttribute(
+    "target",
+    "_blank",
+  );
+  await expect(page.getByRole("link", { name: "Kaffee spendieren", exact: true })).toHaveAttribute(
+    "rel",
+    "noopener noreferrer",
+  );
 });
 
 test("Photo-Post editor detailed interaction flow", async ({ page }) => {
