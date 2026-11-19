@@ -26,9 +26,7 @@ export function AppFooter() {
         </nav>
         <a
           className="app-footer__coffee"
-          href="https://buymeacoffee.com/Haake"
-          rel="noreferrer"
-          target="_blank"
+          href="/unterstuetzung"
         >
           <Coffee aria-hidden="true" size={16} />
           <span>{t("footer.coffee")}</span>
