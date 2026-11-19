@@ -35,8 +35,12 @@ The application is provided without a guarantee of availability or suitability
 for a particular purpose. Educational and legal information does not replace
 case-specific advice.
 
+## Contact
+
+Questions about this application: [apps@haak3.de](mailto:apps@haak3.de)
+
 ## Governing version
 
 If translations differ, the German version governs.
 
-Last updated: June 12, 2026
+Last updated: November 19, 2026

@@ -5,7 +5,7 @@ Alte Ziegelei 7
 26197 Großenkneten  
 Deutschland
 
-E-Mail: [christianhaake@gmail.com](mailto:christianhaake@gmail.com)
+E-Mail: [apps@haak3.de](mailto:apps@haak3.de)
 
 ## Inhaltlich verantwortlich gemäß § 18 Abs. 2 MStV
 
@@ -18,4 +18,4 @@ Deutschland
 
 [github.com/ChristianHaake/SocialMediaCreator](https://github.com/ChristianHaake/SocialMediaCreator)
 
-Stand: 12. Juni 2026
+Stand: 19. November 2026

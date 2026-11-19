@@ -84,10 +84,10 @@ test("General app controls, translations, and static page navigation", async ({ 
   }
 });
 
-test("help and support expose a safe feedback mail link", async ({ page }) => {
-  for (const path of ["/hilfe", "/unterstuetzung"]) {
+test("content pages expose the shared feedback mail link", async ({ page }) => {
+  for (const path of ["/hilfe", "/unterstuetzung", "/datenschutz", "/impressum", "/nutzungsbedingungen"]) {
     await page.goto(path);
-    await expect(page.getByRole("link", { name: "apps@haak3.de", exact: true })).toHaveAttribute(
+    await expect(page.getByRole("link", { name: "apps@haak3.de", exact: true }).first()).toHaveAttribute(
       "href",
       "mailto:apps@haak3.de",
     );
