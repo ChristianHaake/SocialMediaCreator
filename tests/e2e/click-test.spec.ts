@@ -96,6 +96,14 @@ test("help and support expose a safe feedback mail link", async ({ page }) => {
     "href",
     "https://buymeacoffee.com/Haake",
   );
+  await expect(page.getByRole("link", { name: "Kaffee spendieren", exact: true })).toHaveAttribute(
+    "target",
+    "_blank",
+  );
+  await expect(page.getByRole("link", { name: "Kaffee spendieren", exact: true })).toHaveAttribute(
+    "rel",
+    "noopener noreferrer",
+  );
 });
 
 test("Photo-Post editor detailed interaction flow", async ({ page }) => {
