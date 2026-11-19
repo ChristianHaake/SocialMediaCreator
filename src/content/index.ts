@@ -28,7 +28,7 @@ export const contentPages = {
       content: verantwortungsvoll,
     },
     "/nutzungsbedingungen": {
-      title: "Nutzungsbedingungen",
+      title: "AGB",
       content: nutzungsbedingungen,
     },
     "/unterstuetzung": { title: "Unterstützen", content: supportDe },

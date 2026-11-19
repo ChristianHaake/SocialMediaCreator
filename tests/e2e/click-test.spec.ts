@@ -37,6 +37,7 @@ test("General app controls, translations, and static page navigation", async ({ 
   const enButton = page.getByRole("button", { name: "EN", exact: true });
   await enButton.click();
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await expect(page.getByRole("contentinfo").getByRole("link", { name: "Terms of use", exact: true })).toBeVisible();
 
   // Switch back to German
   const deButton = page.getByRole("button", { name: "DE", exact: true });
@@ -64,7 +65,7 @@ test("General app controls, translations, and static page navigation", async ({ 
     { name: "Hilfe", header: "Hilfe" },
     { name: "Über das Projekt", header: "Über das Projekt" },
     { name: "Verantwortungsvoller Einsatz", header: "Verantwortungsvoller Einsatz" },
-    { name: "Nutzungsbedingungen", header: "Nutzungsbedingungen" },
+    { name: "AGB", header: "AGB" },
     { name: "Spendier mir einen Kaffee", header: "Unterstützen" },
     { name: "Bild verifizieren", header: "Bild verifizieren" },
     { name: "Datenschutz", header: "Datenschutz" },

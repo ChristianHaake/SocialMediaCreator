@@ -247,7 +247,7 @@ export const de = {
   "footer.verify": "Bild verifizieren",
   "footer.educators": "Hinweise für Lehrkräfte",
   "footer.responsible": "Verantwortungsvoller Einsatz",
-  "footer.terms": "Nutzungsbedingungen",
+  "footer.terms": "AGB",
   "footer.privacy": "Datenschutz",
   "footer.legal": "Impressum",
   "footer.coffee": "Spendier mir einen Kaffee",
