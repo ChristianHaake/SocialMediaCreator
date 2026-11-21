@@ -17,6 +17,7 @@ import {
   Suspense,
 } from "react";
 import { AppFooter } from "./components/AppFooter";
+import { ContactPage } from "./components/ContactPage";
 import { AppHeader } from "./components/AppHeader";
 import { EducationNotice } from "./components/EducationNotice";
 import { ExportNoticeDialog } from "./components/ExportNoticeDialog";
@@ -431,6 +432,8 @@ function AppContent() {
         <Suspense fallback={null}>
           <VerificationPage />
         </Suspense>
+      ) : pathname === "/kontakt" ? (
+        <ContactPage />
       ) : pathname !== "/" ? (
         <Suspense fallback={null}>
           <ContentRoute pathname={pathname} />

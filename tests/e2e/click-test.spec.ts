@@ -63,6 +63,7 @@ test("General app controls, translations, and static page navigation", async ({ 
   // Footer Navigation: visit internal pages
   const footerPages = [
     { name: "Hilfe", header: "Hilfe" },
+    { name: "Kontakt", header: "Kontakt" },
     { name: "Über das Projekt", header: "Über das Projekt" },
     { name: "Verantwortungsvoller Einsatz", header: "Verantwortungsvoller Einsatz" },
     { name: "AGB", header: "AGB" },
@@ -81,6 +82,20 @@ test("General app controls, translations, and static page navigation", async ({ 
     const backLink = page.getByRole("link", { name: "Zurück zur App", exact: true });
     await backLink.click();
     await expect(page.locator(".intro h1")).toBeVisible();
+  }
+});
+
+test("contact page exposes safe creator social links", async ({ page }) => {
+  await page.goto("/kontakt");
+  for (const [name, href] of [
+    ["LinkedIn", "https://www.linkedin.com/in/christianhaake/"],
+    ["Instagram", "https://www.instagram.com/_haake/"],
+    ["Threads", "https://www.threads.com/@_haake"],
+  ]) {
+    const link = page.getByRole("link", { name, exact: true });
+    await expect(link).toHaveAttribute("href", href);
+    await expect(link).toHaveAttribute("target", "_blank");
+    await expect(link).toHaveAttribute("rel", "noopener noreferrer");
   }
 });
 
