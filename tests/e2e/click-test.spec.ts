@@ -107,6 +107,21 @@ test("content pages expose the shared feedback mail link", async ({ page }) => {
   );
 });
 
+test("help and support link safely to the creator feedback forms", async ({ page }) => {
+  for (const path of ["/hilfe", "/unterstuetzung"]) {
+    await page.goto(path);
+    for (const [name, href] of [
+      ["Fehler melden", "https://haak3.atlassian.net/jira/software/form/69a50efc-0474-445e-8f01-66eb6b747cc1"],
+      ["Funktion vorschlagen", "https://haak3.atlassian.net/jira/software/form/50d4fc51-bff4-4e21-b46e-8fd987b90d24"],
+    ]) {
+      const link = page.getByRole("link", { name, exact: true });
+      await expect(link).toHaveAttribute("href", href);
+      await expect(link).toHaveAttribute("target", "_blank");
+      await expect(link).toHaveAttribute("rel", "noopener noreferrer");
+    }
+  }
+});
+
 test("Photo-Post editor detailed interaction flow", async ({ page }) => {
   await page.goto("/");
 
