@@ -5,7 +5,7 @@ Alte Ziegelei 7
 26197 Großenkneten  
 Germany
 
-Email: [christianhaake@gmail.com](mailto:christianhaake@gmail.com)
+Email: [apps@haak3.de](mailto:apps@haak3.de)
 
 ## 2. Local processing of user content
 
@@ -81,9 +81,8 @@ Subject to statutory requirements, data subjects have rights including access,
 rectification, erasure, restriction, portability, and objection. They may also
 complain to a data-protection authority.
 
-Requests can be sent to
-[christianhaake@gmail.com](mailto:christianhaake@gmail.com).
+Requests can be sent to [apps@haak3.de](mailto:apps@haak3.de).
 
 The German version is authoritative. This translation is not legal advice.
 
-Last updated: June 12, 2026
+Last updated: November 19, 2026
