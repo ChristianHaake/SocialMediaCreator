@@ -86,6 +86,15 @@ test("General app controls, translations, and static page navigation", async ({ 
 });
 
 test("contact page exposes safe creator social links", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  await page.goto("/");
+  await openSection(page, "Inhalt und Reaktionen");
+  const caption = page.getByLabel("Beschreibung", { exact: true });
+  await caption.fill("Entwurf vor Kontakt");
+  await page.getByRole("contentinfo").getByRole("link", { name: "Kontakt", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Kontakt", exact: true })).toBeVisible();
+  await page.goBack();
+  await expect(caption).toHaveValue("Entwurf vor Kontakt");
   await page.goto("/kontakt");
   for (const [name, href] of [
     ["LinkedIn", "https://www.linkedin.com/in/christianhaake/"],

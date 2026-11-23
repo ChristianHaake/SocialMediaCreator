@@ -20,8 +20,10 @@ on the device and are not sent to the operator.
 ## 3. Local storage
 
 The application uses `localStorage` to retain the selected language and
-confirmation of the export notice on the device. The application does not send
-these values to the operator. They can be removed through browser controls.
+confirmation of the export notice on the device. IndexedDB stores the current
+session, including selected images, so work can be restored after a reload.
+You can remove the saved session using **Clear saved data** or by
+clearing the site's data in your browser.
 
 ## 4. Delivery through Cloudflare
 
