@@ -5,7 +5,7 @@ Alte Ziegelei 7
 26197 Großenkneten  
 Deutschland
 
-E-Mail: [christianhaake@gmail.com](mailto:christianhaake@gmail.com)
+E-Mail: [apps@haak3.de](mailto:apps@haak3.de)
 
 ## 2. Lokale Verarbeitung von Nutzinhalten
 
@@ -91,7 +91,6 @@ insbesondere Rechte auf Auskunft, Berichtigung, Löschung, Einschränkung der
 Verarbeitung, Datenübertragbarkeit und Widerspruch. Außerdem besteht ein
 Beschwerderecht bei einer Datenschutzaufsichtsbehörde.
 
-Anfragen können an
-[christianhaake@gmail.com](mailto:christianhaake@gmail.com) gerichtet werden.
+Anfragen können an [apps@haak3.de](mailto:apps@haak3.de) gerichtet werden.
 
-Stand: 12. Juni 2026
+Stand: 19. November 2026

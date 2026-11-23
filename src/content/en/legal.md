@@ -5,7 +5,7 @@ Alte Ziegelei 7
 26197 Großenkneten  
 Germany
 
-Email: [christianhaake@gmail.com](mailto:christianhaake@gmail.com)
+Email: [apps@haak3.de](mailto:apps@haak3.de)
 
 ## Editorial responsibility under Section 18(2) MStV
 
@@ -20,4 +20,4 @@ Germany
 
 The German version is authoritative. This translation is not legal advice.
 
-Last updated: June 12, 2026
+Last updated: November 19, 2026

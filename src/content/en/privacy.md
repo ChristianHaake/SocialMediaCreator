@@ -5,7 +5,7 @@ Alte Ziegelei 7
 26197 Großenkneten  
 Germany
 
-Email: [christianhaake@gmail.com](mailto:christianhaake@gmail.com)
+Email: [apps@haak3.de](mailto:apps@haak3.de)
 
 ## 2. Local processing of user content
 
@@ -20,8 +20,10 @@ on the device and are not sent to the operator.
 ## 3. Local storage
 
 The application uses `localStorage` to retain the selected language and
-confirmation of the export notice on the device. The application does not send
-these values to the operator. They can be removed through browser controls.
+confirmation of the export notice on the device. IndexedDB stores the current
+session, including selected images, so work can be restored after a reload.
+You can remove the saved session using **Clear saved data** or by
+clearing the site's data in your browser.
 
 ## 4. Delivery through Cloudflare
 
@@ -81,9 +83,8 @@ Subject to statutory requirements, data subjects have rights including access,
 rectification, erasure, restriction, portability, and objection. They may also
 complain to a data-protection authority.
 
-Requests can be sent to
-[christianhaake@gmail.com](mailto:christianhaake@gmail.com).
+Requests can be sent to [apps@haak3.de](mailto:apps@haak3.de).
 
 The German version is authoritative. This translation is not legal advice.
 
-Last updated: June 12, 2026
+Last updated: November 19, 2026

@@ -12,11 +12,13 @@ import {
 import {
   type KeyboardEvent,
   lazy,
+  useEffect,
   useRef,
   useState,
   Suspense,
 } from "react";
 import { AppFooter } from "./components/AppFooter";
+import { ContactPage } from "./components/ContactPage";
 import { AppHeader } from "./components/AppHeader";
 import { EducationNotice } from "./components/EducationNotice";
 import { ExportNoticeDialog } from "./components/ExportNoticeDialog";
@@ -169,10 +171,21 @@ function AppContent() {
     t,
   });
   const moduleTabRefs = useRef<Array<HTMLButtonElement | null>>([]);
-  const pathname =
-    window.location.pathname.length > 1
-      ? window.location.pathname.replace(/\/+$/, "")
-      : "/";
+  const [path, setPath] = useState(() => window.location.pathname);
+  const pathname = path.replace(/\/+$/, "") || "/";
+  const routeStart = useRef<HTMLDivElement>(null);
+  const previousPath = useRef(pathname);
+  useEffect(() => {
+    const onPopState = () => setPath(window.location.pathname);
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+  useEffect(() => {
+    if (previousPath.current === pathname) return;
+    previousPath.current = pathname;
+    routeStart.current?.focus({ preventScroll: true });
+    window.scrollTo(0, 0);
+  }, [pathname]);
   const modules = [
     { id: "photoPost" as const, label: t("module.photo"), icon: Camera },
     {
@@ -411,7 +424,16 @@ function AppContent() {
   }
 
   return (
-    <div className="app">
+    <div className="app" ref={routeStart} tabIndex={-1} onClick={(event) => {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const link = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>('a[href^="/"]') : null;
+      if (!link || link.target || link.hasAttribute("download") || link.origin !== location.origin || link.search || link.hash) return;
+      event.preventDefault();
+      if (link.pathname !== location.pathname) history.pushState(null, "", link.pathname);
+      setTeacherInfoOpen(false);
+      if (pendingExport !== null) cancelExport();
+      setPath(link.pathname);
+    }}>
       <AppHeader onOpenTeacherInfo={() => setTeacherInfoOpen(true)} />
       {pathname === "/" && <EducationNotice />}
       {updateAvailable && (
@@ -431,6 +453,8 @@ function AppContent() {
         <Suspense fallback={null}>
           <VerificationPage />
         </Suspense>
+      ) : pathname === "/kontakt" ? (
+        <ContactPage />
       ) : pathname !== "/" ? (
         <Suspense fallback={null}>
           <ContentRoute pathname={pathname} />

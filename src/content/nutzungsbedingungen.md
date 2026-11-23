@@ -36,8 +36,12 @@ Die Anwendung wird ohne Gewähr für eine bestimmte Verfügbarkeit oder Eignung
 bereitgestellt. Pädagogische und rechtliche Hinweise ersetzen keine Beratung
 im Einzelfall.
 
+## Kontakt
+
+Fragen zu dieser Anwendung: [apps@haak3.de](mailto:apps@haak3.de)
+
 ## Maßgebliche Fassung
 
 Bei Abweichungen zwischen Übersetzungen ist die deutsche Fassung maßgeblich.
 
-Stand: 12. Juni 2026
+Stand: 19. November 2026

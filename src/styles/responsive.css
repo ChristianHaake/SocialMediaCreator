@@ -193,6 +193,7 @@
 
   .app-footer nav {
     max-width: none;
+    flex-wrap: wrap;
     justify-content: flex-start;
     overflow: visible;
   }

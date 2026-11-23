@@ -45,8 +45,10 @@ authenticity.
 Use fictional names, content, and metrics. Do not upload private chats, photos
 of uninvolved people, or other personal data.
 
-## Report an error or idea
+## Report an error or suggest a feature
 
-For errors or feature ideas, send the app, device and last step to
-[apps@haak3.de](mailto:apps@haak3.de). Please do not include project or personal
-data.
+- [Report an error](https://haak3.atlassian.net/jira/software/form/69a50efc-0474-445e-8f01-66eb6b747cc1)
+- [Suggest a feature](https://haak3.atlassian.net/jira/software/form/50d4fc51-bff4-4e21-b46e-8fd987b90d24)
+
+The forms open externally. Do not include project or personal data. For general
+questions, contact [apps@haak3.de](mailto:apps@haak3.de).

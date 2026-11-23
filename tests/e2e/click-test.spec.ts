@@ -63,6 +63,7 @@ test("General app controls, translations, and static page navigation", async ({ 
   // Footer Navigation: visit internal pages
   const footerPages = [
     { name: "Hilfe", header: "Hilfe" },
+    { name: "Kontakt", header: "Kontakt" },
     { name: "Über das Projekt", header: "Über das Projekt" },
     { name: "Verantwortungsvoller Einsatz", header: "Verantwortungsvoller Einsatz" },
     { name: "AGB", header: "AGB" },
@@ -84,10 +85,33 @@ test("General app controls, translations, and static page navigation", async ({ 
   }
 });
 
-test("help and support expose a safe feedback mail link", async ({ page }) => {
-  for (const path of ["/hilfe", "/unterstuetzung"]) {
+test("contact page exposes safe creator social links", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  await page.goto("/");
+  await openSection(page, "Inhalt und Reaktionen");
+  const caption = page.getByLabel("Beschreibung", { exact: true });
+  await caption.fill("Entwurf vor Kontakt");
+  await page.getByRole("contentinfo").getByRole("link", { name: "Kontakt", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Kontakt", exact: true })).toBeVisible();
+  await page.goBack();
+  await expect(caption).toHaveValue("Entwurf vor Kontakt");
+  await page.goto("/kontakt");
+  for (const [name, href] of [
+    ["LinkedIn", "https://www.linkedin.com/in/christianhaake/"],
+    ["Instagram", "https://www.instagram.com/_haake/"],
+    ["Threads", "https://www.threads.com/@_haake"],
+  ]) {
+    const link = page.getByRole("link", { name, exact: true });
+    await expect(link).toHaveAttribute("href", href);
+    await expect(link).toHaveAttribute("target", "_blank");
+    await expect(link).toHaveAttribute("rel", "noopener noreferrer");
+  }
+});
+
+test("content pages expose the shared feedback mail link", async ({ page }) => {
+  for (const path of ["/hilfe", "/unterstuetzung", "/datenschutz", "/impressum", "/nutzungsbedingungen"]) {
     await page.goto(path);
-    await expect(page.getByRole("link", { name: "apps@haak3.de", exact: true })).toHaveAttribute(
+    await expect(page.getByRole("link", { name: "apps@haak3.de", exact: true }).first()).toHaveAttribute(
       "href",
       "mailto:apps@haak3.de",
     );
@@ -105,6 +129,21 @@ test("help and support expose a safe feedback mail link", async ({ page }) => {
     "rel",
     "noopener noreferrer",
   );
+});
+
+test("help and support link safely to the creator feedback forms", async ({ page }) => {
+  for (const path of ["/hilfe", "/unterstuetzung"]) {
+    await page.goto(path);
+    for (const [name, href] of [
+      ["Fehler melden", "https://haak3.atlassian.net/jira/software/form/69a50efc-0474-445e-8f01-66eb6b747cc1"],
+      ["Funktion vorschlagen", "https://haak3.atlassian.net/jira/software/form/50d4fc51-bff4-4e21-b46e-8fd987b90d24"],
+    ]) {
+      const link = page.getByRole("link", { name, exact: true });
+      await expect(link).toHaveAttribute("href", href);
+      await expect(link).toHaveAttribute("target", "_blank");
+      await expect(link).toHaveAttribute("rel", "noopener noreferrer");
+    }
+  }
 });
 
 test("Photo-Post editor detailed interaction flow", async ({ page }) => {

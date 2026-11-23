@@ -9,6 +9,9 @@ export function AppFooter() {
       <div className="app-footer__right">
         <nav aria-label={t("footer.navigation")}>
           <a href="/hilfe">{t("footer.help")}</a>
+          <a href="/kontakt">
+            {t("footer.contact")}
+          </a>
           <a className="app-footer__optional-link" href="/ueber">
             {t("footer.about")}
           </a>
