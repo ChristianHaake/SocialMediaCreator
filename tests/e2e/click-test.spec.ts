@@ -129,6 +129,15 @@ test("content pages expose the shared feedback mail link", async ({ page }) => {
     "rel",
     "noopener noreferrer",
   );
+  await page.setViewportSize({ width: 320, height: 720 });
+  await expect(page.getByRole("heading", {
+    name: "Wenn dir die App hilft, spendier mir einen Kaffee",
+  })).toBeVisible();
+  const action = await page.getByRole("link", { name: "Kaffee spendieren", exact: true }).boundingBox();
+  expect(action).not.toBeNull();
+  expect(action!.y + action!.height).toBeLessThan(720);
+  expect(action!.height).toBeGreaterThanOrEqual(44);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
 });
 
 test("help and support link safely to the creator feedback forms", async ({ page }) => {
