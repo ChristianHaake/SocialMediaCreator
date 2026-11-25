@@ -152,6 +152,7 @@ npx playwright install chromium firefox webkit
 | `npm run test:e2e` | Run Playwright tests in Chromium, Firefox, and WebKit |
 | `npm run verify` | Run tests, lint, build, and the complete E2E suite |
 | `npm run deploy` | Deploy the static application with Wrangler |
+| `npm run deploy:stage` | Deploy the built application to the separate stage Worker |
 | `npm run smoke:production` | Validate the production deployment |
 
 To smoke-test another deployment:
