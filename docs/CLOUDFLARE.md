@@ -12,6 +12,14 @@ Die Datei `wrangler.jsonc` definiert Worker-Name, Compatibility Date,
 Ausgabeordner und SPA-Fallback. Parameter im Bereitstellungsbefehl sind deshalb
 nicht erforderlich.
 
+## Stage
+
+`wrangler.stage.jsonc` definiert den separaten Worker
+`socialmediacreator-stage` mit der Domain `stage.smc.haak3.de`. Nach einem
+lokalen Build wird Stage mit `npm run deploy:stage` bereitgestellt. Die
+Cloudflare-Builds des Produktions-Workers verwenden weiter `wrangler.jsonc`;
+ein Push auf `stage` löst deshalb keinen Stage-Deploy aus.
+
 ## Bot-Schutz
 
 Die Anwendung verspricht, dass Nutzinhalte lokal verarbeitet werden. Die
