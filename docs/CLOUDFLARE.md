@@ -8,6 +8,11 @@
 - Produktions-Branch: `main`
 - Node.js: Version 22
 
+Für **Previews Base** ist der Preview-Befehl im Cloudflare-Dashboard
+`npx wrangler versions upload`. Ein `wrangler deploy` auf Nicht-Produktions-
+Branches scheitert am Worker-Namensabgleich. Die Preview-Konfiguration wird
+im Dashboard verwaltet; sie ist nicht Teil von `wrangler.jsonc`.
+
 Die Datei `wrangler.jsonc` definiert Worker-Name, Compatibility Date,
 Ausgabeordner und SPA-Fallback. Parameter im Bereitstellungsbefehl sind deshalb
 nicht erforderlich.
