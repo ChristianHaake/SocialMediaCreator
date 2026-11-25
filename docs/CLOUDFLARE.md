@@ -17,16 +17,19 @@ Preview-Build-Einstellung wird im Dashboard verwaltet.
 
 Die Einstellung **Previews Base** gilt nur für künftig angelegte Previews.
 Bereits vorhandene Branch-Previews wie `stage` behalten ihren alten
-Build-Befehl. Diese müssen über die Workers-Builds-API aktualisiert werden
-(`PATCH /builds/workers/{worker_tag}/previews/{preview_id}` mit
-`settings.deploy_command = "npx wrangler preview"`); ein Retry übernimmt
-sonst wieder den alten Befehl. Dafür ist ein kurzlebiger, nutzergebundener
-API-Token mit `Workers Builds Configuration: Edit` und `Workers Scripts: Read`
-erforderlich. Der Token wird nach der Korrektur widerrufen.
+Build-Befehl. Der Preview-Befehl wird in der jeweiligen Preview unter
+**Settings → Builds → Build configuration** auf `npx wrangler preview`
+gestellt. Ein Retry übernimmt sonst wieder den alten Befehl. Die bestehende
+`stage`-Preview und die Preview des Korrektur-PR wurden am 25. November 2026
+entsprechend aktualisiert und erfolgreich gebaut.
 
 Die Datei `wrangler.jsonc` definiert Worker-Name, Compatibility Date,
 Ausgabeordner und SPA-Fallback. Parameter im Bereitstellungsbefehl sind deshalb
 nicht erforderlich.
+
+Der HTTP-Smoke-Test sendet für Seitenaufrufe die Navigationsheader eines
+Browsers. Cloudflare-Preview-URLs liefern den SPA-Fallback für Navigationen;
+ein reiner API-Request ohne `Sec-Fetch-Mode: navigate` kann dort 404 liefern.
 
 ## Stage
 

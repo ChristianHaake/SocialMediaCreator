@@ -1,3 +1,6 @@
+import { request as httpRequest } from "node:http";
+import { request as httpsRequest } from "node:https";
+
 const baseUrl = new URL(
   process.argv[2] ?? process.env.SMC_BASE_URL ?? "https://smc.haak3.de",
 );
@@ -13,12 +16,41 @@ function check(condition, message) {
   }
 }
 
-async function request(pathname) {
-  const response = await fetch(new URL(pathname, baseUrl), {
-    redirect: "follow",
+function request(pathname, redirects = 0) {
+  const url = new URL(pathname, baseUrl);
+  return new Promise((resolve, reject) => {
+    const client = url.protocol === "https:" ? httpsRequest : httpRequest;
+    const req = client(url, {
+      headers: {
+        Accept: "text/html",
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+      },
+    }, (res) => {
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        res.resume();
+        if (redirects >= 5) {
+          reject(new Error(`Zu viele Weiterleitungen für ${url}`));
+        } else {
+          resolve(request(new URL(res.headers.location, url), redirects + 1));
+        }
+        return;
+      }
+
+      const chunks = [];
+      res.on("data", (chunk) => chunks.push(chunk));
+      res.on("end", () => resolve({
+        response: {
+          status: res.statusCode,
+          headers: new Headers(res.headers),
+        },
+        body: Buffer.concat(chunks).toString("utf8"),
+      }));
+      res.on("error", reject);
+    });
+    req.on("error", reject);
+    req.end();
   });
-  const body = await response.text();
-  return { response, body };
 }
 
 console.log(`Smoke-Test: ${baseUrl.origin}`);
