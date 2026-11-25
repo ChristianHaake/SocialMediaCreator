@@ -6,7 +6,7 @@
 - Bereitstellungsbefehl: `npm run deploy`
 - Stammverzeichnis: `/` beziehungsweise leer
 - Produktions-Branch: `main`
-- Node.js: Version 22
+- Node.js: Version 22 (`.nvmrc`, auch von Cloudflare Builds gelesen)
 
 Für **Previews Base** ist der Preview-Befehl im Cloudflare-Dashboard
 `npx wrangler preview`. Das neue Worker-Preview-Modell benötigt Wrangler
