@@ -6,7 +6,7 @@ const copy = {
     title: "Unterstützen",
     heading: "Wenn dir die App hilft, spendier mir einen Kaffee",
     description:
-      "SocialMediaCreator ist kostenlos. Ich pflege die App, behebe Fehler und teste sie auf verschiedenen Geräten. Wenn du sie gern nutzt, kannst du diese Arbeit freiwillig unterstützen.",
+      "SocialMediaCreator bleibt kostenlos, auch ohne Beitrag. Ich pflege die App, behebe Fehler und teste sie auf verschiedenen Geräten. Ein Kaffee unterstützt diese Arbeit freiwillig.",
     coffee: "Kaffee spendieren",
     external: "Der Link öffnet Buy Me a Coffee in einem neuen Tab. Erst dort wird eine Verbindung zum Anbieter hergestellt; diese Seite lädt kein Spenden-Widget.",
     otherTitle: "Auch ohne Geld helfen",
@@ -20,7 +20,7 @@ const copy = {
     title: "Support",
     heading: "If the app helps you, buy me a coffee",
     description:
-      "SocialMediaCreator is free. I maintain the app, fix bugs and test it on different devices. If you enjoy using it, you can support this work voluntarily.",
+      "SocialMediaCreator stays free, with or without a contribution. I maintain the app, fix bugs and test it on different devices. A coffee supports this work voluntarily.",
     coffee: "Buy me a coffee",
     external: "This link opens Buy Me a Coffee in a new tab. The provider is contacted only then; this page loads no donation widget.",
     otherTitle: "Help without paying",
