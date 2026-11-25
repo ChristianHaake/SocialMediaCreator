@@ -1,6 +1,7 @@
 import { contentPages, isContentPath } from "../../content";
 import { useTranslation } from "../../i18n";
 import { ContentPage } from "./ContentPage";
+import { SupportPage } from "./SupportPage";
 
 type ContentRouteProps = {
   pathname: string;
@@ -8,6 +9,10 @@ type ContentRouteProps = {
 
 export function ContentRoute({ pathname }: ContentRouteProps) {
   const { locale, t } = useTranslation();
+
+  if (pathname === "/unterstuetzung") {
+    return <SupportPage />;
+  }
 
   if (isContentPath(pathname)) {
     return <ContentPage {...contentPages[locale][pathname]} />;

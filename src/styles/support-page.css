@@ -1,0 +1,129 @@
+.support-page__article {
+  padding: 0;
+  overflow: hidden;
+}
+
+.support-page__hero {
+  padding: clamp(28px, 5vw, 52px);
+  background: #fff8ef;
+}
+
+.support-page__icon {
+  display: block;
+  margin-bottom: 24px;
+  color: #a4430a;
+}
+
+.support-page__hero h1 {
+  margin: 0 0 12px;
+  color: #8d3907;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.4;
+}
+
+.support-page__hero h2 {
+  max-width: 650px;
+  margin: 0 0 20px;
+  color: var(--text-main);
+  font-size: clamp(2rem, 4.5vw, 3.25rem);
+  font-weight: 650;
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+}
+
+.support-page__hero > p {
+  max-width: 650px;
+  margin: 0;
+}
+
+.support-page__hero .support-page__action {
+  display: inline-flex;
+  min-height: 52px;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 28px;
+  padding: 12px 20px;
+  border-radius: var(--radius-md);
+  background: #9a3c05;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.support-page__hero .support-page__action:hover {
+  background: #7f2f03;
+}
+
+.support-page__hero .support-page__action:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.support-page__hero > .support-page__external {
+  max-width: 620px;
+  margin-top: 16px;
+  color: #63584d;
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.support-page__other {
+  padding: 32px clamp(28px, 5vw, 52px) 40px;
+}
+
+.support-page__other h2 {
+  margin: 0 0 8px;
+}
+
+.support-page__other > p {
+  margin: 0;
+}
+
+.support-page__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.support-page__links a {
+  display: inline-flex;
+  min-height: 44px;
+  gap: 8px;
+  align-items: center;
+  padding: 9px 14px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+}
+
+.support-page__links a:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.support-page__other > .support-page__contact {
+  margin-top: 20px;
+}
+
+@media (max-width: 480px) {
+  .support-page__icon {
+    margin-bottom: 20px;
+  }
+
+  .support-page__hero h2 {
+    font-size: clamp(1.75rem, 8vw, 2.2rem);
+  }
+
+  .support-page__action {
+    width: 100%;
+  }
+
+  .support-page__links {
+    flex-direction: column;
+  }
+}
