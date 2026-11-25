@@ -15,6 +15,15 @@ mindestens 4.135.0. `wrangler deploy` aktiviert die Produktionsversion;
 Produktionsressourcen und ist kein isoliertes Branch-Preview. Die
 Preview-Build-Einstellung wird im Dashboard verwaltet.
 
+Die Einstellung **Previews Base** gilt nur für künftig angelegte Previews.
+Bereits vorhandene Branch-Previews wie `stage` behalten ihren alten
+Build-Befehl. Diese müssen über die Workers-Builds-API aktualisiert werden
+(`PATCH /builds/workers/{worker_tag}/previews/{preview_id}` mit
+`settings.deploy_command = "npx wrangler preview"`); ein Retry übernimmt
+sonst wieder den alten Befehl. Dafür ist ein kurzlebiger, nutzergebundener
+API-Token mit `Workers Builds Configuration: Edit` und `Workers Scripts: Read`
+erforderlich. Der Token wird nach der Korrektur widerrufen.
+
 Die Datei `wrangler.jsonc` definiert Worker-Name, Compatibility Date,
 Ausgabeordner und SPA-Fallback. Parameter im Bereitstellungsbefehl sind deshalb
 nicht erforderlich.
