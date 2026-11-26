@@ -67,11 +67,9 @@ for (const width of [320, 390, 768, 1440]) {
     const github = footer.getByRole("link", {
       name: "GitHub",
     });
-    await github.focus();
+    await footer.getByRole("link", { name: "Spendier mir einen Kaffee" }).focus();
     await page.keyboard.press(browserName === "webkit" ? "Alt+Tab" : "Tab");
-    await page.keyboard.press(
-      browserName === "webkit" ? "Alt+Shift+Tab" : "Shift+Tab",
-    );
+    await expect(github).toBeFocused();
     await expect(github.locator(".repository-tooltip")).toBeVisible();
     expect(
       await github.evaluate((el) => getComputedStyle(el).outlineStyle),
@@ -285,7 +283,7 @@ test("existing session schema restores edits after reload", async ({
         : "";
     })
     .toContain("Gesicherter UI-Migrationsstand");
-  await page.reload();
+  await page.reload({ waitUntil: "domcontentloaded" });
   await expect(page.getByLabel("Beschreibung", { exact: true })).toHaveValue(
     "Gesicherter UI-Migrationsstand",
   );
