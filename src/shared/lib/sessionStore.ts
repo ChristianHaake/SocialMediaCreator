@@ -13,7 +13,8 @@ const MODULES: ModuleType[] = ["photoPost", "messenger", "microblog"];
 const SNAPSHOT_TTL_MS = 24 * 60 * 60 * 1000;
 
 type StoredSnapshot = {
-  blob: Blob;
+  blob?: Blob;
+  bytes?: ArrayBuffer;
   savedAt: number;
 };
 
@@ -21,10 +22,11 @@ function isStoredSnapshot(value: unknown): value is StoredSnapshot {
   return (
     typeof value === "object" &&
     value !== null &&
-    "blob" in value &&
-    (value as { blob?: unknown }).blob instanceof Blob &&
     "savedAt" in value &&
-    typeof (value as { savedAt?: unknown }).savedAt === "number"
+    typeof (value as { savedAt?: unknown }).savedAt === "number" &&
+    (("blob" in value && (value as { blob?: unknown }).blob instanceof Blob) ||
+      ("bytes" in value &&
+        (value as { bytes?: unknown }).bytes instanceof ArrayBuffer))
   );
 }
 
@@ -67,11 +69,14 @@ function write(
   );
 }
 
-export function putSessionSnapshot(
+export async function putSessionSnapshot(
   module: ModuleType,
   blob: Blob,
 ): Promise<void> {
-  return write((store) => store.put({ blob, savedAt: Date.now() }, module));
+  // WebKit can reject Blob values in IndexedDB with UnknownError. Keep the
+  // existing database and keys, but store bytes for new snapshots.
+  const bytes = await blob.arrayBuffer();
+  return write((store) => store.put({ bytes, savedAt: Date.now() }, module));
 }
 
 export function deleteSessionSnapshot(module: ModuleType): Promise<void> {
@@ -104,7 +109,9 @@ export async function getSessionSnapshots(): Promise<
               store.delete(module);
               return;
             }
-            out[module] = request.result.blob;
+            out[module] =
+              request.result.blob ??
+              new Blob([request.result.bytes!], { type: "application/zip" });
           };
         }
         transaction.oncomplete = () => resolve(out);

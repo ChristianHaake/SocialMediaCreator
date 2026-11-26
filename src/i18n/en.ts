@@ -36,6 +36,8 @@ export const en: Record<TranslationKey, string> = {
   "app.clearedSaved": "Local data cleared.",
   "app.updateAvailable": "A new version is available.",
   "app.updateNow": "Update",
+  "app.updateSaveFailed":
+    "Recent changes could not be saved. Export your project before updating the app.",
   "app.refreshApp": "Update app",
   "app.imageExportError":
     "The image export could not be started. Update the app or open it in the browser.",
