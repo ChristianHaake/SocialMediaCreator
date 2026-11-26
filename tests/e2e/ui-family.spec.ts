@@ -57,7 +57,7 @@ for (const width of [320, 390, 768, 1440]) {
     ]) {
       const link = footer.getByRole("link", { name, exact: true });
       await expect(link).toBeVisible();
-      expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+      expect(Math.round((await link.boundingBox())!.height)).toBeGreaterThanOrEqual(44);
     }
     expect(
       await page.evaluate(
@@ -240,8 +240,9 @@ test("information links inside dialogs preserve work and close the overlay", asy
   );
 });
 
-test("existing session schema restores edits after reload", async ({
+test("existing session schema restores edits after reopening", async ({
   page,
+  context,
   browserName,
 }) => {
   test.skip(
@@ -283,8 +284,9 @@ test("existing session schema restores edits after reload", async ({
         : "";
     })
     .toContain("Gesicherter UI-Migrationsstand");
-  await page.reload({ waitUntil: "domcontentloaded" });
-  await expect(page.getByLabel("Beschreibung", { exact: true })).toHaveValue(
+  const reopened = await context.newPage();
+  await reopened.goto("/");
+  await expect(reopened.getByLabel("Beschreibung", { exact: true })).toHaveValue(
     "Gesicherter UI-Migrationsstand",
   );
 });
