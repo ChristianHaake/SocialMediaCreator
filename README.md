@@ -200,6 +200,7 @@ security and caching headers from `public/_headers`.
 - [Coding plan](docs/planning/Codingplan.md)
 - [UI and UX plan](docs/planning/UI-Design-Entwurf.md)
 - [Cloudflare deployment](docs/CLOUDFLARE.md)
+- [Stage handoff and release gates](docs/STAGE-HANDOFF.md)
 - [Project archive format](docs/PROJECT-ARCHIVE.md)
 - [Software stack audit](docs/STACK-AUDIT.md)
 - [Educational and transparency concept](docs/planning/BILDUNGS-UND-TRANSPARENZKONZEPT.md)
