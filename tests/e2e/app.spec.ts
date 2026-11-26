@@ -1064,7 +1064,7 @@ test("image uploads reject invalid files and accept decodable images", async ({
   await expect(page.getByRole("alert")).toBeHidden();
 });
 
-test("core workflows do not request network resources after loading", async ({
+test("core workflows request no external resources beyond configured analytics", async ({
   page,
 }) => {
   await page.goto("/");
@@ -1074,7 +1074,11 @@ test("core workflows do not request network resources after loading", async ({
   const requests: string[] = [];
   page.on("request", (request) => {
     const url = new URL(request.url());
-    if (url.origin !== appOrigin) requests.push(request.url());
+    const isConfiguredAnalytics =
+      url.origin === "https://cloudflareinsights.com" &&
+      url.pathname === "/cdn-cgi/rum";
+    if (url.origin !== appOrigin && !isConfiguredAnalytics)
+      requests.push(request.url());
   });
 
   await page.getByLabel("Benutzername").fill("offline_test");
