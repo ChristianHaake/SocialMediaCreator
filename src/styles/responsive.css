@@ -193,13 +193,8 @@
 
   .app-footer nav {
     max-width: none;
-    flex-wrap: wrap;
     justify-content: flex-start;
     overflow: visible;
-  }
-
-  .app-footer__optional-link {
-    display: none;
   }
 
   .app-footer__coffee {
@@ -217,9 +212,6 @@
       gap: 9px;
     }
 
-    .app-footer__narrow-link {
-      display: none;
-    }
   }
 
   .content-shell {

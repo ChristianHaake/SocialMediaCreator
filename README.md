@@ -28,8 +28,8 @@ Release-level capabilities:
 
 - **Local-first workflow:** no account, no upload endpoint, no server-side
   content storage.
-- **German and English UI:** localized editor, previews, dialogs, verification,
-  and content pages.
+- **Five-language UI:** German, English, French, Spanish, and Dutch for editors,
+  previews, dialogs, verification, and content pages.
 - **Responsive editing:** desktop split workspace plus mobile editor/preview
   switching.
 - **Live preview:** the same preview components are used for editing and export
@@ -176,7 +176,7 @@ src/
   features/     Photo Post, Messenger, Microblog, and verification modules
   shared/       reusable editor components and browser-side utilities
   domain/       serialized state types, defaults, and field constraints
-  i18n/         typed German and English dictionaries and locale provider
+  i18n/         typed five-language dictionaries and locale provider
   content/      bundled Markdown pages
   styles/       ordered base, preview, content, and responsive layers
 ```
@@ -201,6 +201,7 @@ security and caching headers from `public/_headers`.
 - [UI and UX plan](docs/planning/UI-Design-Entwurf.md)
 - [Cloudflare deployment](docs/CLOUDFLARE.md)
 - [Stage handoff and release gates](docs/STAGE-HANDOFF.md)
+- [Redesign verification and remaining gates](docs/UI-OVERHAUL.md)
 - [Project archive format](docs/PROJECT-ARCHIVE.md)
 - [Software stack audit](docs/STACK-AUDIT.md)
 - [Educational and transparency concept](docs/planning/BILDUNGS-UND-TRANSPARENZKONZEPT.md)

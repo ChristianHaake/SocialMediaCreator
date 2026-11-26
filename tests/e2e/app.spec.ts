@@ -151,7 +151,7 @@ test("education notice and public guidance pages are visible and bilingual", asy
   await expect(page.getByText("Unterrichtsszenario 5: Plattformmechaniken")).toBeVisible();
   await expect(page.getByRole("heading", { name: "FAQ" })).toBeVisible();
 
-  await page.getByRole("button", { name: "EN", exact: true }).click();
+  await page.getByRole("button", { name: "English", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Information for educators" }),
   ).toBeVisible();
@@ -204,7 +204,7 @@ test("language switch preserves content and exports locale in config v6", async 
 }) => {
   await page.goto("/");
   await page.getByLabel("Benutzername").fill("custom_account");
-  await page.getByRole("button", { name: "EN", exact: true }).click();
+  await page.getByRole("button", { name: "English", exact: true }).click();
 
   await expect(
     page.getByRole("heading", { name: "Create your photo posts." }),
@@ -1030,7 +1030,7 @@ test("PDF export and local image verification are available", async ({
   expect((await jpgDownload).suggestedFilename()).toMatch(/\.jpg$/);
 
   await page.goto("/verifizieren");
-  await page.locator('input[type="file"]').setInputFiles(imagePath!);
+  await page.locator('.verification-page input[type="file"]').setInputFiles(imagePath!);
   await expect(
     page.getByRole("heading", { name: "Gültiger Herkunftsmarker" }),
   ).toBeVisible();
@@ -1064,7 +1064,7 @@ test("image uploads reject invalid files and accept decodable images", async ({
   await expect(page.getByRole("alert")).toBeHidden();
 });
 
-test("core workflows do not request network resources after loading", async ({
+test("core workflows request no external resources beyond configured analytics", async ({
   page,
 }) => {
   await page.goto("/");
@@ -1074,7 +1074,11 @@ test("core workflows do not request network resources after loading", async ({
   const requests: string[] = [];
   page.on("request", (request) => {
     const url = new URL(request.url());
-    if (url.origin !== appOrigin) requests.push(request.url());
+    const isConfiguredAnalytics =
+      url.origin === "https://cloudflareinsights.com" &&
+      url.pathname === "/cdn-cgi/rum";
+    if (url.origin !== appOrigin && !isConfiguredAnalytics)
+      requests.push(request.url());
   });
 
   await page.getByLabel("Benutzername").fill("offline_test");

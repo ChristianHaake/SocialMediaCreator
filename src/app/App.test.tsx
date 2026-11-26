@@ -11,6 +11,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "./App";
 import { exportBadgeText } from "../shared/lib/exportLabels";
 
+vi.mock("../shared/lib/sessionStore", () => ({
+  getSessionSnapshots: vi.fn().mockResolvedValue({}),
+  putSessionSnapshot: vi.fn().mockResolvedValue(undefined),
+  deleteSessionSnapshot: vi.fn().mockResolvedValue(undefined),
+  clearSessionSnapshots: vi.fn().mockResolvedValue(undefined),
+}));
+
 beforeEach(() => {
   window.localStorage.setItem("social-media-creator-locale", "de");
   window.localStorage.setItem(
@@ -123,7 +130,7 @@ describe("App", () => {
     const username = screen.getByLabelText("Benutzername");
     await user.clear(username);
     await user.type(username, "custom_account");
-    await user.click(screen.getByRole("button", { name: "EN" }));
+    await user.click(screen.getByRole("button", { name: "English" }));
 
     expect(screen.getByLabelText("Username")).toHaveValue("custom_account");
     expect(
@@ -142,7 +149,7 @@ describe("App", () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(screen.getByRole("button", { name: "EN" }));
+    await user.click(screen.getByRole("button", { name: "English" }));
     await user.click(screen.getByRole("button", { name: "Reset" }));
     expect(screen.getByText("Learning Lab")).toBeInTheDocument();
 
@@ -457,9 +464,12 @@ describe("App", () => {
     window.history.replaceState({}, "", "/datenschutz");
     render(<App />);
 
-    expect(
-      await screen.findByRole("heading", { level: 1, name: "Datenschutz" }),
-    ).toBeInTheDocument();
+    const heading = await screen.findByRole("heading", {
+      level: 1,
+      name: "Datenschutz",
+    });
+    expect(heading).toHaveFocus();
+    expect(document.title).toBe("Datenschutz · SocialMediaCreator");
     expect(screen.getByText("4. Bereitstellung über Cloudflare")).toBeInTheDocument();
   });
 

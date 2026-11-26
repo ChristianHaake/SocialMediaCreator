@@ -8,7 +8,7 @@ import type { TranslationKey } from "../i18n/de";
 export interface ExportControllerConfig {
   previewRef: RefObject<HTMLElement | null>;
   activeModule: ModuleType;
-  locale: "de" | "en";
+  locale: import("../domain/types").Locale;
   t: (key: TranslationKey) => string;
 }
 

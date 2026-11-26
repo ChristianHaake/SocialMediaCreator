@@ -3,6 +3,10 @@ import { de, type TranslationKey } from "./de";
 export const en: Record<TranslationKey, string> = {
   ...de,
   "app.tagline": "Workshop for digital formats",
+  "app.skip": "Skip to content",
+  "app.sessionSaveError": "Local changes could not be saved.",
+  "app.backupProject": "Download project file now",
+  "app.clearSavedError": "Local data could not be fully deleted.",
   "app.local": "Content stays local",
   "app.teacher": "For educators",
   "app.language": "Language",
@@ -74,6 +78,7 @@ export const en: Record<TranslationKey, string> = {
   "microblog.description":
     "Create short fictional posts with profiles, dates, and reactions. The counter informs without limiting you.",
   "microblog.editorTitle": "Edit microblog posts",
+  "common.and": "and",
   "common.appearance": "Appearance",
   "common.theme": "Color scheme",
   "common.light": "Light",

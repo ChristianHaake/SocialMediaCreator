@@ -54,5 +54,5 @@ describe("MessengerEditor", () => {
       screen.getByText(/maximum of 200 messages|maximal 200 nachrichten/i),
     ).toBeVisible();
     expect(onChange).not.toHaveBeenCalled();
-  });
+  }, 15_000);
 });

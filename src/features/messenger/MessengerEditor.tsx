@@ -343,9 +343,7 @@ export function MessengerEditor({
                       <span className="field-label">{t("messenger.sender")}</span>
                       <select
                         aria-label={
-                          locale === "de"
-                            ? `Absender von Nachricht ${index + 1}`
-                            : `Sender of message ${index + 1}`
+                          ({ de: `Absender von Nachricht ${index + 1}`, en: `Sender of message ${index + 1}`, fr: `Expéditeur du message ${index + 1}`, es: `Remitente del mensaje ${index + 1}`, nl: `Afzender van bericht ${index + 1}` })[locale]
                         }
                         onChange={(event) =>
                           updateMessage(message.id, {
@@ -365,9 +363,7 @@ export function MessengerEditor({
                       <span className="field-label">{t("messenger.text")}</span>
                       <EmojiTextarea
                         aria-label={
-                          locale === "de"
-                            ? `Text von Nachricht ${index + 1}`
-                            : `Text of message ${index + 1}`
+                          ({ de: `Text von Nachricht ${index + 1}`, en: `Text of message ${index + 1}`, fr: `Texte du message ${index + 1}`, es: `Texto del mensaje ${index + 1}`, nl: `Tekst van bericht ${index + 1}` })[locale]
                         }
                         maxLength={fieldLimits.messenger.messageText}
                         onChange={(text) =>
@@ -381,9 +377,7 @@ export function MessengerEditor({
                       <span className="field-label">{t("common.timestamp")}</span>
                       <input
                         aria-label={
-                          locale === "de"
-                            ? `Zeitstempel von Nachricht ${index + 1}`
-                            : `Timestamp of message ${index + 1}`
+                          ({ de: `Zeitstempel von Nachricht ${index + 1}`, en: `Timestamp of message ${index + 1}`, fr: `Date du message ${index + 1}`, es: `Fecha del mensaje ${index + 1}`, nl: `Tijdstempel van bericht ${index + 1}` })[locale]
                         }
                         maxLength={fieldLimits.common.timestamp}
                         onChange={(event) =>

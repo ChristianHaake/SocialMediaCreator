@@ -1,5 +1,7 @@
 # Übergabe: SocialMediaCreator auf Stage fertigstellen
 
+Diese Übergabe beschreibt den Stand vor dem Redesign. Den aktuellen Integrationsstand und die verbleibenden Freigabeschritte hält [Redesign verification](UI-OVERHAUL.md) fest.
+
 Stand: 26. November 2026. Ausgangspunkt ist `origin/stage` (bei Erstellung dieses Dokuments `4bf572c`), nicht ein älterer lokaler Checkout. Diese Übergabe hält bekannte Befunde fest; sie ist kein Nachweis einer aktuellen Produktionsabnahme.
 
 ## Ziel und Grenzen

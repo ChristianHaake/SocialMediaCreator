@@ -12,6 +12,9 @@ import aboutEn from "./en/about.md?raw";
 import educatorsEn from "./en/educators.md?raw";
 import responsibleEn from "./en/responsible-use.md?raw";
 import termsEn from "./en/terms.md?raw";
+import frPages from "./fr/index";
+import esPages from "./es/index";
+import nlPages from "./nl/index";
 
 export const contentPages = {
   de: {
@@ -47,6 +50,9 @@ export const contentPages = {
     "/datenschutz": { title: "Privacy", content: privacyEn },
     "/impressum": { title: "Legal notice", content: legalEn },
   },
+  fr: frPages,
+  es: esPages,
+  nl: nlPages,
 } as const;
 
 export type ContentPath = keyof typeof contentPages.de;

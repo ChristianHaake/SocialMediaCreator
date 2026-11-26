@@ -60,7 +60,7 @@ export function PhotoPostPreview({
   return (
     <div className={`photo-feed simulation-theme theme-${value.theme}`}>
       {sortedPosts.map((post) => {
-        const username = post.username.trim() || (locale === "de" ? "benutzername" : "username");
+        const username = post.username.trim() || ({ de: "benutzername", en: "username", fr: "nom_utilisateur", es: "nombre_usuario", nl: "gebruikersnaam" })[locale];
         const postImages = images[post.id];
         const selected = post.id === value.activePostId;
         const visibleCommentCount = Math.max(

@@ -71,6 +71,10 @@
   line-height: 1.5;
 }
 
+.support-page__hero > .support-page__external + p {
+  margin-top: 16px;
+}
+
 .support-page__other {
   padding: 32px clamp(28px, 5vw, 52px) 40px;
 }

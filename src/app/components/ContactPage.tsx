@@ -1,4 +1,5 @@
 import { ArrowLeft, AtSign, Instagram, Linkedin } from "lucide-react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "../../i18n";
 
 const profiles = [
@@ -9,6 +10,15 @@ const profiles = [
 
 export function ContactPage() {
   const { t } = useTranslation();
+  const title = t("contact.title");
+  const heading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    heading.current?.focus();
+    document.title = `${title} · SocialMediaCreator`;
+    return () => {
+      document.title = "SocialMediaCreator";
+    };
+  }, [title]);
   return (
     <main className="content-shell">
       <a className="back-link" href="/">
@@ -16,7 +26,7 @@ export function ContactPage() {
         {t("content.back")}
       </a>
       <article className="markdown-page contact-page">
-        <h1>{t("contact.title")}</h1>
+        <h1 id="content-title" tabIndex={-1} ref={heading}>{title}</h1>
         <p>{t("contact.description")}</p>
         <h2>{t("contact.emailHeading")}</h2>
         <p><a href="mailto:apps@haak3.de">apps@haak3.de</a></p>

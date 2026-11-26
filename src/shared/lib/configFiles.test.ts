@@ -127,14 +127,11 @@ describe("configuration version 6", () => {
     }
   });
 
-  it("rejects invalid locale values", () => {
-    const config = {
-      ...createMicroblogConfig(defaultMicroblog),
-      locale: "fr",
-    };
-    expect(() => parseConfig(JSON.stringify(config))).toThrow(
-      "config.incomplete",
-    );
+  it("roundtrips each supported locale", () => {
+    for (const locale of ["de", "en", "fr", "es", "nl"] as const) {
+      const config = { ...createMicroblogConfig(defaultMicroblog), locale };
+      expect(parseConfig(JSON.stringify(config)).locale).toBe(locale);
+    }
   });
 
   it("rejects invalid sender references", () => {

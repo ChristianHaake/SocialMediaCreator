@@ -38,10 +38,11 @@ export function AppFooter() {
           aria-label="GitHub"
           className="app-footer__github"
           href="https://github.com/ChristianHaake/SocialMediaCreator"
-          rel="noreferrer"
+          rel="noopener noreferrer"
           target="_blank"
         >
           <Github aria-hidden="true" size={20} />
+          <span className="repository-tooltip">GitHub Repository</span>
         </a>
       </div>
     </footer>

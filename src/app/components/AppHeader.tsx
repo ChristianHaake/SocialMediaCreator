@@ -23,14 +23,15 @@ export function AppHeader({ onOpenTeacherInfo }: AppHeaderProps) {
         </span>
         <div className="header-meta__controls">
           <div aria-label={t("app.language")} className="language-switch">
-            {(["de", "en"] as const).map((option) => (
+            {(["de", "en", "fr", "es", "nl"] as const).map((option) => (
               <button
+                aria-label={({ de: "Deutsch", en: "English", fr: "Français", es: "Español", nl: "Nederlands" })[option]}
                 aria-pressed={locale === option}
                 key={option}
                 onClick={() => setLocale(option)}
                 type="button"
               >
-                {option.toUpperCase()}
+                {({ de: "Deutsch", en: "English", fr: "Français", es: "Español", nl: "Nederlands" })[option]}
               </button>
             ))}
           </div>
