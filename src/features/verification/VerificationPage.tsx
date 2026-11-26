@@ -1,5 +1,5 @@
 import { ArrowLeft, FileCheck2, FileQuestion, FileWarning } from "lucide-react";
-import { useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import {
   verifyImageMarker,
   type VerificationResult,
@@ -10,6 +10,15 @@ export function VerificationPage() {
   const { numberLocale, t } = useTranslation();
   const [result, setResult] = useState<VerificationResult | null>(null);
   const [checking, setChecking] = useState(false);
+  const heading = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    heading.current?.focus();
+  }, []);
+  useEffect(() => {
+    document.title = `${t("verify.title")} · SocialMediaCreator`;
+    return () => { document.title = "SocialMediaCreator"; };
+  }, [t]);
 
   async function handleFile(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -30,7 +39,7 @@ export function VerificationPage() {
         {t("content.back")}
       </a>
       <article className="markdown-page verification-page">
-        <h1>{t("verify.title")}</h1>
+        <h1 id="content-title" tabIndex={-1} ref={heading}>{t("verify.title")}</h1>
         <p>{t("verify.description")}</p>
         <label className="verification-upload button button--primary">
           <FileCheck2 aria-hidden="true" size={19} />

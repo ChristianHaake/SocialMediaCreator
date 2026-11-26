@@ -393,10 +393,13 @@ export async function exportElementAsPdf(
   const pdf = new jsPDF({ format: "a4", orientation: "portrait", unit: "mm" });
   pdf.setProperties({
     title: "SocialMediaCreator Simulation",
-    subject:
-      locale === "de"
-        ? "Lokal erzeugte SocialMediaCreator Simulation"
-        : "Locally created SocialMediaCreator simulation",
+    subject: ({
+      de: "Lokal erzeugte SocialMediaCreator Simulation",
+      en: "Locally created SocialMediaCreator simulation",
+      fr: "Simulation SocialMediaCreator créée localement",
+      es: "Simulación de SocialMediaCreator creada localmente",
+      nl: "Lokaal gemaakte SocialMediaCreator-simulatie",
+    })[locale],
     author: "SocialMediaCreator",
     creator: "SocialMediaCreator",
   });

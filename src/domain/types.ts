@@ -1,5 +1,5 @@
 export type ModuleType = "photoPost" | "messenger" | "microblog";
-export type Locale = "de" | "en";
+export type Locale = "de" | "en" | "fr" | "es" | "nl";
 export type Theme = "light" | "dim" | "dark";
 export type PostViewMode = "post" | "comments";
 export type MicroblogLayoutMode = "feed" | "thread";
@@ -335,13 +335,52 @@ const englishMicroblog: MicroblogState = {
 };
 
 export function getDefaultPhotoPost(locale: Locale) {
-  return structuredClone(locale === "en" ? englishPhotoPost : defaultPhotoPost);
+  if (locale === "en") return structuredClone(englishPhotoPost);
+  if (locale === "fr" || locale === "es" || locale === "nl") {
+    const labels = {
+      fr: { user: "projet_classe", location: "Atelier pédagogique", caption: "Aujourd’hui, nous documentons notre idée de projet.", author: "equipe_apprentissage", question: "Quelle source avez-vous utilisée pour cette affirmation ?", answer: "Nous avons comparé deux sources indépendantes.", commentTime: "il y a 5 minutes", replyTime: "il y a 2 minutes" },
+      es: { user: "proyecto_clase", location: "Aula de aprendizaje", caption: "Hoy documentamos nuestra idea de proyecto.", author: "equipo_aprendizaje", question: "¿Qué fuente utilizasteis para esta afirmación?", answer: "Comparamos dos fuentes independientes.", commentTime: "hace 5 minutos", replyTime: "hace 2 minutos" },
+      nl: { user: "project_klas", location: "Leerwerkplaats", caption: "Vandaag leggen we ons projectidee vast.", author: "leerteam", question: "Welke bron hebben jullie voor deze bewering gebruikt?", answer: "We hebben twee onafhankelijke bronnen vergeleken.", commentTime: "5 minuten geleden", replyTime: "2 minuten geleden" },
+    }[locale];
+    const value = structuredClone(englishPhotoPost);
+    Object.assign(value.posts[0], { username: labels.user, location: labels.location, caption: labels.caption });
+    Object.assign(value.posts[0].comments[0], { author: labels.author, text: labels.question, timestamp: labels.commentTime });
+    Object.assign(value.posts[0].comments[0].replies[0], { author: labels.user, text: labels.answer, timestamp: labels.replyTime });
+    return value;
+  }
+  return structuredClone(defaultPhotoPost);
 }
 
 export function getDefaultMessenger(locale: Locale) {
-  return structuredClone(locale === "en" ? englishMessenger : defaultMessenger);
+  if (locale === "en") return structuredClone(englishMessenger);
+  if (locale === "fr" || locale === "es" || locale === "nl") {
+    const labels = {
+      fr: { group: "Groupe projet", me: "Moi", available: "disponible", q: "As-tu vérifié la source de notre affirmation ?", a: "Oui. J’ai trouvé une deuxième source pour comparer.", done: "Bien, nous pouvons citer les deux dans la publication." },
+      es: { group: "Grupo del proyecto", me: "Yo", available: "disponible", q: "¿Has verificado la fuente de nuestra afirmación?", a: "Sí. Encontré una segunda fuente para comparar.", done: "Bien, podemos citar ambas en la publicación." },
+      nl: { group: "Projectgroep", me: "Ik", available: "beschikbaar", q: "Heb je de bron van onze bewering gecontroleerd?", a: "Ja. Ik heb een tweede bron gevonden om te vergelijken.", done: "Goed, dan kunnen we beide in het bericht noemen." },
+    }[locale];
+    const value = structuredClone(englishMessenger);
+    Object.assign(value.profiles[0], { name: labels.group });
+    Object.assign(value.profiles[1], { name: labels.me, status: labels.available });
+    value.messages[0].text = labels.q; value.messages[1].text = labels.a; value.messages[2].text = labels.done;
+    return value;
+  }
+  return structuredClone(defaultMessenger);
 }
 
 export function getDefaultMicroblog(locale: Locale) {
-  return structuredClone(locale === "en" ? englishMicroblog : defaultMicroblog);
+  if (locale === "en") return structuredClone(englishMicroblog);
+  if (locale === "fr" || locale === "es" || locale === "nl") {
+    const labels = {
+      fr: { name: "Projet médias", handle: "projet_medias", text: "Une affirmation ne devient pas plus crédible simplement parce qu’elle est souvent partagée. Vérifiez la source, le contexte et la date.", author: "verif_source", comment: "Le contexte d’origine est essentiel.", reply: "Exactement. Sans contexte, l’affirmation peut induire en erreur.", commentTime: "il y a 8 minutes", replyTime: "il y a 3 minutes" },
+      es: { name: "Proyecto de medios", handle: "proyecto_medios", text: "Una afirmación no es más creíble solo porque se comparta a menudo. Comprueba la fuente, el contexto y la fecha.", author: "verificacion_fuente", comment: "El contexto original es esencial.", reply: "Exacto. Sin contexto, la afirmación puede resultar engañosa.", commentTime: "hace 8 minutos", replyTime: "hace 3 minutos" },
+      nl: { name: "Mediaproject", handle: "mediaproject", text: "Een bewering wordt niet geloofwaardiger doordat ze vaak wordt gedeeld. Controleer de bron, context en datum.", author: "broncontrole", comment: "De oorspronkelijke context is essentieel.", reply: "Precies. Zonder context kan de bewering misleidend zijn.", commentTime: "8 minuten geleden", replyTime: "3 minuten geleden" },
+    }[locale];
+    const value = structuredClone(englishMicroblog);
+    Object.assign(value.posts[0], { displayName: labels.name, handle: labels.handle, text: labels.text });
+    Object.assign(value.posts[0].comments[0], { author: labels.author, text: labels.comment, timestamp: labels.commentTime });
+    Object.assign(value.posts[0].comments[0].replies[0], { author: labels.handle, text: labels.reply, timestamp: labels.replyTime });
+    return value;
+  }
+  return structuredClone(defaultMicroblog);
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, type MutableRefObject } from "react";
+import { useCallback, useEffect, useRef, useState, type MutableRefObject } from "react";
 import type {
   Locale,
   MessengerImages,
@@ -111,8 +111,14 @@ function applyModule(
 
 export function useSessionPersistence(config: SessionPersistenceConfig) {
   const configRef = useRef(config);
+  const initialConfigRef = useRef(config);
   configRef.current = config;
   const hydratedRef = useRef(false);
+  const readFailedRef = useRef(false);
+  const failedModulesRef = useRef(new Set<ModuleType>());
+  const [sessionSaveError, setSessionSaveError] = useState(false);
+  const initialActiveModuleRef = useRef(config.activeModule);
+  const activeModuleChangedRef = useRef(false);
   const restoreTokenRef = useRef(0);
   const lastSigRef = useRef<Record<ModuleType, string>>({
     photoPost: "",
@@ -132,16 +138,6 @@ export function useSessionPersistence(config: SessionPersistenceConfig) {
     return operation;
   }, []);
 
-  function seedCurrentSignatures() {
-    for (const module of MODULES) {
-      lastSigRef.current[module] = signature(
-        stateFor(configRef.current, module),
-        imagesFor(configRef.current, module),
-        configRef.current.locale,
-      );
-    }
-  }
-
   const schedulePersist = useCallback((modules: ModuleType[]) => {
     if (!hydratedRef.current) return;
     modules.forEach((module) => pendingModulesRef.current.add(module));
@@ -155,7 +151,7 @@ export function useSessionPersistence(config: SessionPersistenceConfig) {
   }, [queuePersist]);
 
   const flushPendingSave = useCallback(async () => {
-    if (!hydratedRef.current) return false;
+    if (!hydratedRef.current || readFailedRef.current) return false;
     if (timerRef.current !== null) {
       window.clearTimeout(timerRef.current);
       timerRef.current = null;
@@ -167,26 +163,35 @@ export function useSessionPersistence(config: SessionPersistenceConfig) {
 
   function cancelPendingSessionRestore() {
     restoreTokenRef.current += 1;
+    readFailedRef.current = false;
     if (!hydratedRef.current) {
-      seedCurrentSignatures();
       hydratedRef.current = true;
+      schedulePersist(MODULES);
     }
   }
 
   // Restore the last session once, before any auto-save can run.
   useEffect(() => {
     let cancelled = false;
+    const pendingModules = pendingModulesRef.current;
     const restoreToken = restoreTokenRef.current;
+    const initial = initialConfigRef.current;
+    const initialSignatures = Object.fromEntries(
+      MODULES.map((module) => [
+        module,
+        signature(stateFor(initial, module), imagesFor(initial, module), initial.locale),
+      ]),
+    ) as Record<ModuleType, string>;
+    // Early edits must differ from this baseline when hydration finishes.
+    lastSigRef.current = { ...initialSignatures };
     const isStale = () =>
       cancelled || restoreToken !== restoreTokenRef.current;
     void (async () => {
       try {
-        const snapshots = await getSessionSnapshots().catch(
-          (): Partial<Record<ModuleType, Blob>> => ({}),
-        );
+        const snapshots = await getSessionSnapshots();
         if (isStale()) return;
         if (Object.keys(snapshots).length > 0) {
-          const { readProjectArchive } = await import(
+          const { readProjectArchive, disposeProjectImages } = await import(
             "../shared/lib/projectArchives"
           );
           if (isStale()) return;
@@ -198,17 +203,33 @@ export function useSessionPersistence(config: SessionPersistenceConfig) {
                 type: "application/zip",
               });
               const { config: parsed, images } = await readProjectArchive(file);
-              if (isStale()) return;
-              if (parsed.module !== module) continue;
-              applyModule(configRef.current, module, parsed.data, images);
+              if (isStale()) {
+                disposeProjectImages(images);
+                return;
+              }
+              const current = configRef.current;
+              if (
+                parsed.module !== module ||
+                signature(stateFor(current, module), imagesFor(current, module), initial.locale) !==
+                  initialSignatures[module]
+              ) {
+                disposeProjectImages(images);
+                continue;
+              }
+              applyModule(current, module, parsed.data, images);
               lastSigRef.current[module] = signature(
                 parsed.data,
-                imagesFor(configRef.current, module),
-                parsed.locale,
+                images[module],
+                current.locale,
               );
             } catch {
+              if (isStale()) return;
               // Corrupt/unsupported snapshot — drop it so it can't keep failing.
-              await deleteSessionSnapshot(module).catch(() => undefined);
+              await deleteSessionSnapshot(module).catch(() => {
+                if (isStale()) return;
+                failedModulesRef.current.add(module);
+                setSessionSaveError(true);
+              });
             }
           }
         }
@@ -220,34 +241,40 @@ export function useSessionPersistence(config: SessionPersistenceConfig) {
         }
         if (
           !isStale() &&
+          !activeModuleChangedRef.current &&
           (storedModule === "photoPost" ||
             storedModule === "messenger" ||
             storedModule === "microblog")
         ) {
           configRef.current.setActiveModule(storedModule);
         }
-      } finally {
+      } catch {
         if (!isStale()) {
-          // Seed signatures for modules that had no snapshot so the first
-          // auto-save pass doesn't redundantly re-write unchanged defaults.
-          for (const module of MODULES) {
-            if (!lastSigRef.current[module]) {
-              lastSigRef.current[module] = signature(
-                stateFor(configRef.current, module),
-                imagesFor(configRef.current, module),
-                configRef.current.locale,
-              );
-            }
-          }
+          // Preserve unread snapshots until the user explicitly imports or clears.
+          readFailedRef.current = true;
+          setSessionSaveError(true);
+        }
+      } finally {
+        if (!isStale() && !readFailedRef.current) {
           hydratedRef.current = true;
+          schedulePersist(MODULES);
+          try {
+            if (activeModuleChangedRef.current) {
+              localStorage.setItem(ACTIVE_MODULE_KEY, configRef.current.activeModule);
+            }
+          } catch {
+            // ignore storage failures
+          }
         }
       }
     })();
     return () => {
       cancelled = true;
+      hydratedRef.current = false;
+      if (timerRef.current) window.clearTimeout(timerRef.current);
+      pendingModules.clear();
     };
-     
-  }, []);
+  }, [schedulePersist]);
 
   // Debounced auto-save of whichever module actually changed.
   useEffect(() => {
@@ -280,7 +307,12 @@ export function useSessionPersistence(config: SessionPersistenceConfig) {
 
   // Remember the open module so a reload returns to the same tab.
   useEffect(() => {
-    if (!hydratedRef.current) return;
+    if (!hydratedRef.current) {
+      if (config.activeModule !== initialActiveModuleRef.current) {
+        activeModuleChangedRef.current = true;
+      }
+      return;
+    }
     try {
       localStorage.setItem(ACTIVE_MODULE_KEY, config.activeModule);
     } catch {
@@ -296,7 +328,7 @@ export function useSessionPersistence(config: SessionPersistenceConfig) {
       const state = stateFor(current, module);
       const images = imagesFor(current, module);
       const sig = signature(state, images, current.locale);
-      if (sig === lastSigRef.current[module]) continue;
+      if (sig === lastSigRef.current[module] && !failedModulesRef.current.has(module)) continue;
       try {
         if (isPristine(module, state, images, current.locale)) {
           await deleteSessionSnapshot(module);
@@ -311,29 +343,44 @@ export function useSessionPersistence(config: SessionPersistenceConfig) {
           await putSessionSnapshot(module, blob);
         }
         lastSigRef.current[module] = sig;
+        failedModulesRef.current.delete(module);
+        if (hydratedRef.current) {
+          setSessionSaveError(readFailedRef.current || failedModulesRef.current.size > 0);
+        }
       } catch {
+        failedModulesRef.current.add(module);
+        if (hydratedRef.current) setSessionSaveError(true);
         // Save failed (e.g. too large). Leave the signature so we retry on the
         // next change rather than silently giving up.
         saved = false;
       }
     }
-    return saved;
+    return saved && !readFailedRef.current && failedModulesRef.current.size === 0;
   }
   persistRef.current = persist;
 
   async function clearSession() {
     if (timerRef.current !== null) window.clearTimeout(timerRef.current);
     timerRef.current = null;
-    pendingModulesRef.current.clear();
     await saveQueueRef.current;
-    await clearSessionSnapshots().catch(() => undefined);
+    try {
+      await clearSessionSnapshots();
+    } catch (error) {
+      schedulePersist(Array.from(pendingModulesRef.current));
+      throw error;
+    }
+    cancelPendingSessionRestore();
+    pendingModulesRef.current.clear();
+    readFailedRef.current = false;
+    failedModulesRef.current.clear();
+    setSessionSaveError(false);
     try {
       localStorage.removeItem(ACTIVE_MODULE_KEY);
     } catch {
       // ignore
     }
     lastSigRef.current = { photoPost: "", messenger: "", microblog: "" };
-    }
+  }
 
-  return { cancelPendingSessionRestore, clearSession, flushPendingSave };
+  return { cancelPendingSessionRestore, clearSession, flushPendingSave, sessionSaveError };
 }

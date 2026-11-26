@@ -15,13 +15,10 @@ export function ContentRoute({ pathname }: ContentRouteProps) {
   }
 
   if (isContentPath(pathname)) {
-    return <ContentPage {...contentPages[locale][pathname]} />;
+    return <ContentPage key={pathname} {...contentPages[locale][pathname]} />;
   }
 
   return (
-    <ContentPage
-      content={t("app.notFoundText")}
-      title={t("app.notFound")}
-    />
+    <ContentPage content={t("app.notFoundText")} title={t("app.notFound")} />
   );
 }

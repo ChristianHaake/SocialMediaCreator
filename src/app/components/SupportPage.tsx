@@ -1,4 +1,5 @@
 import { ArrowLeft, Coffee, ExternalLink } from "lucide-react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "../../i18n";
 
 const copy = {
@@ -30,11 +31,65 @@ const copy = {
     suggest: "Suggest a feature",
     contact: "For other questions:",
   },
+  fr: {
+    title: "Soutenir",
+    heading: "Si l’application vous aide, offrez-moi un café",
+    description:
+      "SocialMediaCreator reste gratuit, avec ou sans contribution. J’entretiens l’application, corrige les bugs et la teste sur différents appareils. Un café soutient librement ce travail.",
+    coffee: "Offrir un café",
+    external:
+      "Ce lien ouvre Buy Me a Coffee dans un nouvel onglet. Le fournisseur n’est contacté qu’à ce moment-là ; cette page ne charge aucun widget de don.",
+    otherTitle: "Aider sans payer",
+    otherDescription:
+      "Un signalement de bug ou une idée m’aide aussi à améliorer SocialMediaCreator.",
+    report: "Signaler un bug",
+    suggest: "Proposer une fonctionnalité",
+    contact: "Pour toute autre question :",
+  },
+  es: {
+    title: "Apoyar",
+    heading: "Si la aplicación te ayuda, invítame a un café",
+    description:
+      "SocialMediaCreator sigue siendo gratuita, con o sin aportaciones. Mantengo la aplicación, corrijo errores y la pruebo en distintos dispositivos. Un café apoya este trabajo de forma voluntaria.",
+    coffee: "Invitar a un café",
+    external:
+      "Este enlace abre Buy Me a Coffee en una pestaña nueva. El proveedor solo recibe una conexión entonces; esta página no carga ningún widget de donación.",
+    otherTitle: "Ayudar sin pagar",
+    otherDescription:
+      "Un informe de error o una idea también me ayuda a mejorar SocialMediaCreator.",
+    report: "Informar de un error",
+    suggest: "Proponer una función",
+    contact: "Para otras preguntas:",
+  },
+  nl: {
+    title: "Steunen",
+    heading: "Als de app je helpt, trakteer me op een koffie",
+    description:
+      "SocialMediaCreator blijft gratis, met of zonder bijdrage. Ik onderhoud de app, los fouten op en test hem op verschillende apparaten. Met een koffie steun je dit werk vrijwillig.",
+    coffee: "Trakteer op koffie",
+    external:
+      "Deze link opent Buy Me a Coffee in een nieuw tabblad. De aanbieder wordt pas dan benaderd; deze pagina laadt geen donatiewidget.",
+    otherTitle: "Helpen zonder te betalen",
+    otherDescription:
+      "Een bugmelding of idee helpt me ook om SocialMediaCreator te verbeteren.",
+    report: "Een fout melden",
+    suggest: "Een functie voorstellen",
+    contact: "Voor andere vragen:",
+  },
 } as const;
 
 export function SupportPage() {
   const { locale, t } = useTranslation();
   const c = copy[locale];
+  const heading = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    heading.current?.focus();
+  }, []);
+  useEffect(() => {
+    document.title = `${c.title} · SocialMediaCreator`;
+    return () => { document.title = "SocialMediaCreator"; };
+  }, [c.title]);
 
   return (
     <main className="content-shell support-page">
@@ -45,9 +100,8 @@ export function SupportPage() {
       <article className="markdown-page support-page__article">
         <div className="support-page__hero">
           <Coffee className="support-page__icon" aria-hidden="true" size={28} />
-          <h1>{c.title}</h1>
+          <h1 id="content-title" tabIndex={-1} ref={heading}>{c.title}</h1>
           <h2>{c.heading}</h2>
-          <p>{c.description}</p>
           <a
             className="support-page__action"
             href="https://buymeacoffee.com/Haake"
@@ -59,6 +113,7 @@ export function SupportPage() {
             <ExternalLink aria-hidden="true" size={16} />
           </a>
           <p className="support-page__external">{c.external}</p>
+          <p>{c.description}</p>
         </div>
         <section className="support-page__other" aria-labelledby="support-other-title">
           <h2 id="support-other-title">{c.otherTitle}</h2>

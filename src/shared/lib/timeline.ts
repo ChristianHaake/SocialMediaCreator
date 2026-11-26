@@ -11,12 +11,15 @@ export function formatTimelineDate(
   locale: Locale = "de",
 ) {
   const [year, month, day] = date.split("-");
-  const formattedDate =
-    year && month && day
-      ? locale === "de"
-        ? `${day}.${month}.${year}`
-        : `${month}/${day}/${year}`
-      : date;
+  const formattedDate = year && month && day
+    ? locale === "de"
+      ? `${day}.${month}.${year}`
+      : locale === "en"
+        ? `${month}/${day}/${year}`
+        : locale === "nl"
+          ? `${day}-${month}-${year}`
+          : `${day}/${month}/${year}`
+    : date;
   return time ? `${formattedDate} · ${time}` : formattedDate;
 }
 

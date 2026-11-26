@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import {
   type KeyboardEvent,
+  type MouseEvent,
   lazy,
   useEffect,
   useRef,
@@ -92,37 +93,33 @@ function AppContent() {
   } = useProjectImages();
   const [mobileView, setMobileView] = useState<MobileView>("editor");
   const [imageError, setImageError] = useState<string | null>(null);
-  const [updateError, setUpdateError] = useState(false);
   const [teacherInfoOpen, setTeacherInfoOpen] = useState(false);
   const [orientationDismissed, setOrientationDismissed] = useState(
     readOrientationDismissed,
   );
   const previewRef = useRef<HTMLDivElement>(null);
   const configInputRef = useRef<HTMLInputElement>(null);
-  const {
-    refreshApp,
-    resetAppVersion,
-    updateAvailable,
-  } = usePwaUpdate();
+  const { refreshApp, resetAppVersion, updateAvailable } = usePwaUpdate();
 
-  const { cancelPendingSessionRestore, clearSession, flushPendingSave } = useSessionPersistence({
-    locale,
-    activeModule,
-    setActiveModule,
-    photoPost,
-    messenger,
-    microblog,
-    setPhotoPost,
-    setMessenger,
-    setMicroblog,
-    initialPhotoPost,
-    initialMessenger,
-    initialMicroblog,
-    photoImages,
-    messengerImages,
-    microblogImages,
-    replaceModuleImages,
-  });
+  const { cancelPendingSessionRestore, clearSession, flushPendingSave, sessionSaveError } =
+    useSessionPersistence({
+      locale,
+      activeModule,
+      setActiveModule,
+      photoPost,
+      messenger,
+      microblog,
+      setPhotoPost,
+      setMessenger,
+      setMicroblog,
+      initialPhotoPost,
+      initialMessenger,
+      initialMicroblog,
+      photoImages,
+      messengerImages,
+      microblogImages,
+      replaceModuleImages,
+    });
 
   const {
     projectOperation,
@@ -171,21 +168,58 @@ function AppContent() {
     locale,
     t,
   });
+  const [updateError, setUpdateError] = useState(false);
   const moduleTabRefs = useRef<Array<HTMLButtonElement | null>>([]);
-  const [path, setPath] = useState(() => window.location.pathname);
-  const pathname = path.replace(/\/+$/, "") || "/";
-  const routeStart = useRef<HTMLDivElement>(null);
-  const previousPath = useRef(pathname);
+  const readPath = () => window.location.pathname.replace(/\/+$/, "") || "/";
+  const [pathname, setPathname] = useState(readPath);
+  const navigationTrigger = useRef<HTMLAnchorElement | null>(null);
   useEffect(() => {
-    const onPopState = () => setPath(window.location.pathname);
-    window.addEventListener("popstate", onPopState);
-    return () => window.removeEventListener("popstate", onPopState);
+    const onPop = () => {
+      const next = readPath();
+      setPathname(next);
+      if (next === "/")
+        requestAnimationFrame(() =>
+          document.getElementById("workspace")?.focus(),
+        );
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
   }, []);
+
+  function navigateInternal(event: MouseEvent<HTMLDivElement>) {
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    )
+      return;
+    const link = (event.target as Element).closest<HTMLAnchorElement>(
+      "a[href]",
+    );
+    if (!link || link.target || link.hasAttribute("download")) return;
+    const url = new URL(link.href);
+    if (url.origin !== window.location.origin || url.hash) return;
+    event.preventDefault();
+    const next = url.pathname.replace(/\/+$/, "") || "/";
+    if (next !== "/") navigationTrigger.current = link;
+    else if (link.classList.contains("brand")) navigationTrigger.current = null;
+    if (url.href !== window.location.href)
+      window.history.pushState(null, "", url);
+    setPathname(next);
+    setTeacherInfoOpen(false);
+    if (pendingExport !== null) cancelExport();
+    if (next === "/")
+      requestAnimationFrame(() => {
+        const trigger = navigationTrigger.current;
+        if (trigger?.isConnected) trigger.focus();
+        else document.getElementById("workspace")?.focus();
+      });
+  }
   useEffect(() => {
-    if (previousPath.current === pathname) return;
-    previousPath.current = pathname;
-    routeStart.current?.focus({ preventScroll: true });
-    window.scrollTo(0, 0);
+    if (pathname === "/") document.title = "SocialMediaCreator";
   }, [pathname]);
   const modules = [
     { id: "photoPost" as const, label: t("module.photo"), icon: Camera },
@@ -255,14 +289,16 @@ function AppContent() {
   function isModuleChanged(module: ModuleType) {
     if (module === "photoPost") {
       return (
-        JSON.stringify(photoPost) !== JSON.stringify(initialPhotoPost.current) ||
+        JSON.stringify(photoPost) !==
+          JSON.stringify(initialPhotoPost.current) ||
         Object.keys(photoImages).length > 0
       );
     }
 
     if (module === "messenger") {
       return (
-        JSON.stringify(messenger) !== JSON.stringify(initialMessenger.current) ||
+        JSON.stringify(messenger) !==
+          JSON.stringify(initialMessenger.current) ||
         Object.keys(messengerImages).length > 0
       );
     }
@@ -302,7 +338,12 @@ function AppContent() {
 
   async function clearSavedData() {
     if (!window.confirm(t("app.clearSavedConfirm"))) return;
-    await clearSession();
+    try {
+      await clearSession();
+    } catch {
+      setConfigStatus({ type: "error", message: t("app.clearSavedError") });
+      return;
+    }
     const nextPhoto = getDefaultPhotoPost(locale);
     initialPhotoPost.current = nextPhoto;
     setPhotoPost(nextPhoto);
@@ -320,6 +361,15 @@ function AppContent() {
     setConfigStatus({ type: "success", message: t("app.clearedSaved") });
   }
 
+  async function applyAppUpdate() {
+    setUpdateError(false);
+    if (!(await flushPendingSave())) {
+      setUpdateError(true);
+      return;
+    }
+    refreshApp();
+  }
+
   function dismissOrientation() {
     setOrientationDismissed(true);
     try {
@@ -328,7 +378,6 @@ function AppContent() {
       // The hint is dismissible for this render even if persistence is blocked.
     }
   }
-
 
   function renderEditor() {
     if (activeModule === "photoPost") {
@@ -345,9 +394,7 @@ function AppContent() {
             setPhotoMapImage(postId, "media", mediaId, image)
           }
           onPostRemoved={removePhotoPostImages}
-          onProfileImageChange={(postId, image) =>
-            setPhotoImage(postId, image)
-          }
+          onProfileImageChange={(postId, image) => setPhotoImage(postId, image)}
           value={photoPost}
         />
       );
@@ -388,9 +435,7 @@ function AppContent() {
             setPhotoPost((current) => ({
               ...current,
               posts: current.posts.map((post) =>
-                post.id === postId
-                  ? { ...post, activeMediaId: mediaId }
-                  : post,
+                post.id === postId ? { ...post, activeMediaId: mediaId } : post,
               ),
             }))
           }
@@ -404,12 +449,7 @@ function AppContent() {
     }
 
     if (activeModule === "messenger") {
-      return (
-        <MessengerPreview
-          images={messengerImages}
-          value={messenger}
-        />
-      );
+      return <MessengerPreview images={messengerImages} value={messenger} />;
     }
 
     return (
@@ -424,26 +464,14 @@ function AppContent() {
     );
   }
 
-  async function applyAppUpdate() {
-    setUpdateError(false);
-    if (!(await flushPendingSave())) {
-      setUpdateError(true);
-      return;
-    }
-    refreshApp();
-  }
-
   return (
-    <div className="app" ref={routeStart} tabIndex={-1} onClick={(event) => {
-      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-      const link = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>('a[href^="/"]') : null;
-      if (!link || link.target || link.hasAttribute("download") || link.origin !== location.origin || link.search || link.hash) return;
-      event.preventDefault();
-      if (link.pathname !== location.pathname) history.pushState(null, "", link.pathname);
-      setTeacherInfoOpen(false);
-      if (pendingExport !== null) cancelExport();
-      setPath(link.pathname);
-    }}>
+    <div className="app" onClickCapture={navigateInternal}>
+      <a
+        className="skip-link"
+        href={pathname === "/" ? "#workspace" : "#content-title"}
+      >
+        {t("app.skip")}
+      </a>
       <AppHeader onOpenTeacherInfo={() => setTeacherInfoOpen(true)} />
       {pathname === "/" && <EducationNotice />}
       {updateAvailable && (
@@ -465,266 +493,274 @@ function AppContent() {
       )}
 
       {pathname === "/verifizieren" ? (
-        <Suspense fallback={null}>
+        <Suspense fallback={<p role="status">{t("app.loading")}</p>}>
           <VerificationPage />
         </Suspense>
       ) : pathname === "/kontakt" ? (
         <ContactPage />
       ) : pathname !== "/" ? (
-        <Suspense fallback={null}>
+        <Suspense fallback={<p role="status">{t("app.loading")}</p>}>
           <ContentRoute pathname={pathname} />
         </Suspense>
-      ) : (
-        <main>
-          <section className="intro">
-            <div>
-              <span className="eyebrow">{activeCopy.eyebrow}</span>
-              <h1>{activeCopy.title}</h1>
-              <p>{activeCopy.description}</p>
-            </div>
-          </section>
-
-          {!orientationDismissed && (
-            <aside
-              aria-label={t("orientation.label")}
-              className="orientation-strip"
-            >
-              <strong>{t("orientation.title")}</strong>
-              <ol>
-                <li>
-                  <span>1</span>
-                  {t("orientation.step1")}
-                </li>
-                <li>
-                  <span>2</span>
-                  {t("orientation.step2")}
-                </li>
-                <li>
-                  <span>3</span>
-                  {t("orientation.step3")}
-                </li>
-                <li>
-                  <span>4</span>
-                  {t("orientation.step4")}
-                </li>
-              </ol>
-              <button
-                aria-label={t("orientation.dismiss")}
-                className="orientation-strip__close"
-                onClick={dismissOrientation}
-                type="button"
-              >
-                <X aria-hidden="true" size={22} />
-              </button>
-            </aside>
-          )}
-
-          <nav
-            aria-label={t("app.format")}
-            className="module-tabs"
-            role="tablist"
-          >
-            {modules.map(({ id, label, icon: Icon }, index) => (
-              <button
-                aria-controls="module-panel"
-                aria-selected={id === activeModule}
-                className={
-                  id === activeModule
-                    ? "module-tab module-tab--active"
-                    : "module-tab"
-                }
-                id={`module-tab-${id}`}
-                key={id}
-                onClick={() => selectModule(id)}
-                onKeyDown={(event) => handleModuleKeyDown(event, index)}
-                ref={(element) => {
-                  moduleTabRefs.current[index] = element;
-                }}
-                role="tab"
-                tabIndex={id === activeModule ? 0 : -1}
-                type="button"
-              >
-                <Icon aria-hidden="true" size={19} />
-                <span>{label}</span>
-              </button>
-            ))}
-          </nav>
-
-          <div aria-label={t("app.view")} className="mobile-view-toggle">
+      ) : null}
+      <main hidden={pathname !== "/"} id="workspace" tabIndex={-1}>
+        {sessionSaveError && (
+          <div className="status status--error status--action" role="alert">
+            <span>{t("app.sessionSaveError")}</span>
             <button
-              aria-pressed={mobileView === "editor"}
-              onClick={() => setMobileView("editor")}
+              className="button button--secondary"
               type="button"
+              disabled={projectOperation !== null}
+              onClick={() => void handleProjectDownload()}
             >
-              {t("app.edit")}
-            </button>
-            <button
-              aria-pressed={mobileView === "preview"}
-              onClick={() => setMobileView("preview")}
-              type="button"
-            >
-              {t("app.preview")}
+              {t("app.backupProject")}
             </button>
           </div>
+        )}
+        <section className="intro">
+          <div>
+            <h1>{activeCopy.title}</h1>
+            <p>{activeCopy.description}</p>
+          </div>
+        </section>
 
-          <section
-            aria-labelledby={`module-tab-${activeModule}`}
-            className="workspace"
-            id="module-panel"
-            role="tabpanel"
+        {!orientationDismissed && (
+          <aside
+            aria-label={t("orientation.label")}
+            className="orientation-strip"
           >
-            <div
-              className={`editor-panel ${
-                mobileView === "editor" ? "mobile-panel--active" : ""
-              }`}
+            <strong>{t("orientation.title")}</strong>
+            <ol>
+              <li>
+                <span>1</span>
+                {t("orientation.step1")}
+              </li>
+              <li>
+                <span>2</span>
+                {t("orientation.step2")}
+              </li>
+              <li>
+                <span>3</span>
+                {t("orientation.step3")}
+              </li>
+              <li>
+                <span>4</span>
+                {t("orientation.step4")}
+              </li>
+            </ol>
+            <button
+              aria-label={t("orientation.dismiss")}
+              className="orientation-strip__close"
+              onClick={dismissOrientation}
+              type="button"
             >
-              <div className="panel-heading">
-                <div>
-                  <span className="panel-kicker">{t("app.editor")}</span>
-                  <h2>{activeCopy.editorTitle}</h2>
-                </div>
+              <X aria-hidden="true" size={22} />
+            </button>
+          </aside>
+        )}
+
+        <nav
+          aria-label={t("app.format")}
+          className="module-tabs"
+          role="tablist"
+        >
+          {modules.map(({ id, label, icon: Icon }, index) => (
+            <button
+              aria-controls="module-panel"
+              aria-selected={id === activeModule}
+              className={
+                id === activeModule
+                  ? "module-tab module-tab--active"
+                  : "module-tab"
+              }
+              id={`module-tab-${id}`}
+              key={id}
+              onClick={() => selectModule(id)}
+              onKeyDown={(event) => handleModuleKeyDown(event, index)}
+              ref={(element) => {
+                moduleTabRefs.current[index] = element;
+              }}
+              role="tab"
+              tabIndex={id === activeModule ? 0 : -1}
+              type="button"
+            >
+              <Icon aria-hidden="true" size={19} />
+              <span>{label}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div aria-label={t("app.view")} className="mobile-view-toggle">
+          <button
+            aria-pressed={mobileView === "editor"}
+            onClick={() => setMobileView("editor")}
+            type="button"
+          >
+            {t("app.edit")}
+          </button>
+          <button
+            aria-pressed={mobileView === "preview"}
+            onClick={() => setMobileView("preview")}
+            type="button"
+          >
+            {t("app.preview")}
+          </button>
+        </div>
+
+        {configStatus && (
+          <p
+            className={`status status--${configStatus.type}`}
+            role={configStatus.type === "error" ? "alert" : "status"}
+          >
+            {configStatus.message}
+          </p>
+        )}
+        <section
+          aria-labelledby={`module-tab-${activeModule}`}
+          className="workspace"
+          id="module-panel"
+          role="tabpanel"
+        >
+          <div
+            className={`editor-panel ${
+              mobileView === "editor" ? "mobile-panel--active" : ""
+            }`}
+          >
+            <div className="panel-heading">
+              <div>
+                <h2>{activeCopy.editorTitle}</h2>
+              </div>
+              <button
+                className="icon-button"
+                onClick={resetActiveModule}
+                title={t("app.reset")}
+                type="button"
+              >
+                <RotateCcw aria-hidden="true" size={18} />
+                <span className="visually-hidden">{t("app.reset")}</span>
+              </button>
+            </div>
+
+            {imageError && (
+              <p className="status status--error" role="alert">
+                {imageError}
+              </p>
+            )}
+
+            {renderEditor()}
+          </div>
+
+          <div
+            className={`preview-panel ${
+              mobileView === "preview" ? "mobile-panel--active" : ""
+            }`}
+          >
+            <div className="preview-panel__header">
+              <div>
+                <strong>{t("app.livePreview")}</strong>
+                <p>{t("app.localRender")}</p>
+              </div>
+              <span className="live-indicator">
+                <span />
+                {t("app.live")}
+              </span>
+            </div>
+
+            <div className={`preview-stage preview-stage--${activeModule}`}>
+              <div className="export-wrapper" ref={previewRef}>
+                {renderPreview()}
+              </div>
+            </div>
+
+            <div className="action-bar">
+              <div className="action-group">
+                <span>{t("app.project")}</span>
                 <button
-                  className="icon-button"
-                  onClick={resetActiveModule}
-                  title={t("app.reset")}
+                  className="button button--secondary"
+                  disabled={projectOperation !== null}
+                  onClick={() => configInputRef.current?.click()}
                   type="button"
                 >
-                  <RotateCcw aria-hidden="true" size={18} />
-                  <span className="visually-hidden">{t("app.reset")}</span>
+                  <FileUp aria-hidden="true" size={17} />
+                  {projectOperation === "loading"
+                    ? t("app.loading")
+                    : t("app.load")}
+                </button>
+                <input
+                  accept=".smc,.json,application/zip,application/json"
+                  className="visually-hidden"
+                  onChange={handleProjectUpload}
+                  ref={configInputRef}
+                  type="file"
+                />
+                <button
+                  className="button button--secondary"
+                  disabled={projectOperation !== null}
+                  onClick={() => void handleProjectDownload()}
+                  type="button"
+                >
+                  <FileDown aria-hidden="true" size={17} />
+                  {projectOperation === "saving"
+                    ? t("app.saving")
+                    : t("app.save")}
+                </button>
+                <button
+                  className="button button--secondary"
+                  disabled={projectOperation !== null}
+                  onClick={() => void clearSavedData()}
+                  title={t("app.clearSavedHint")}
+                  type="button"
+                >
+                  <Trash2 aria-hidden="true" size={17} />
+                  {t("app.clearSaved")}
                 </button>
               </div>
-
-              {imageError && (
-                <p className="status status--error" role="alert">
-                  {imageError}
-                </p>
-              )}
-
-              {renderEditor()}
-            </div>
-
-            <div
-              className={`preview-panel ${
-                mobileView === "preview" ? "mobile-panel--active" : ""
-              }`}
-            >
-              <div className="preview-panel__header">
-                <div>
-                  <span className="panel-kicker">{t("app.livePreview")}</span>
-                  <p>{t("app.localRender")}</p>
-                </div>
-                <span className="live-indicator">
-                  <span />
-                  {t("app.live")}
-                </span>
-              </div>
-
-              <div
-                className={`preview-stage preview-stage--${activeModule}`}
-              >
-                <div className="export-wrapper" ref={previewRef}>
-                  {renderPreview()}
-                </div>
-              </div>
-
-              <div className="action-bar">
-                <div className="action-group">
-                  <span>{t("app.project")}</span>
-                  <button
-                    className="button button--secondary"
-                    disabled={projectOperation !== null}
-                    onClick={() => configInputRef.current?.click()}
-                    type="button"
-                  >
-                    <FileUp aria-hidden="true" size={17} />
-                    {projectOperation === "loading"
-                      ? t("app.loading")
-                      : t("app.load")}
-                  </button>
-                  <input
-                    accept=".smc,.json,application/zip,application/json"
-                    className="visually-hidden"
-                    onChange={handleProjectUpload}
-                    ref={configInputRef}
-                    type="file"
-                  />
-                  <button
-                    className="button button--secondary"
-                    disabled={projectOperation !== null}
-                    onClick={() => void handleProjectDownload()}
-                    type="button"
-                  >
-                    <FileDown aria-hidden="true" size={17} />
-                    {projectOperation === "saving"
-                      ? t("app.saving")
-                      : t("app.save")}
-                  </button>
-                  <button
-                    className="button button--secondary"
-                    disabled={projectOperation !== null}
-                    onClick={() => void clearSavedData()}
-                    title={t("app.clearSavedHint")}
-                    type="button"
-                  >
-                    <Trash2 aria-hidden="true" size={17} />
-                    {t("app.clearSaved")}
-                  </button>
-                </div>
-                <div className="action-group">
-                  <span>{t("app.image")}</span>
-                  <button
-                    className="button button--secondary"
-                    disabled={exporting !== null}
-                    onClick={() => requestExport("jpg")}
-                    type="button"
-                  >
-                    <Download aria-hidden="true" size={17} />
-                    {exporting === "jpg" ? t("app.creating") : "JPG"}
-                  </button>
-                  <button
-                    className="button button--primary"
-                    disabled={exporting !== null}
-                    onClick={() => requestExport("png")}
-                    type="button"
-                  >
-                    <Download aria-hidden="true" size={17} />
-                    {exporting === "png" ? t("app.creating") : "PNG"}
-                  </button>
-                  <button
-                    className="button button--secondary"
-                    disabled={exporting !== null}
-                    onClick={() => requestExport("pdf")}
-                    type="button"
-                  >
-                    <FileDown aria-hidden="true" size={17} />
-                    {exporting === "pdf" ? t("app.creating") : "PDF"}
-                  </button>
-                </div>
-              </div>
-              {exportError && (
-                <div className="status status--error status--action" role="alert">
-                  <span>{exportError}</span>
-                  <button
-                    className="button button--secondary"
-                    onClick={() => void resetAppVersion()}
-                    type="button"
-                  >
-                    {t("app.refreshApp")}
-                  </button>
-                </div>
-              )}
-              {configStatus && (
-                <p
-                  className={`status status--${configStatus.type}`}
-                  role={configStatus.type === "error" ? "alert" : "status"}
+              <div className="action-group">
+                <span>{t("app.image")}</span>
+                <button
+                  className="button button--secondary"
+                  disabled={exporting !== null}
+                  onClick={() => requestExport("jpg")}
+                  type="button"
                 >
-                  {configStatus.message}
-                </p>
-              )}
+                  <Download aria-hidden="true" size={17} />
+                  {exporting === "jpg" ? t("app.creating") : "JPG"}
+                </button>
+                <button
+                  className="button button--primary"
+                  disabled={exporting !== null}
+                  onClick={() => requestExport("png")}
+                  type="button"
+                >
+                  <Download aria-hidden="true" size={17} />
+                  {exporting === "png" ? t("app.creating") : "PNG"}
+                </button>
+                <button
+                  className="button button--secondary"
+                  disabled={exporting !== null}
+                  onClick={() => requestExport("pdf")}
+                  type="button"
+                >
+                  <FileDown aria-hidden="true" size={17} />
+                  {exporting === "pdf" ? t("app.creating") : "PDF"}
+                </button>
+              </div>
             </div>
-          </section>
-        </main>
-      )}
+            {exportError && (
+              <div className="status status--error status--action" role="alert">
+                <span>{exportError}</span>
+                <button
+                  className="button button--secondary"
+                  onClick={() => void resetAppVersion()}
+                  type="button"
+                >
+                  {t("app.refreshApp")}
+                </button>
+              </div>
+            )}
+          </div>
+        </section>
+      </main>
 
       <AppFooter />
       <TeacherInfoDialog

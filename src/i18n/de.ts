@@ -1,5 +1,9 @@
 export const de = {
   "app.tagline": "Werkstatt für digitale Formate",
+  "app.skip": "Zum Inhalt springen",
+  "app.sessionSaveError": "Die lokalen Änderungen konnten nicht gespeichert werden.",
+  "app.backupProject": "Projektdatei jetzt herunterladen",
+  "app.clearSavedError": "Die lokalen Daten konnten nicht vollständig gelöscht werden.",
   "app.local": "Inhalte bleiben lokal",
   "app.teacher": "Für Lehrkräfte",
   "app.language": "Sprache",
@@ -72,6 +76,7 @@ export const de = {
   "microblog.description":
     "Gestalte kurze fiktive Beiträge mit Profil, Zeitangaben und Reaktionen. Der Zeichenzähler informiert, ohne dich zu begrenzen.",
   "microblog.editorTitle": "Mikroblog-Beiträge bearbeiten",
+  "common.and": "und",
   "common.appearance": "Darstellung",
   "common.theme": "Farbschema",
   "common.light": "Light",

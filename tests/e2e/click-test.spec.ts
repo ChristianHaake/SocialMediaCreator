@@ -34,13 +34,13 @@ test("General app controls, translations, and static page navigation", async ({ 
   await page.goto("/");
 
   // Switch to English and check HTML lang
-  const enButton = page.getByRole("button", { name: "EN", exact: true });
+  const enButton = page.getByRole("button", { name: "English", exact: true });
   await enButton.click();
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page.getByRole("contentinfo").getByRole("link", { name: "Terms of use", exact: true })).toBeVisible();
 
   // Switch back to German
-  const deButton = page.getByRole("button", { name: "DE", exact: true });
+  const deButton = page.getByRole("button", { name: "Deutsch", exact: true });
   await deButton.click();
   await expect(page.locator("html")).toHaveAttribute("lang", "de");
 
@@ -82,6 +82,23 @@ test("General app controls, translations, and static page navigation", async ({ 
     const backLink = page.getByRole("link", { name: "Zurück zur App", exact: true });
     await backLink.click();
     await expect(page.locator(".intro h1")).toBeVisible();
+  }
+});
+
+test("all five language controls update the interface", async ({ page }) => {
+  await page.goto("/");
+  const languages = [
+    ["Deutsch", "de", "Erstelle deine Foto-Posts."],
+    ["English", "en", "Create your photo posts."],
+    ["Français", "fr", "Créez vos publications photo."],
+    ["Español", "es", "Crea tus publicaciones con fotos."],
+    ["Nederlands", "nl", "Maak je fotoberichten."],
+  ] as const;
+
+  for (const [name, locale, heading] of languages) {
+    await page.getByRole("button", { name, exact: true }).click();
+    await expect(page.locator("html")).toHaveAttribute("lang", locale);
+    await expect(page.getByRole("heading", { level: 1, name: heading })).toBeVisible();
   }
 });
 
@@ -386,7 +403,7 @@ test("Verification page upload and validation states", async ({ page }) => {
 
   // Test uploading a non-decodable file
   const invalidBuffer = Buffer.from("this is a fake image file text");
-  await page.locator('input[type="file"]').setInputFiles({
+  await page.locator('.verification-page input[type="file"]').setInputFiles({
     name: "fake_verification.png",
     mimeType: "image/png",
     buffer: invalidBuffer,

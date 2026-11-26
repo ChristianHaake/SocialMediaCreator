@@ -13,8 +13,8 @@ export type ConfigStatus = {
 export type ProjectOperation = "saving" | "loading" | null;
 
 export interface ProjectStorageConfig {
-  locale: "de" | "en";
-  setLocale: (locale: "de" | "en") => void;
+  locale: import("../domain/types").Locale;
+  setLocale: (locale: import("../domain/types").Locale) => void;
   t: (key: TranslationKey) => string;
   activeModule: ModuleType;
   setActiveModule: (module: ModuleType) => void;

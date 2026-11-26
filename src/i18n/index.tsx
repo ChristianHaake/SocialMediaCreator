@@ -11,20 +11,24 @@ import type { Locale } from "../domain/types";
 
 import { de, type TranslationKey } from "./de";
 import { en } from "./en";
+import { fr } from "./fr";
+import { es } from "./es";
+import { nl } from "./nl";
 
 type Params = Record<string, string | number>;
 
-const dictionaries = { de, en };
+const dictionaries = { de, en, fr, es, nl };
 const storageKey = "social-media-creator-locale";
 
 function detectLocale(): Locale {
   try {
     const stored = window.localStorage.getItem(storageKey);
-    if (stored === "de" || stored === "en") return stored;
+    if (stored === "de" || stored === "en" || stored === "fr" || stored === "es" || stored === "nl") return stored;
   } catch {
     // Fall back to browser language when localStorage is blocked.
   }
-  return window.navigator.language.toLowerCase().startsWith("en") ? "en" : "de";
+  const language = window.navigator.language.toLowerCase().split("-")[0];
+  return language === "en" || language === "fr" || language === "es" || language === "nl" ? language : "de";
 }
 
 function translate(locale: Locale, key: TranslationKey, params?: Params) {
@@ -41,7 +45,7 @@ type LocaleContextValue = {
   locale: Locale;
   setLocale: (locale: Locale) => void;
   t: (key: TranslationKey, params?: Params) => string;
-  numberLocale: "de-DE" | "en-US";
+  numberLocale: "de-DE" | "en-US" | "fr-FR" | "es-ES" | "nl-NL";
 };
 
 const LocaleContext = createContext<LocaleContextValue | null>(null);
@@ -56,7 +60,6 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
       // Locale selection still works for the current render.
     }
     document.documentElement.lang = locale;
-    document.title = "SocialMediaCreator";
     document
       .querySelector('meta[name="description"]')
       ?.setAttribute("content", translate(locale, "app.metaDescription"));
@@ -66,7 +69,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     () => ({
       locale,
       setLocale,
-      numberLocale: locale === "de" ? "de-DE" : "en-US",
+      numberLocale: ({ de: "de-DE", en: "en-US", fr: "fr-FR", es: "es-ES", nl: "nl-NL" } as const)[locale],
       t: (key, params) => translate(locale, key, params),
     }),
     [locale],

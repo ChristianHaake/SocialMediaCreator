@@ -80,7 +80,7 @@ function isTheme(value: unknown): value is Theme {
 }
 
 function isLocale(value: unknown): value is Locale {
-  return value === "de" || value === "en";
+  return value === "de" || value === "en" || value === "fr" || value === "es" || value === "nl";
 }
 
 function isSortOrder(value: unknown): value is TimelineSortOrder {
