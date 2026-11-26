@@ -15,6 +15,6 @@ Stand: 26. November 2026. Referenz: [haak3-Webapp-Standard](https://github.com/C
 - Cloudflare Web Analytics ist bereits Teil des Hostings und der Datenschutzhinweise. Die Betreiberprüfung dieser bestehenden Ausnahme steht vor Produktion aus.
 - Die Anwendungschrome bietet noch keine eigene Hell-/Dunkel-Präferenz. Die Light-/Dim-/Dark-Modi gelten nur für Simulationen. Dies bleibt eine dokumentierte Abweichung vom empfohlenen Erscheinungsbild-Schalter.
 - Die neuen rechtlichen Sprachfassungen sind Entwürfe. Betreiberprüfung ist erforderlich.
-- Echte iPhone-/iPad-Bedienung, installierte PWA-Aktualisierung, Safari-Offlineverhalten, 200-%-Zoom, Screenreader sowie Firefox in funktionierender Umgebung sind für diesen Integrationsstand offen.
+- Echte iPhone-/iPad-Bedienung, installierte PWA-Aktualisierung, Safari-Offlineverhalten, 200-%-Zoom, Screenreader und ein Firefox-Reload mit gespeicherten Projektdaten sind für diesen Integrationsstand offen. Die übrigen Firefox-E2E-Tests bestanden in Linux-CI.
 
 Ein Rollback darf weder Browserdaten löschen noch das Lesen vorhandener `.smc`-Archive verlieren. Das vorherige Produktionsartefakt und die Rückwärtsprüfung sind vor der Freigabe festzuhalten.
