@@ -34,6 +34,8 @@ export const de = {
   "app.clearedSaved": "Lokale Daten gelöscht.",
   "app.updateAvailable": "Eine neue Version ist verfügbar.",
   "app.updateNow": "Aktualisieren",
+  "app.updateSaveFailed":
+    "Aktuelle Änderungen konnten nicht gespeichert werden. Exportiere dein Projekt, bevor du die App aktualisierst.",
   "app.refreshApp": "App aktualisieren",
   "app.imageExportError":
     "Das Bild konnte nicht gestartet werden. Bitte aktualisiere die App oder öffne sie im Browser.",

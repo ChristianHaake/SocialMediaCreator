@@ -4,87 +4,82 @@ import { usePwaUpdate } from "./usePwaUpdate";
 
 type RegisterOptions = {
   onNeedRefresh?: () => void;
+  onNeedReload?: () => void;
   onRegisteredSW?: (
     swUrl: string,
     registration: Pick<ServiceWorkerRegistration, "update"> | undefined,
   ) => void;
 };
 
-function createServiceWorker(controller: ServiceWorker | null = {} as ServiceWorker) {
-  const listeners = new Map<string, EventListener>();
-  const serviceWorker = {
-    controller,
-    addEventListener: vi.fn((type: string, listener: EventListener) => {
-      listeners.set(type, listener);
-    }),
-    getRegistrations: vi.fn(() => Promise.resolve([])),
-    removeEventListener: vi.fn((type: string) => {
-      listeners.delete(type);
-    }),
-  } as unknown as ServiceWorkerContainer;
-  return { listeners, serviceWorker };
-}
+const serviceWorker = {} as ServiceWorkerContainer;
 
 describe("usePwaUpdate", () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it("shows an update notice and refreshes through the registered service worker", () => {
-    const { serviceWorker } = createServiceWorker();
+  it("shows the update action on a waiting worker and activates it only on request", () => {
     const updateServiceWorker = vi.fn();
-    let onNeedRefresh: (() => void) | undefined;
+    let callbacks: RegisterOptions = {};
     const register = vi.fn((options: RegisterOptions) => {
-      onNeedRefresh = options.onNeedRefresh;
+      callbacks = options;
       return updateServiceWorker;
     });
 
     const { result } = renderHook(() =>
-      usePwaUpdate({
-        register: register as never,
-        serviceWorker,
-      }),
+      usePwaUpdate({ register: register as never, serviceWorker }),
     );
 
-    act(() => onNeedRefresh?.());
+    act(() => callbacks.onNeedRefresh?.());
     expect(result.current.updateAvailable).toBe(true);
+    expect(updateServiceWorker).not.toHaveBeenCalled();
 
     act(() => result.current.refreshApp());
     expect(updateServiceWorker).toHaveBeenCalledWith(true);
   });
 
-  it("reloads only once when an existing service worker takes control", () => {
-    const { listeners, serviceWorker } = createServiceWorker();
+  it("reloads only once after the requested update takes control", () => {
+    let callbacks: RegisterOptions = {};
     const reload = vi.fn();
 
     renderHook(() =>
       usePwaUpdate({
-        register: vi.fn(() => vi.fn()) as never,
+        register: vi.fn((options: RegisterOptions) => {
+          callbacks = options;
+          return vi.fn();
+        }) as never,
         reload,
         serviceWorker,
       }),
     );
 
-    act(() => listeners.get("controllerchange")?.(new Event("controllerchange")));
-    act(() => listeners.get("controllerchange")?.(new Event("controllerchange")));
-
+    act(() => callbacks.onNeedReload?.());
+    act(() => callbacks.onNeedReload?.());
     expect(reload).toHaveBeenCalledOnce();
   });
 
-  it("does not reload when the first service worker claims the page", () => {
-    const { listeners, serviceWorker } = createServiceWorker(null);
-    const reload = vi.fn();
-
-    renderHook(() =>
+  it("checks for updates on registration and when an existing page becomes visible", () => {
+    let callbacks: RegisterOptions = {};
+    const update = vi.fn(() => Promise.resolve());
+    vi.spyOn(document, "visibilityState", "get").mockReturnValue("visible");
+    const { unmount } = renderHook(() =>
       usePwaUpdate({
-        register: vi.fn(() => vi.fn()) as never,
-        reload,
+        register: vi.fn((options: RegisterOptions) => {
+          callbacks = options;
+          return vi.fn();
+        }) as never,
         serviceWorker,
       }),
     );
 
-    act(() => listeners.get("controllerchange")?.(new Event("controllerchange")));
+    act(() => callbacks.onRegisteredSW?.("/sw.js", { update }));
+    expect(update).toHaveBeenCalledOnce();
 
-    expect(reload).not.toHaveBeenCalled();
+    act(() => document.dispatchEvent(new Event("visibilitychange")));
+    expect(update).toHaveBeenCalledTimes(2);
+
+    unmount();
+    act(() => document.dispatchEvent(new Event("visibilitychange")));
+    expect(update).toHaveBeenCalledTimes(2);
   });
 });

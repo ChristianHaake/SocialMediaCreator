@@ -11,7 +11,6 @@ export function usePwaUpdate(options: UsePwaUpdateOptions = {}) {
   const { register = registerSW, reload, serviceWorker } = options;
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const refreshing = useRef(false);
-  const hadController = useRef(false);
   const updateServiceWorker = useRef<ReturnType<typeof registerSW> | null>(null);
 
   useEffect(() => {
@@ -22,31 +21,40 @@ export function usePwaUpdate(options: UsePwaUpdateOptions = {}) {
 
     const reloadPage = reload ?? (() => window.location.reload());
     let updateInterval: number | undefined;
-    hadController.current = !!activeServiceWorker.controller;
-
-    const onControllerChange = () => {
-      if (!hadController.current || refreshing.current) return;
-      refreshing.current = true;
-      reloadPage();
-    };
-
-    activeServiceWorker.addEventListener("controllerchange", onControllerChange);
+    let removeVisibilityListener: (() => void) | undefined;
+    let disposed = false;
     updateServiceWorker.current = register({
       immediate: true,
       onNeedRefresh() {
-        setUpdateAvailable(true);
+        if (!disposed) setUpdateAvailable(true);
+      },
+      onNeedReload() {
+        if (disposed || refreshing.current) return;
+        refreshing.current = true;
+        reloadPage();
       },
       onRegisteredSW(_swUrl, registration) {
-        if (!registration) return;
+        if (disposed || !registration) return;
+        const checkForUpdate = () => {
+          if (navigator.onLine) void registration.update().catch(() => {});
+        };
+        checkForUpdate();
+        const onVisibilityChange = () => {
+          if (document.visibilityState === "visible") checkForUpdate();
+        };
+        document.addEventListener("visibilitychange", onVisibilityChange);
+        removeVisibilityListener = () =>
+          document.removeEventListener("visibilitychange", onVisibilityChange);
         updateInterval = window.setInterval(
-          () => void registration.update(),
+          checkForUpdate,
           60 * 60 * 1000,
         );
       },
     });
 
     return () => {
-      activeServiceWorker.removeEventListener("controllerchange", onControllerChange);
+      disposed = true;
+      removeVisibilityListener?.();
       if (updateInterval !== undefined) window.clearInterval(updateInterval);
     };
   }, [register, reload, serviceWorker]);

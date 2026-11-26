@@ -92,6 +92,7 @@ function AppContent() {
   } = useProjectImages();
   const [mobileView, setMobileView] = useState<MobileView>("editor");
   const [imageError, setImageError] = useState<string | null>(null);
+  const [updateError, setUpdateError] = useState(false);
   const [teacherInfoOpen, setTeacherInfoOpen] = useState(false);
   const [orientationDismissed, setOrientationDismissed] = useState(
     readOrientationDismissed,
@@ -104,7 +105,7 @@ function AppContent() {
     updateAvailable,
   } = usePwaUpdate();
 
-  const { cancelPendingSessionRestore, clearSession } = useSessionPersistence({
+  const { cancelPendingSessionRestore, clearSession, flushPendingSave } = useSessionPersistence({
     locale,
     activeModule,
     setActiveModule,
@@ -423,6 +424,15 @@ function AppContent() {
     );
   }
 
+  async function applyAppUpdate() {
+    setUpdateError(false);
+    if (!(await flushPendingSave())) {
+      setUpdateError(true);
+      return;
+    }
+    refreshApp();
+  }
+
   return (
     <div className="app" ref={routeStart} tabIndex={-1} onClick={(event) => {
       if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -441,12 +451,17 @@ function AppContent() {
           <span>{t("app.updateAvailable")}</span>
           <button
             className="button button--secondary"
-            onClick={refreshApp}
+            onClick={() => void applyAppUpdate()}
             type="button"
           >
             {t("app.updateNow")}
           </button>
         </div>
+      )}
+      {updateError && (
+        <p className="status status--error" role="alert">
+          {t("app.updateSaveFailed")}
+        </p>
       )}
 
       {pathname === "/verifizieren" ? (

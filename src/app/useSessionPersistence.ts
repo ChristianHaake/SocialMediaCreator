@@ -121,9 +121,16 @@ export function useSessionPersistence(config: SessionPersistenceConfig) {
   });
   const timerRef = useRef<number | null>(null);
   const pendingModulesRef = useRef<Set<ModuleType>>(new Set());
-  const persistRef = useRef<(modules: ModuleType[]) => Promise<void>>(
-    async () => undefined,
+  const saveQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const persistRef = useRef<(modules: ModuleType[]) => Promise<boolean>>(
+    async () => true,
   );
+
+  const queuePersist = useCallback((modules: ModuleType[]) => {
+    const operation = saveQueueRef.current.then(() => persistRef.current(modules));
+    saveQueueRef.current = operation.then(() => undefined, () => undefined);
+    return operation;
+  }, []);
 
   function seedCurrentSignatures() {
     for (const module of MODULES) {
@@ -142,9 +149,21 @@ export function useSessionPersistence(config: SessionPersistenceConfig) {
     timerRef.current = window.setTimeout(() => {
       const pending = Array.from(pendingModulesRef.current);
       pendingModulesRef.current.clear();
-      void persistRef.current(pending);
+      timerRef.current = null;
+      void queuePersist(pending);
     }, SAVE_DEBOUNCE_MS);
-  }, []);
+  }, [queuePersist]);
+
+  const flushPendingSave = useCallback(async () => {
+    if (!hydratedRef.current) return false;
+    if (timerRef.current !== null) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    const pending = Array.from(pendingModulesRef.current);
+    pendingModulesRef.current.clear();
+    return queuePersist(pending.length > 0 ? pending : MODULES);
+  }, [queuePersist]);
 
   function cancelPendingSessionRestore() {
     restoreTokenRef.current += 1;
@@ -272,6 +291,7 @@ export function useSessionPersistence(config: SessionPersistenceConfig) {
   async function persist(modules: ModuleType[]) {
     const current = configRef.current;
     let archiveTools: typeof import("../shared/lib/projectArchives") | null = null;
+    let saved = true;
     for (const module of modules) {
       const state = stateFor(current, module);
       const images = imagesFor(current, module);
@@ -294,13 +314,18 @@ export function useSessionPersistence(config: SessionPersistenceConfig) {
       } catch {
         // Save failed (e.g. too large). Leave the signature so we retry on the
         // next change rather than silently giving up.
+        saved = false;
       }
     }
+    return saved;
   }
   persistRef.current = persist;
 
   async function clearSession() {
-    if (timerRef.current) window.clearTimeout(timerRef.current);
+    if (timerRef.current !== null) window.clearTimeout(timerRef.current);
+    timerRef.current = null;
+    pendingModulesRef.current.clear();
+    await saveQueueRef.current;
     await clearSessionSnapshots().catch(() => undefined);
     try {
       localStorage.removeItem(ACTIVE_MODULE_KEY);
@@ -310,5 +335,5 @@ export function useSessionPersistence(config: SessionPersistenceConfig) {
     lastSigRef.current = { photoPost: "", messenger: "", microblog: "" };
     }
 
-  return { cancelPendingSessionRestore, clearSession };
+  return { cancelPendingSessionRestore, clearSession, flushPendingSave };
 }
