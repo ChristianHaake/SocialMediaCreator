@@ -88,5 +88,6 @@ describe("EmojiTextarea", () => {
     expect(
       screen.queryByRole("button", { name: "Emoji einfügen 🙂" }),
     ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", {name: "Emoji auswählen"})).toHaveFocus();
   });
 });

@@ -71,6 +71,11 @@ Die Anwendung verwendet keine Cookies zu Werbe- oder Marketingzwecken und lädt
 keine externen Schriftarten oder Nutzermedien. Cloudflare kann im Rahmen
 technisch notwendiger Sicherheitsmaßnahmen Cookies einsetzen.
 
+Die interne Unterstützen-Seite enthält einen einfachen Link zu Buy Me a
+Coffee. Die Anwendung lädt dafür keine Spendenwidgets oder Tracking-Pixel.
+Wenn du den Link öffnest, rufst du die externe Website auf; dort gelten die
+Datenschutzbedingungen des Anbieters.
+
 ## 7. Datenübermittlung in Drittländer
 
 Eine Verarbeitung durch Cloudflare in den USA kann nicht ausgeschlossen

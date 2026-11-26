@@ -5,6 +5,7 @@ import "./styles/base-and-editor.css";
 import "./styles/previews.css";
 import "./styles/content-and-dialogs.css";
 import "./styles/responsive.css";
+import "./styles/ui-family.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

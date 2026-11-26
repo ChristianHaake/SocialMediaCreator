@@ -54,15 +54,21 @@ function write(
     (db) =>
       new Promise<void>((resolve, reject) => {
         const transaction = db.transaction(STORE, "readwrite");
-        run(transaction.objectStore(STORE));
         transaction.oncomplete = () => {
           db.close();
           resolve();
         };
-        transaction.onerror = () => {
+        transaction.onabort = transaction.onerror = () => {
           db.close();
           reject(transaction.error ?? new Error("IndexedDB write failed"));
         };
+        try {
+          run(transaction.objectStore(STORE));
+        } catch (error) {
+          transaction.abort();
+          db.close();
+          reject(error);
+        }
       }),
   );
 }
@@ -108,7 +114,7 @@ export async function getSessionSnapshots(): Promise<
           };
         }
         transaction.oncomplete = () => resolve(out);
-        transaction.onerror = () =>
+        transaction.onabort = transaction.onerror = () =>
           reject(transaction.error ?? new Error("IndexedDB read failed"));
       },
     );

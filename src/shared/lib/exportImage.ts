@@ -349,9 +349,89 @@ async function withRenderFrameFallback<T>(run: () => Promise<T>): Promise<T> {
 
 async function renderElementCanvas(element: HTMLElement) {
   await waitForRenderFrame();
-  return withRenderFrameFallback(() =>
-    toCanvas(element, getRenderOptions(element)),
-  );
+  const images = Array.from(element.querySelectorAll<HTMLImageElement>("img"));
+  const needsImageComposition =
+    /AppleWebKit/i.test(navigator.userAgent) &&
+    !/(Chrome|Chromium|Edg)\//i.test(navigator.userAgent) &&
+    images.some((image) => {
+      const rect = image.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0;
+    });
+  // WebKit can omit large nested images when SVG foreignObject is rasterized.
+  const visibility = images.map((image) => image.style.visibility);
+  if (needsImageComposition) {
+    images.forEach((image) => { image.style.visibility = "hidden"; });
+  }
+  let canvas: HTMLCanvasElement;
+  try {
+    canvas = await withRenderFrameFallback(() =>
+      toCanvas(element, getRenderOptions(element)),
+    );
+  } finally {
+    images.forEach((image, index) => {
+      image.style.visibility = visibility[index];
+    });
+  }
+  if (needsImageComposition) {
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Canvas not available.");
+    const root = element.getBoundingClientRect();
+    const ratio = canvas.width / root.width;
+    for (const image of images) {
+      const rect = image.getBoundingClientRect();
+      if (!rect.width || !rect.height) continue;
+      const source = new Image();
+      source.src = image.src;
+      await source.decode();
+      const style = getComputedStyle(image);
+      const border = parseFloat(style.borderLeftWidth) || 0;
+      const x = (rect.left - root.left + border) * ratio;
+      const y = (rect.top - root.top + border) * ratio;
+      const width = (rect.width - border * 2) * ratio;
+      const height = (rect.height - border * 2) * ratio;
+      const radius = style.borderRadius.includes("%")
+        ? (Math.min(width, height) * parseFloat(style.borderRadius)) / 100
+        : (parseFloat(style.borderRadius) || 0) * ratio;
+      context.save();
+      context.beginPath();
+      context.roundRect(x, y, width, height, Math.max(0, radius));
+      context.clip();
+      const scale = style.objectFit === "contain"
+        ? Math.min(width / source.naturalWidth, height / source.naturalHeight)
+        : Math.max(width / source.naturalWidth, height / source.naturalHeight);
+      const drawnWidth = source.naturalWidth * scale;
+      const drawnHeight = source.naturalHeight * scale;
+      context.drawImage(
+        source,
+        x + (width - drawnWidth) / 2,
+        y + (height - drawnHeight) / 2,
+        drawnWidth,
+        drawnHeight,
+      );
+      context.restore();
+    }
+    for (const overlay of element.querySelectorAll<HTMLElement>(
+      ".video-overlay, .video-meta, .carousel-counter",
+    )) {
+      const rect = overlay.getBoundingClientRect();
+      if (!rect.width || !rect.height) continue;
+      const layer = await toCanvas(overlay, {
+        pixelRatio: ratio,
+        width: rect.width,
+        height: rect.height,
+        backgroundColor: "transparent",
+        style: {
+          position: "static", transform: "none", inset: "auto", margin: "0",
+        },
+      });
+      context.drawImage(
+        layer,
+        (rect.left - root.left) * ratio,
+        (rect.top - root.top) * ratio,
+      );
+    }
+  }
+  return canvas;
 }
 
 async function renderElementBlob(

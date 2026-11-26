@@ -3,6 +3,7 @@ export const de = {
   "app.local": "Inhalte bleiben lokal",
   "app.teacher": "Für Lehrkräfte",
   "app.language": "Sprache",
+  "app.skip": "Zum Arbeitsbereich",
   "app.metaDescription":
     "Erstelle fiktive digitale Kommunikationsformate lokal im Browser.",
   "app.format": "Format auswählen",
@@ -32,6 +33,9 @@ export const de = {
   "app.clearSavedConfirm":
     "Alle lokal auf diesem Gerät gespeicherten Eingaben und Bilder löschen und neu beginnen?",
   "app.clearedSaved": "Lokale Daten gelöscht.",
+  "app.clearSavedError": "Lokale Daten konnten nicht gelöscht werden. Dein Arbeitsstand bleibt erhalten. Versuche es erneut oder verwende die Website-Daten deines Browsers.",
+  "app.sessionSaveError": "Die lokale Sicherung ist nicht verfügbar. Sichere deinen Arbeitsstand als Projektdatei, bevor du die App schließt oder neu lädst.",
+  "app.backupProject": "Projektdatei sichern",
   "app.updateAvailable": "Eine neue Version ist verfügbar.",
   "app.updateNow": "Aktualisieren",
   "app.refreshApp": "App aktualisieren",
@@ -251,6 +255,9 @@ export const de = {
   "footer.privacy": "Datenschutz",
   "footer.legal": "Impressum",
   "footer.coffee": "Spendier mir einen Kaffee",
+  "footer.support": "Unterstützen",
+  "footer.by": "Ein Projekt von",
+  "footer.repository": "SocialMediaCreator: Quellcode auf GitHub",
   "content.back": "Zurück zur App",
   "content.help": "Hilfe",
   "content.about": "Über das Projekt",

@@ -12,10 +12,13 @@ import aboutEn from "./en/about.md?raw";
 import educatorsEn from "./en/educators.md?raw";
 import responsibleEn from "./en/responsible-use.md?raw";
 import termsEn from "./en/terms.md?raw";
+import support from "./unterstuetzung.md?raw";
+import supportEn from "./en/support.md?raw";
 
 export const contentPages = {
   de: {
     "/hilfe": { title: "Hilfe", content: hilfe },
+    "/unterstuetzung": { title: "Unterstützen", content: support },
     "/ueber": { title: "Über das Projekt", content: ueber },
     "/lehrkraefte": {
       title: "Hinweise für Lehrkräfte",
@@ -34,6 +37,7 @@ export const contentPages = {
   },
   en: {
     "/hilfe": { title: "Help", content: helpEn },
+    "/unterstuetzung": { title: "Support", content: supportEn },
     "/ueber": { title: "About the project", content: aboutEn },
     "/lehrkraefte": {
       title: "Information for educators",

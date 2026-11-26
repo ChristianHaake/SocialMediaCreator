@@ -34,13 +34,12 @@ test("General app controls, translations, and static page navigation", async ({ 
   await page.goto("/");
 
   // Switch to English and check HTML lang
-  const enButton = page.getByRole("button", { name: "EN", exact: true });
-  await enButton.click();
+  const language = page.getByRole("combobox", { name: "Sprache", exact: true });
+  await language.selectOption("en");
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
 
   // Switch back to German
-  const deButton = page.getByRole("button", { name: "DE", exact: true });
-  await deButton.click();
+  await page.getByRole("combobox", { name: "Language", exact: true }).selectOption("de");
   await expect(page.locator("html")).toHaveAttribute("lang", "de");
 
   // Open teacher info dialog
@@ -313,7 +312,7 @@ test("Verification page upload and validation states", async ({ page }) => {
 
   // Test uploading a non-decodable file
   const invalidBuffer = Buffer.from("this is a fake image file text");
-  await page.locator('input[type="file"]').setInputFiles({
+  await page.locator('.verification-upload input[type="file"]').setInputFiles({
     name: "fake_verification.png",
     mimeType: "image/png",
     buffer: invalidBuffer,

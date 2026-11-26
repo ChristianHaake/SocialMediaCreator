@@ -151,7 +151,7 @@ test("education notice and public guidance pages are visible and bilingual", asy
   await expect(page.getByText("Unterrichtsszenario 5: Plattformmechaniken")).toBeVisible();
   await expect(page.getByRole("heading", { name: "FAQ" })).toBeVisible();
 
-  await page.getByRole("button", { name: "EN", exact: true }).click();
+  await page.getByRole("combobox", { name: "Sprache", exact: true }).selectOption("en");
   await expect(
     page.getByRole("heading", { name: "Information for educators" }),
   ).toBeVisible();
@@ -204,7 +204,7 @@ test("language switch preserves content and exports locale in config v6", async 
 }) => {
   await page.goto("/");
   await page.getByLabel("Benutzername").fill("custom_account");
-  await page.getByRole("button", { name: "EN", exact: true }).click();
+  await page.getByRole("combobox", { name: "Sprache", exact: true }).selectOption("en");
 
   await expect(
     page.getByRole("heading", { name: "Create your photo posts." }),
@@ -547,6 +547,103 @@ test("photo image exports include media restored from project archives", async (
     `PNG export did not contain archived green profile pixels. Result: ${JSON.stringify(profilePixelResult)}`,
   ).toBeGreaterThan(0);
 });
+
+test("mobile WebKit export includes large archived photo and profile pixels", async ({
+  browserName,
+  page,
+}) => {
+  test.skip(
+    browserName === "firefox",
+    "Firefox download events are covered by lighter export tests; Safari PNG coverage runs in WebKit.",
+  );
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  const redPng = await createSolidColorPng(
+    page,
+    { red: 255, green: 0, blue: 0 },
+    1536,
+  );
+  const greenPng = await createSolidColorPng(
+    page,
+    { red: 0, green: 255, blue: 0 },
+    1536,
+  );
+  const photoPost = structuredClone(defaultPhotoPost);
+  const post = photoPost.posts[0];
+  const manifest = {
+    format: "social-media-creator-project",
+    version: 1,
+    config: {
+      format: "social-media-creator-config",
+      version: 6,
+      locale: "de",
+      module: "photoPost",
+      data: photoPost,
+    },
+    media: [
+      {
+        path: "media/0001.png",
+        originalFileName: "green-profile.png",
+        reference: { kind: "photo-profile", postId: post.id },
+      },
+      {
+        path: "media/0002.png",
+        originalFileName: "red-media.png",
+        reference: {
+          kind: "photo-media",
+          postId: post.id,
+          mediaId: post.media[0].id,
+        },
+      },
+    ],
+  };
+  const archive = Buffer.from(
+    zipSync({
+      "project.json": strToU8(JSON.stringify(manifest)),
+      "media/0001.png": greenPng,
+      "media/0002.png": redPng,
+    }),
+  );
+
+  await page.locator('input[type="file"][accept*=".smc"]').setInputFiles({
+    name: "archive-images.smc",
+    mimeType: "application/zip",
+    buffer: archive,
+  });
+  await page.getByRole("button", { name: "Vorschau", exact: true }).click();
+  await expect(page.locator("img.photo-post__avatar")).toBeVisible();
+  await expect(page.locator(".photo-post__media img")).toBeVisible();
+
+  const imageDownload = page.waitForEvent("download");
+  await page.getByRole("button", { name: "PNG" }).click();
+  await continueExport(page);
+  const image = await imageDownload;
+  const path = await image.path();
+  expect(path).not.toBeNull();
+  const bytes = new Uint8Array(await readFile(path!));
+
+  const mediaPixelResult = await imageHasPixelNearColor(page, bytes, {
+    red: 255,
+    green: 0,
+    blue: 0,
+  });
+  expect(
+    mediaPixelResult.matchedPixels,
+    `PNG export did not contain archived red media pixels. Result: ${JSON.stringify(mediaPixelResult)}`,
+  ).toBeGreaterThan(0);
+
+  const profilePixelResult = await imageHasPixelNearColor(page, bytes, {
+    red: 0,
+    green: 255,
+    blue: 0,
+  });
+  expect(
+    profilePixelResult.matchedPixels,
+    `PNG export did not contain archived green profile pixels. Result: ${JSON.stringify(profilePixelResult)}`,
+  ).toBeGreaterThan(0);
+});
+
 
 test("photo and microblog feeds support multiple posts with comments", async ({
   page,
@@ -1030,7 +1127,7 @@ test("PDF export and local image verification are available", async ({
   expect((await jpgDownload).suggestedFilename()).toMatch(/\.jpg$/);
 
   await page.goto("/verifizieren");
-  await page.locator('input[type="file"]').setInputFiles(imagePath!);
+  await page.locator('.verification-upload input[type="file"]').setInputFiles(imagePath!);
   await expect(
     page.getByRole("heading", { name: "Gültiger Herkunftsmarker" }),
   ).toBeVisible();

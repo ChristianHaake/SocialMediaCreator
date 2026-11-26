@@ -56,7 +56,6 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
       // Locale selection still works for the current render.
     }
     document.documentElement.lang = locale;
-    document.title = "SocialMediaCreator";
     document
       .querySelector('meta[name="description"]')
       ?.setAttribute("content", translate(locale, "app.metaDescription"));

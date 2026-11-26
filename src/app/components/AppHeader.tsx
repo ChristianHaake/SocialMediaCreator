@@ -1,5 +1,6 @@
 import { Check, GraduationCap } from "lucide-react";
 import { useTranslation } from "../../i18n";
+import type { Locale } from "../../domain/types";
 
 type AppHeaderProps = {
   onOpenTeacherInfo: () => void;
@@ -22,18 +23,16 @@ export function AppHeader({ onOpenTeacherInfo }: AppHeaderProps) {
           {t("app.local")}
         </span>
         <div className="header-meta__controls">
-          <div aria-label={t("app.language")} className="language-switch">
-            {(["de", "en"] as const).map((option) => (
-              <button
-                aria-pressed={locale === option}
-                key={option}
-                onClick={() => setLocale(option)}
-                type="button"
-              >
-                {option.toUpperCase()}
-              </button>
-            ))}
-          </div>
+          <label className="language-menu">
+            <span>{t("app.language")}</span>
+            <select
+              value={locale}
+              onChange={(event) => setLocale(event.target.value as Locale)}
+            >
+              <option value="de">Deutsch</option>
+              <option value="en">English</option>
+            </select>
+          </label>
           <button
             className="text-button"
             onClick={(event) => {

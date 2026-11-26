@@ -195,6 +195,11 @@ security and caching headers from `public/_headers`.
 
 ## Documentation
 
+The family UI migration adopts the orange shell and direct editor layout while
+retaining all simulation modules and project formats. See
+[UI overhaul verification](docs/UI-OVERHAUL.md) and
+[standard conformance / release gates](docs/standard-conformance.md).
+
 - [Changelog](CHANGELOG.md)
 - [Coding plan](docs/planning/Codingplan.md)
 - [UI and UX plan](docs/planning/UI-Design-Entwurf.md)

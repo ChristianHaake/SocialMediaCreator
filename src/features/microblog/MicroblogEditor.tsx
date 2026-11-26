@@ -279,44 +279,7 @@ export function MicroblogEditor({
 
       <EditorDisclosure
         defaultOpen
-        description={t("microblog.profileDescription")}
-        number="01"
-        title={t("microblog.profile")}
-      >
-        <ImageUploadField
-          id="microblog-profile-image"
-          image={activeImages.profileImage}
-          label={t("common.profileImage")}
-          onChange={(image) => onProfileImageChange(activePost.id, image)}
-          onError={onImageError}
-        />
-        <div className="field-row">
-          <label className="field">
-            <span className="field-label">{t("microblog.displayName")}</span>
-            <input
-              ref={authorInputRef}
-              maxLength={fieldLimits.microblog.displayName}
-              onChange={(event) =>
-                updatePost({ displayName: event.target.value })
-              }
-              value={activePost.displayName}
-            />
-          </label>
-          <label className="field">
-            <span className="field-label">Handle</span>
-            <input
-              maxLength={fieldLimits.microblog.handle}
-              onChange={(event) => updatePost({ handle: event.target.value })}
-              value={activePost.handle}
-            />
-          </label>
-        </div>
-      </EditorDisclosure>
-
-      <EditorDisclosure
-        defaultOpen
         description={t("microblog.contentDescription")}
-        number="02"
         title={t("microblog.contentTitle")}
       >
         <div className="field">
@@ -364,8 +327,43 @@ export function MicroblogEditor({
       </EditorDisclosure>
 
       <EditorDisclosure
+        defaultOpen
+        description={t("microblog.profileDescription")}
+        title={t("microblog.profile")}
+      >
+        <ImageUploadField
+          id="microblog-profile-image"
+          image={activeImages.profileImage}
+          label={t("common.profileImage")}
+          onChange={(image) => onProfileImageChange(activePost.id, image)}
+          onError={onImageError}
+        />
+        <div className="field-row">
+          <label className="field">
+            <span className="field-label">{t("microblog.displayName")}</span>
+            <input
+              ref={authorInputRef}
+              maxLength={fieldLimits.microblog.displayName}
+              onChange={(event) =>
+                updatePost({ displayName: event.target.value })
+              }
+              value={activePost.displayName}
+            />
+          </label>
+          <label className="field">
+            <span className="field-label">Handle</span>
+            <input
+              maxLength={fieldLimits.microblog.handle}
+              onChange={(event) => updatePost({ handle: event.target.value })}
+              value={activePost.handle}
+            />
+          </label>
+        </div>
+      </EditorDisclosure>
+
+
+      <EditorDisclosure
         description={t("microblog.reactionsDescription")}
-        number="03"
         title={t("microblog.reactions")}
       >
         <div className="field-row field-row--three">
@@ -410,7 +408,6 @@ export function MicroblogEditor({
 
       <EditorDisclosure
         description={t("comment.discussion")}
-        number="04"
         title={`${t("common.comments")} ${locale === "de" ? "und" : "and"} ${t("common.replies")}`}
       >
         <CommentEditor

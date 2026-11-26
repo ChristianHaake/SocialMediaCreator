@@ -327,8 +327,86 @@ export function PhotoPostEditor({
 
       <EditorDisclosure
         defaultOpen
+        description={t("photo.contentDescription")}
+        title={t("photo.contentTitle")}
+      >
+        <div className="field">
+          <span className="field-label">{t("photo.caption")}</span>
+          <EmojiTextarea
+            aria-label={t("photo.caption")}
+            maxLength={fieldLimits.photoPost.caption}
+            onChange={(caption) => updatePost({ caption })}
+            rows={4}
+            value={activePost.caption}
+          />
+        </div>
+        <div className="field-row">
+          <label className="field">
+            <span className="field-label">Likes</span>
+            <input
+              aria-describedby={
+                metricWarnings.likes ? "photo-likes-metric-hint" : undefined
+              }
+              aria-invalid={metricWarnings.likes === true}
+              max={fieldLimits.common.metric}
+              min={0}
+              onChange={(event) => updateMetric("likes", event.target.value)}
+              step={1}
+              type="number"
+              value={activePost.likes}
+            />
+            {metricWarnings.likes && (
+              <span
+                className="field-hint field-hint--warning"
+                id="photo-likes-metric-hint"
+              >
+                {t("common.metricNonNegative")}
+              </span>
+            )}
+          </label>
+          <label className="field">
+            <span className="field-label">{t("photo.commentCount")}</span>
+            <input
+              aria-describedby={
+                metricWarnings.commentCount
+                  ? "photo-comment-count-metric-hint"
+                  : undefined
+              }
+              aria-invalid={metricWarnings.commentCount === true}
+              max={fieldLimits.common.metric}
+              min={0}
+              onChange={(event) =>
+                updateMetric("commentCount", event.target.value)
+              }
+              step={1}
+              type="number"
+              value={activePost.commentCount}
+            />
+            {metricWarnings.commentCount && (
+              <span
+                className="field-hint field-hint--warning"
+                id="photo-comment-count-metric-hint"
+              >
+                {t("common.metricNonNegative")}
+              </span>
+            )}
+          </label>
+        </div>
+        <label className="toggle-field">
+          <input
+            checked={activePost.showComments}
+            onChange={(event) =>
+              updatePost({ showComments: event.target.checked })
+            }
+            type="checkbox"
+          />
+          <span>{t("photo.showComments")}</span>
+        </label>
+      </EditorDisclosure>
+
+      <EditorDisclosure
+        defaultOpen
         description={t("photo.profileDescription")}
-        number="01"
         title={t("photo.profileTitle")}
       >
         <ImageUploadField
@@ -391,7 +469,6 @@ export function PhotoPostEditor({
 
       <EditorDisclosure
         description={t("photo.carouselDescription")}
-        number="02"
         title={t("photo.carousel")}
       >
         <div className="editor-section-actions">
@@ -525,89 +602,9 @@ export function PhotoPostEditor({
         )}
       </EditorDisclosure>
 
-      <EditorDisclosure
-        defaultOpen
-        description={t("photo.contentDescription")}
-        number="03"
-        title={t("photo.contentTitle")}
-      >
-        <div className="field">
-          <span className="field-label">{t("photo.caption")}</span>
-          <EmojiTextarea
-            aria-label={t("photo.caption")}
-            maxLength={fieldLimits.photoPost.caption}
-            onChange={(caption) => updatePost({ caption })}
-            rows={4}
-            value={activePost.caption}
-          />
-        </div>
-        <div className="field-row">
-          <label className="field">
-            <span className="field-label">Likes</span>
-            <input
-              aria-describedby={
-                metricWarnings.likes ? "photo-likes-metric-hint" : undefined
-              }
-              aria-invalid={metricWarnings.likes === true}
-              max={fieldLimits.common.metric}
-              min={0}
-              onChange={(event) => updateMetric("likes", event.target.value)}
-              step={1}
-              type="number"
-              value={activePost.likes}
-            />
-            {metricWarnings.likes && (
-              <span
-                className="field-hint field-hint--warning"
-                id="photo-likes-metric-hint"
-              >
-                {t("common.metricNonNegative")}
-              </span>
-            )}
-          </label>
-          <label className="field">
-            <span className="field-label">{t("photo.commentCount")}</span>
-            <input
-              aria-describedby={
-                metricWarnings.commentCount
-                  ? "photo-comment-count-metric-hint"
-                  : undefined
-              }
-              aria-invalid={metricWarnings.commentCount === true}
-              max={fieldLimits.common.metric}
-              min={0}
-              onChange={(event) =>
-                updateMetric("commentCount", event.target.value)
-              }
-              step={1}
-              type="number"
-              value={activePost.commentCount}
-            />
-            {metricWarnings.commentCount && (
-              <span
-                className="field-hint field-hint--warning"
-                id="photo-comment-count-metric-hint"
-              >
-                {t("common.metricNonNegative")}
-              </span>
-            )}
-          </label>
-        </div>
-        <label className="toggle-field">
-          <input
-            checked={activePost.showComments}
-            onChange={(event) =>
-              updatePost({ showComments: event.target.checked })
-            }
-            type="checkbox"
-          />
-          <span>{t("photo.showComments")}</span>
-        </label>
-      </EditorDisclosure>
 
       <EditorDisclosure
         description={t("comment.discussion")}
-        number="04"
         title={`${t("common.comments")} ${locale === "de" ? "und" : "and"} ${t("common.replies")}`}
       >
         <CommentEditor

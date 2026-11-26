@@ -63,6 +63,7 @@ export function EmojiTextarea({
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -101,6 +102,7 @@ export function EmojiTextarea({
   function closeOnEscape(event: KeyboardEvent<HTMLElement>) {
     if (event.key === "Escape" && open) {
       setOpen(false);
+      triggerRef.current?.focus();
       event.preventDefault();
       event.stopPropagation();
     }
@@ -109,6 +111,7 @@ export function EmojiTextarea({
   function handleTextareaKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
     if (event.key === "Escape" && open) {
       setOpen(false);
+      triggerRef.current?.focus();
       event.preventDefault();
       event.stopPropagation();
       return;
@@ -135,6 +138,7 @@ export function EmojiTextarea({
           aria-expanded={open}
           aria-label={t("emoji.open")}
           className="emoji-textarea__button"
+          ref={triggerRef}
           onClick={() => setOpen((current) => !current)}
           type="button"
         >
@@ -142,7 +146,11 @@ export function EmojiTextarea({
         </button>
       </div>
       {open && (
-        <div className="emoji-textarea__popover">
+        <div
+          className="emoji-textarea__popover"
+          role="group"
+          aria-label={t("emoji.open")}
+        >
           {emojiOptions.map((emoji) => (
             <button
               aria-label={`${t("emoji.insert")} ${emoji}`}

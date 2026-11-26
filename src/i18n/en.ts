@@ -6,6 +6,7 @@ export const en: Record<TranslationKey, string> = {
   "app.local": "Content stays local",
   "app.teacher": "For educators",
   "app.language": "Language",
+  "app.skip": "Skip to workspace",
   "app.metaDescription":
     "Create fictional digital communication formats locally in your browser.",
   "app.format": "Choose a format",
@@ -34,6 +35,9 @@ export const en: Record<TranslationKey, string> = {
   "app.clearSavedConfirm":
     "Delete everything saved locally on this device and start fresh?",
   "app.clearedSaved": "Local data cleared.",
+  "app.clearSavedError": "Local data could not be deleted. Your work is unchanged. Try again or use your browser’s site-data settings.",
+  "app.sessionSaveError": "Local recovery storage is unavailable. Back up your work as a project file before closing or reloading the app.",
+  "app.backupProject": "Back up project file",
   "app.updateAvailable": "A new version is available.",
   "app.updateNow": "Update",
   "app.refreshApp": "Update app",
@@ -243,6 +247,9 @@ export const en: Record<TranslationKey, string> = {
   "footer.privacy": "Privacy",
   "footer.legal": "Legal notice",
   "footer.coffee": "Buy me a coffee",
+  "footer.support": "Support",
+  "footer.by": "A project by",
+  "footer.repository": "SocialMediaCreator: source code on GitHub",
   "content.back": "Back to the app",
   "content.help": "Help",
   "content.about": "About the project",

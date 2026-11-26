@@ -64,6 +64,11 @@ The application uses no advertising or marketing cookies and loads no external
 fonts or user media. Cloudflare may use technically necessary cookies for
 security measures.
 
+The internal support page contains a plain link to Buy Me a Coffee. The
+application does not load donation widgets or tracking pixels for this link.
+Opening it takes you to the external website, where the provider’s privacy
+terms apply.
+
 ## 7. International transfers
 
 Processing by Cloudflare in the United States cannot be excluded. Cloudflare
