@@ -130,7 +130,7 @@ describe("App", () => {
     const username = screen.getByLabelText("Benutzername");
     await user.clear(username);
     await user.type(username, "custom_account");
-    await user.click(screen.getByRole("button", { name: "English" }));
+    await user.selectOptions(screen.getByRole("combobox", { name: "Sprache" }), "en");
 
     expect(screen.getByLabelText("Username")).toHaveValue("custom_account");
     expect(
@@ -149,7 +149,7 @@ describe("App", () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(screen.getByRole("button", { name: "English" }));
+    await user.selectOptions(screen.getByRole("combobox", { name: "Sprache" }), "en");
     await user.click(screen.getByRole("button", { name: "Reset" }));
     expect(screen.getByText("Learning Lab")).toBeInTheDocument();
 
@@ -453,7 +453,7 @@ describe("App", () => {
       screen.getByRole("button", { name: "Dialog schließen" }),
     ).toHaveFocus();
 
-    await user.keyboard("{Escape}");
+    fireEvent(screen.getByRole("dialog"), new Event("cancel", { cancelable: true }));
     expect(
       screen.queryByRole("dialog", { name: "Hinweise für Lehrkräfte" }),
     ).not.toBeInTheDocument();

@@ -151,7 +151,7 @@ test("education notice and public guidance pages are visible and bilingual", asy
   await expect(page.getByText("Unterrichtsszenario 5: Plattformmechaniken")).toBeVisible();
   await expect(page.getByRole("heading", { name: "FAQ" })).toBeVisible();
 
-  await page.getByRole("button", { name: "English", exact: true }).click();
+  await page.locator("[data-creator-language] select").selectOption("en");
   await expect(
     page.getByRole("heading", { name: "Information for educators" }),
   ).toBeVisible();
@@ -204,7 +204,7 @@ test("language switch preserves content and exports locale in config v6", async 
 }) => {
   await page.goto("/");
   await page.getByLabel("Benutzername").fill("custom_account");
-  await page.getByRole("button", { name: "English", exact: true }).click();
+  await page.locator("[data-creator-language] select").selectOption("en");
 
   await expect(
     page.getByRole("heading", { name: "Create your photo posts." }),
@@ -273,7 +273,7 @@ test("teacher dialog traps and restores focus", async ({ page }) => {
   await expect(close).toBeFocused();
   await page.keyboard.press("Tab");
   expect(
-    await teacherDialog.locator(".info-dialog").evaluate((dialog) =>
+    await teacherDialog.evaluate((dialog) =>
       dialog.contains(document.activeElement),
     ),
   ).toBe(true);

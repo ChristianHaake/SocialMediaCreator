@@ -1,4 +1,5 @@
 import { test } from '@playwright/test';
+import { expectCreatorDialogCancellation } from '../creator/creator-dialog-contract';
 import { expectCreatorFooter } from '../creator/creator-footer-contract';
 import { copyFor } from '../../src/creator/creator-copy';
 
@@ -14,3 +15,15 @@ for (const locale of ['de', 'en', 'fr', 'es', 'nl']) {
     });
   });
 }
+
+test.use({ locale: 'de-DE' });
+
+test('shared dialog restores focus after keyboard dismissal', async ({ page }) => {
+  await page.goto('/');
+  await expectCreatorDialogCancellation(
+    page,
+    page.getByRole('button', { name: 'Für Lehrkräfte' }),
+    'Hinweise für Lehrkräfte',
+    'Dialog schließen',
+  );
+});

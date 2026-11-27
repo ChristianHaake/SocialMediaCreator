@@ -45,3 +45,26 @@
   max-block-size: calc(100dvh - 2rem);
   overflow: auto;
 }
+
+[data-creator-controls],
+[data-creator-actions],
+[data-creator-dialog-actions] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  min-inline-size: 0;
+  gap: 0.5rem;
+}
+
+[data-creator-actions] { flex-basis: 100%; }
+[data-creator-dialog-actions] { justify-content: end; }
+[data-creator-dialog-actions] button {
+  min-block-size: 44px;
+  min-inline-size: 44px;
+}
+
+@media print {
+  [data-creator-header], [data-creator-footer], [data-creator-dialog] {
+    display: none;
+  }
+}
