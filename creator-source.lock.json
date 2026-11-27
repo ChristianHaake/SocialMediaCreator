@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "commit": "6b2af460c7f4ef6321d13742bbbd459971302595",
+  "commit": "a47018bd6e0c66de20041e9645704a9e9aa7422c",
   "files": {
     "scripts/sync-creator.mjs": "da12f492a5307ceeff9a601c6f26d42e454aa1454bb1d65c844df3a3e81c7923",
-    "src/creator/CreatorFooter.tsx": "45ee10ffc72d42b972c1d0d841674adfb5f7c3f81c914c9a2f8a3eba3e28d77a",
-    "src/creator/creator-copy.ts": "ee57049b2c47bc814fa01d0838c98c0bb5674d21d1cd411b9ae3a4bd8e15cb4c",
+    "src/creator/CreatorFooter.tsx": "94b09a13798aaac667c52e1f9218c3201a8cc1a7639da604c3b2b878cb5e4967",
+    "src/creator/creator-copy.ts": "abd9dabd0336d6e1d3dcf50eb3fa604f8a2100dae958552f202a3995d2a79e13",
     "src/creator/creator.css": "041d534bdafe86ab9c0bd7daf8b66381983d9829a61003c4bc4334e9ea44fbfa",
-    "tests/creator/creator-footer-contract.ts": "35fdb2fc8f261f641584164bfb7132ed9ec7c879b01a1eb7d8087701fe302705"
+    "tests/creator/creator-footer-contract.ts": "04af2b2cec653145f1c640e0dde61572a60e28bbb9b4f016ebecad0a85374904"
   }
 }

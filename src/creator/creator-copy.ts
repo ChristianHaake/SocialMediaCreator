@@ -1,9 +1,9 @@
 export const creatorCopy = {
-  de: { language: 'Sprache', moreApps: 'Weitere Apps', name: 'Deutsch' },
-  en: { language: 'Language', moreApps: 'More apps', name: 'English' },
-  fr: { language: 'Langue', moreApps: 'Autres applications', name: 'Français' },
-  es: { language: 'Idioma', moreApps: 'Más aplicaciones', name: 'Español' },
-  nl: { language: 'Taal', moreApps: 'Meer apps', name: 'Nederlands' },
+  de: { newTab: 'Öffnet in einem neuen Tab.', language: 'Sprache', moreApps: 'Weitere Apps', name: 'Deutsch' },
+  en: { newTab: 'Opens in a new tab.', language: 'Language', moreApps: 'More apps', name: 'English' },
+  fr: { newTab: 'S’ouvre dans un nouvel onglet.', language: 'Langue', moreApps: 'Autres applications', name: 'Français' },
+  es: { newTab: 'Se abre en una pestaña nueva.', language: 'Idioma', moreApps: 'Más aplicaciones', name: 'Español' },
+  nl: { newTab: 'Opent in een nieuw tabblad.', language: 'Taal', moreApps: 'Meer apps', name: 'Nederlands' },
 } as const;
 
 export type CreatorLocale = keyof typeof creatorCopy;

@@ -4,7 +4,7 @@ import './creator.css';
 
 export function MoreAppsLink({ locale }: { locale: string }) {
   return (
-    <a className="creator-more-apps" href={appsDirectory} target="_blank" rel="noopener noreferrer">
+    <a className="creator-more-apps" aria-description={copyFor(locale).newTab} href={appsDirectory} target="_blank" rel="noopener noreferrer">
       {copyFor(locale).moreApps}
     </a>
   );

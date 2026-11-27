@@ -5,6 +5,7 @@ export async function expectCreatorFooter(page: Page, localizedDirectoryLabel: s
   const directory = footer.getByRole('link', { name: localizedDirectoryLabel, exact: true });
   await expect(footer.getByRole('navigation')).toHaveAccessibleName(/\S/);
   await expect(directory).toBeVisible();
+  await expect(directory).toHaveAccessibleDescription(/\S/);
   await expect(directory).toHaveAttribute('href', 'https://haak3.de/apps-fur-die-schule/');
   await expect(directory).toHaveAttribute('target', '_blank');
   await expect(directory).toHaveAttribute('rel', /\bnoopener\b/);
