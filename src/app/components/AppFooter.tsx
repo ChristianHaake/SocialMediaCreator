@@ -1,13 +1,19 @@
 import { Coffee, Github } from "lucide-react";
 import { useTranslation } from "../../i18n";
 
+import { CreatorFooter } from "../../creator/CreatorFooter";
+
 export function AppFooter() {
-  const { t } = useTranslation();
+  const { locale, t } = useTranslation();
   return (
-    <footer className="app-footer">
-      <span>{t("footer.local")}</span>
-      <div className="app-footer__right">
-        <nav aria-label={t("footer.navigation")}>
+    <CreatorFooter
+      locale={locale}
+      className="app-footer"
+      innerClassName="app-footer__right"
+      navigationLabel={t("footer.navigation")}
+      identity={<span>{t("footer.local")}</span>}
+      links={
+        <>
           <a href="/hilfe">{t("footer.help")}</a>
           <a href="/kontakt">
             {t("footer.contact")}
@@ -26,25 +32,29 @@ export function AppFooter() {
             {t("footer.privacy")}
           </a>
           <a href="/impressum">{t("footer.legal")}</a>
-        </nav>
-        <a
-          className="app-footer__coffee"
-          href="/unterstuetzung"
-        >
-          <Coffee aria-hidden="true" size={16} />
-          <span>{t("footer.coffee")}</span>
-        </a>
-        <a
-          aria-label="GitHub"
-          className="app-footer__github"
-          href="https://github.com/ChristianHaake/SocialMediaCreator"
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          <Github aria-hidden="true" size={20} />
-          <span className="repository-tooltip">GitHub Repository</span>
-        </a>
-      </div>
-    </footer>
+        </>
+      }
+      actions={
+        <>
+          <a
+            className="app-footer__coffee"
+            href="/unterstuetzung"
+          >
+            <Coffee aria-hidden="true" size={16} />
+            <span>{t("footer.coffee")}</span>
+          </a>
+          <a
+            aria-label="GitHub"
+            className="app-footer__github"
+            href="https://github.com/ChristianHaake/SocialMediaCreator"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            <Github aria-hidden="true" size={20} />
+            <span className="repository-tooltip">GitHub Repository</span>
+          </a>
+        </>
+      }
+    />
   );
 }

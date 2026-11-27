@@ -18,6 +18,7 @@ import {
   useState,
   Suspense,
 } from "react";
+import { CreatorStatus } from "../creator/CreatorShell";
 import { AppFooter } from "./components/AppFooter";
 import { ContactPage } from "./components/ContactPage";
 import { AppHeader } from "./components/AppHeader";
@@ -475,7 +476,7 @@ function AppContent() {
       <AppHeader onOpenTeacherInfo={() => setTeacherInfoOpen(true)} />
       {pathname === "/" && <EducationNotice />}
       {updateAvailable && (
-        <div className="status status--success status--action" role="status">
+        <CreatorStatus className="status status--success status--action">
           <span>{t("app.updateAvailable")}</span>
           <button
             className="button button--secondary"
@@ -484,12 +485,12 @@ function AppContent() {
           >
             {t("app.updateNow")}
           </button>
-        </div>
+        </CreatorStatus>
       )}
       {updateError && (
-        <p className="status status--error" role="alert">
+        <CreatorStatus className="status status--error" urgent>
           {t("app.updateSaveFailed")}
-        </p>
+        </CreatorStatus>
       )}
 
       {pathname === "/verifizieren" ? (
@@ -505,7 +506,7 @@ function AppContent() {
       ) : null}
       <main hidden={pathname !== "/"} id="workspace" tabIndex={-1}>
         {sessionSaveError && (
-          <div className="status status--error status--action" role="alert">
+          <CreatorStatus className="status status--error status--action" urgent>
             <span>{t("app.sessionSaveError")}</span>
             <button
               className="button button--secondary"
@@ -515,7 +516,7 @@ function AppContent() {
             >
               {t("app.backupProject")}
             </button>
-          </div>
+          </CreatorStatus>
         )}
         <section className="intro">
           <div>
@@ -642,9 +643,9 @@ function AppContent() {
             </div>
 
             {imageError && (
-              <p className="status status--error" role="alert">
+              <CreatorStatus className="status status--error" urgent>
                 {imageError}
-              </p>
+              </CreatorStatus>
             )}
 
             {renderEditor()}
@@ -720,7 +721,7 @@ function AppContent() {
                 <button
                   className="button button--secondary"
                   disabled={exporting !== null}
-                  onClick={() => requestExport("jpg")}
+                  onClick={(event) => { event.currentTarget.focus(); requestExport("jpg"); }}
                   type="button"
                 >
                   <Download aria-hidden="true" size={17} />
@@ -729,7 +730,7 @@ function AppContent() {
                 <button
                   className="button button--primary"
                   disabled={exporting !== null}
-                  onClick={() => requestExport("png")}
+                  onClick={(event) => { event.currentTarget.focus(); requestExport("png"); }}
                   type="button"
                 >
                   <Download aria-hidden="true" size={17} />
@@ -738,7 +739,7 @@ function AppContent() {
                 <button
                   className="button button--secondary"
                   disabled={exporting !== null}
-                  onClick={() => requestExport("pdf")}
+                  onClick={(event) => { event.currentTarget.focus(); requestExport("pdf"); }}
                   type="button"
                 >
                   <FileDown aria-hidden="true" size={17} />
@@ -747,7 +748,7 @@ function AppContent() {
               </div>
             </div>
             {exportError && (
-              <div className="status status--error status--action" role="alert">
+              <CreatorStatus className="status status--error status--action" urgent>
                 <span>{exportError}</span>
                 <button
                   className="button button--secondary"
@@ -756,7 +757,7 @@ function AppContent() {
                 >
                   {t("app.refreshApp")}
                 </button>
-              </div>
+              </CreatorStatus>
             )}
           </div>
         </section>

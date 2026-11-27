@@ -34,14 +34,12 @@ test("General app controls, translations, and static page navigation", async ({ 
   await page.goto("/");
 
   // Switch to English and check HTML lang
-  const enButton = page.getByRole("button", { name: "English", exact: true });
-  await enButton.click();
+  await page.locator("[data-creator-language] select").selectOption("en");
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page.getByRole("contentinfo").getByRole("link", { name: "Terms of use", exact: true })).toBeVisible();
 
   // Switch back to German
-  const deButton = page.getByRole("button", { name: "Deutsch", exact: true });
-  await deButton.click();
+  await page.locator("[data-creator-language] select").selectOption("de");
   await expect(page.locator("html")).toHaveAttribute("lang", "de");
 
   // Open teacher info dialog
@@ -96,7 +94,7 @@ test("all five language controls update the interface", async ({ page }) => {
   ] as const;
 
   for (const [name, locale, heading] of languages) {
-    await page.getByRole("button", { name, exact: true }).click();
+    await page.locator("[data-creator-language] select").selectOption({ label: name });
     await expect(page.locator("html")).toHaveAttribute("lang", locale);
     await expect(page.getByRole("heading", { level: 1, name: heading })).toBeVisible();
   }

@@ -361,30 +361,6 @@ textarea {
     justify-content: space-between;
     gap: 8px;
   }
-  .language-switch {
-    flex-wrap: wrap;
-  }
-  .language-switch button {
-    font-size: 0;
-  }
-  .language-switch button::after {
-    font-size: 0.75rem;
-  }
-  .language-switch button[aria-label="Deutsch"]::after {
-    content: "DE";
-  }
-  .language-switch button[aria-label="English"]::after {
-    content: "EN";
-  }
-  .language-switch button[aria-label="Français"]::after {
-    content: "FR";
-  }
-  .language-switch button[aria-label="Español"]::after {
-    content: "ES";
-  }
-  .language-switch button[aria-label="Nederlands"]::after {
-    content: "NL";
-  }
   .privacy-badge {
     justify-self: start;
     max-width: 100%;

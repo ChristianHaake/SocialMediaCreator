@@ -145,30 +145,8 @@ a {
   align-items: center;
 }
 
-.language-switch {
-  display: inline-flex;
-  padding: 3px;
-  border: 1px solid var(--border-soft);
-  border-radius: 9px;
-  background: var(--surface-subtle);
-}
 
-.language-switch button {
-  min-width: 44px;
-  min-height: 44px;
-  padding: 5px 7px;
-  border: 0;
-  border-radius: 6px;
-  color: var(--text-muted);
-  background: transparent;
-  font-size: 0.72rem;
-  font-weight: 600;
-}
 
-.language-switch button[aria-pressed="true"] {
-  color: white;
-  background: var(--accent);
-}
 
 .privacy-badge,
 .live-indicator {

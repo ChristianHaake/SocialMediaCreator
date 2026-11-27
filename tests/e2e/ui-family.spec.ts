@@ -31,7 +31,7 @@ for (const width of [320, 390, 768, 1440]) {
     await page.keyboard.press("Enter");
     await expect(page.locator("#workspace")).toBeFocused();
     expect(
-      (await page.getByRole("button", { name: "English", exact: true }).boundingBox())!
+      (await page.locator("[data-creator-language] select").boundingBox())!
         .height,
     ).toBeGreaterThanOrEqual(44);
     await page
@@ -149,7 +149,7 @@ test("internal pages and history preserve edits, focus and translated titles", a
   );
   await expect(coffee).toHaveAttribute("rel", "noopener noreferrer");
   await expect(coffee).toHaveAttribute("target", "_blank");
-  await page.getByRole("button", { name: "English", exact: true }).click();
+  await page.locator("[data-creator-language] select").selectOption("en");
   await expect(page).toHaveTitle("Support · SocialMediaCreator");
   await expect(
     page.getByRole("article").getByRole("link", { name: "Buy me a coffee", exact: true }),
@@ -193,7 +193,7 @@ test("language menu works with unavailable preference storage", async ({
   await page
     .getByLabel(/Beschreibung|Caption/, { exact: true })
     .fill("Unveränderter Inhalt");
-  await page.getByRole("button", { name: "English", exact: true }).click();
+  await page.locator("[data-creator-language] select").selectOption("en");
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page.getByLabel("Caption", { exact: true })).toHaveValue(
     "Unveränderter Inhalt",

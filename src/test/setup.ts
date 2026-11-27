@@ -32,3 +32,9 @@ Object.defineProperty(window, "localStorage", {
   configurable: true,
   value: new MemoryStorage(),
 });
+
+// jsdom lacks the native modal API. Playwright covers Escape and focus trapping.
+if (!HTMLDialogElement.prototype.showModal) {
+  HTMLDialogElement.prototype.showModal = function () { this.open = true; };
+  HTMLDialogElement.prototype.close = function () { this.open = false; };
+}
